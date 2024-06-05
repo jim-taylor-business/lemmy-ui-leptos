@@ -41,9 +41,13 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+      - uses: pnpm/action-setup@v4
+#        with:
+#          version: 8
+#          run_install: false
+      - uses: cargo-bins/cargo-binstall@main
       - name: install
         run: |
-          wget https://github.com/cargo-bins/cargo-binstall/releases/latest/download/cargo-binstall-x86_64-unknown-linux-musl.tgz && tar -xvf cargo-binstall-x86_64-unknown-linux-musl.tgz && cp cargo-binstall .cargo/bin
           cargo-binstall -y cargo-leptos
           npm install -g pnpm
           pnpm install
