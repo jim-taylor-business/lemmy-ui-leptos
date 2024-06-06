@@ -41,17 +41,22 @@ jobs:
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
+          target: wasm32-unknown-unknown
       - uses: pnpm/action-setup@v4
         with:
           version: 8
-#          run_install: false
+          run_install: true
       - uses: cargo-bins/cargo-binstall@main
       - name: install
         run: |
           cargo-binstall -y cargo-leptos
-          pnpm install
-          rustup target add wasm32-unknown-unknown
-          LEPTOS_TAILWIND_VERSION=v3.4.4 cargo leptos build --release
+          cargo leptos build --release
+          ls -la .
+          ls -la ./site
+          ls -la ./target/release
+          ls -la ~/.cargo
+#          pnpm install
+#          rustup target add wasm32-unknown-unknown
 #          cd end2end
 #          pnpm install
 #          cd ..
