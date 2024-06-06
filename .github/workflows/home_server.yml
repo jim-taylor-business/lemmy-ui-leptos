@@ -38,6 +38,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -47,15 +56,22 @@ jobs:
           version: 8
           run_install: true
       - uses: cargo-bins/cargo-binstall@main
-      - name: install
+      - name: Leptos build
         run: |
           cargo-binstall -y cargo-leptos
           cargo leptos build --release
-          ls -la .
-          ls -la ./target
-          ls -la ./target/site
-          ls -la ./target/release
-          ls -la ~/.cargo
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
+
+
+          
 #          pnpm install
 #          rustup target add wasm32-unknown-unknown
 #          cd end2end
