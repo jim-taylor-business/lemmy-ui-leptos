@@ -52,7 +52,8 @@ jobs:
           cargo-binstall -y cargo-leptos
           cargo leptos build --release
           ls -la .
-          ls -la ./site
+          ls -la ./target
+          ls -la ./target/site
           ls -la ./target/release
           ls -la ~/.cargo
 #          pnpm install
