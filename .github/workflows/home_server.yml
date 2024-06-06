@@ -35,7 +35,7 @@ on: [pull_request]
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v3
       - uses: actions/cache/restore@v4
@@ -69,14 +69,31 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
-      - uses: moonpathbg/scp_uploader@latest
+      # - uses: moonpathbg/scp_uploader@latest
+      #   with:
+      #       host: ${{ secrets.SSH_HOST }}
+      #       port: ${{ secrets.SSH_PORT }}
+      #       username: ${{ secrets.SSH_USER }}
+      #       key : ${{ secrets.SSH_KEY }}
+      #       source: "target/"
+      #       target: ${{ secrets.WORK_DIR }}
+      - uses: appleboy/scp-action@v0.1.7
         with:
-            host: ${{ secrets.SSH_HOST }}
-            port: ${{ secrets.SSH_PORT }}
-            username: ${{ secrets.SSH_USER }}
-            key : ${{ secrets.SSH_KEY }}
-            source: "target/"
-            target: ${{ secrets.WORK_DIR }}
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.SSH_USER }}
+          password: ${{ secrets.SSH_PASS }}
+          port: ${{ secrets.SSH_PORT }}
+          source: "target/"
+          target: ${{ secrets.WORK_DIR }}
+          # source: "tests/a.txt,tests/b.txt"
+          # target: your_server_target_folder_path
+      - uses: tiyee/action-ssh@release
+        with:
+          host: ${{ secrets.SSH_HOST }} 
+          port: ${{ secrets.SSH_PORT }} 
+          username: ${{ secrets.SSH_USER }} 
+          privateKey: ${{ secrets.SSH_KEY }} 
+          command: 'ls -alh'
       - name: Run some stuff
         run: |
           ls -la
