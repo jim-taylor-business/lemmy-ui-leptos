@@ -79,7 +79,7 @@ jobs:
             target: ${{ secrets.WORK_DIR }}
       - name: Run some stuff
         run: |
-          ls -la .
+          ls -la
 
           
 #          pnpm install
