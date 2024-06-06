@@ -38,37 +38,37 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/cache/restore@v4
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
-      - uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: wasm32-unknown-unknown
-      - uses: pnpm/action-setup@v4
-        with:
-          version: 8
-          run_install: true
-      - uses: cargo-bins/cargo-binstall@main
-      - name: Leptos build
-        run: |
-          cargo-binstall -y cargo-leptos
-          cargo leptos build --release
-      - uses: actions/cache@v3
-        with:
-          path: |
-            ~/.cargo/bin/
-            ~/.cargo/registry/index/
-            ~/.cargo/registry/cache/
-            ~/.cargo/git/db/
-            target/
-          key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
+      # - uses: actions/cache/restore@v4
+      #   with:
+      #     path: |
+      #       ~/.cargo/bin/
+      #       ~/.cargo/registry/index/
+      #       ~/.cargo/registry/cache/
+      #       ~/.cargo/git/db/
+      #       target/
+      #     key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
+      # - uses: actions-rs/toolchain@v1
+      #   with:
+      #     toolchain: stable
+      #     target: wasm32-unknown-unknown
+      # - uses: pnpm/action-setup@v4
+      #   with:
+      #     version: 8
+      #     run_install: true
+      # - uses: cargo-bins/cargo-binstall@main
+      # - name: Leptos build
+      #   run: |
+      #     cargo-binstall -y cargo-leptos
+      #     cargo leptos build --release
+      # - uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ~/.cargo/bin/
+      #       ~/.cargo/registry/index/
+      #       ~/.cargo/registry/cache/
+      #       ~/.cargo/git/db/
+      #       target/
+      #     key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
       # - uses: moonpathbg/scp_uploader@latest
       #   with:
       #       host: ${{ secrets.SSH_HOST }}
