@@ -108,8 +108,9 @@ jobs:
       - name: install ssh keys
         # check this thread to understand why its needed:
         # https://stackoverflow.com/a/70447517
-        run: |        
-          echo "${{ secrets.SSH_KEY }}" >> ~/.ssh/id_rsa
+        run: |
+          mkdir ~/.ssh
+          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
           chmod 600 ~/.ssh/id_rsa
           ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
           # install -m 600 -D /dev/null ~/.ssh/id_rsa
