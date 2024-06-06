@@ -83,7 +83,7 @@ jobs:
           username: ${{ secrets.SSH_USER }}
           password: ${{ secrets.SSH_PASS }}
           port: ${{ secrets.SSH_PORT }}
-          source: "target/"
+          source: "target/release/lemmy-ui-leptos"
           target: ${{ secrets.WORK_DIR }}
           # source: "tests/a.txt,tests/b.txt"
           # target: your_server_target_folder_path
