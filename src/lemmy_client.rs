@@ -4,7 +4,8 @@ use crate::{
   host::{get_host, get_https},
 };
 use cfg_if::cfg_if;
-use lemmy_api_common::{comment::*, community::*, person::*, post::*, site::*, LemmyErrorType};
+use lemmy_api_common::{comment::*, community::*, person::*, post::*, site::*/* , LemmyErrorType */};
+use crate::lemmy_error::LemmyErrorType;
 use leptos::Serializable;
 use serde::{Deserialize, Serialize};
 

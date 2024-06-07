@@ -1,6 +1,6 @@
 use crate::i18n::*;
 use core::num::ParseIntError;
-use lemmy_api_common::LemmyErrorType;
+use crate::lemmy_error::LemmyErrorType;
 use leptos::*;
 use serde::{Deserialize, Serialize};
 use serde_urlencoded::ser;
@@ -136,18 +136,18 @@ impl From<web_sys::wasm_bindgen::JsValue> for LemmyAppError {
   }
 }
 
-pub trait NoneError<T>
-where
-  Self: std::marker::Sized,
-{
-  fn n(self) -> Result<T, LemmyAppErrorType>;
-}
+// pub trait NoneError<T>
+// where
+//   Self: std::marker::Sized,
+// {
+//   fn n(self) -> Result<T, LemmyAppErrorType>;
+// }
 
-impl<T> NoneError<T> for Option<T> {
-  fn n(self) -> Result<T, LemmyAppErrorType> {
-    self.ok_or(LemmyAppErrorType::InternalClientError)
-  }
-}
+// impl<T> NoneError<T> for Option<T> {
+//   fn n(self) -> Result<T, LemmyAppErrorType> {
+//     self.ok_or(LemmyAppErrorType::InternalClientError)
+//   }
+// }
 
 #[cfg(not(feature = "ssr"))]
 impl From<gloo_net::Error> for LemmyAppError {

@@ -50,19 +50,19 @@ pub fn HomeActivity(
     .ok()
   };
 
-  let from_func = move || {
-    if let Some(t) = query.get().get("from").cloned() {
-      if !t.is_empty() {
-        Some(PaginationCursor(t))
-      } else {
-        None
-      }
-    } else {
-      None
-    }
-  };
+  // let from_func = move || {
+  //   if let Some(t) = query.get().get("from").cloned() {
+  //     if !t.is_empty() {
+  //       Some(PaginationCursor(t))
+  //     } else {
+  //       None
+  //     }
+  //   } else {
+  //     None
+  //   }
+  // };
 
-  let ssr_prev = move || query.get().get("prev").cloned();
+  // let ssr_prev = move || query.get().get("prev").cloned();
   let ssr_limit = move || {
     query
       .get()
@@ -101,11 +101,11 @@ pub fn HomeActivity(
         user.get(),
         list_func(),
         sort_func(),
-        from_func(),
+        // from_func(),
         ssr_limit(),
       )
     },
-    move |(_user, list_type, sort_type, from, limit)| async move {
+    move |(_user, list_type, sort_type, /* from, */ limit)| async move {
       let form = GetPosts {
         type_: list_type,
         sort: sort_type,
@@ -116,8 +116,9 @@ pub fn HomeActivity(
         saved_only: None,
         disliked_only: None,
         liked_only: None,
-        page_cursor: from,
-        show_hidden: None,
+        // page_cursor: from,
+        page_cursor: None,
+        // show_hidden: None,
       };
 
       let result = LemmyClient.list_posts(form).await;
@@ -201,7 +202,7 @@ pub fn HomeActivity(
                 disliked_only: None,
                 liked_only: None,
                 page_cursor: csr_paginator.get(),
-                show_hidden: None,
+                // show_hidden: None,
               };
 
               let result = LemmyClient.list_posts(form).await;
@@ -341,55 +342,55 @@ pub fn HomeActivity(
                               .unwrap_or_default()
                               .into()/>
                         </div>
-                        <div class=" hidden sm:block">
+                        // <div class=" hidden sm:block">
 
-                          {if let Some(s) = ssr_prev() {
-                              if !s.is_empty() {
-                                  let mut st = s.split(',').collect::<Vec<_>>();
-                                  let p = st.pop().unwrap_or("");
-                                  let mut query_params = query.get();
-                                  query_params.insert("prev".into(), st.join(",").to_string());
-                                  query_params.insert("from".into(), p.into());
-                                  view! {
-                                    <span>
-                                      <A
-                                        href=format!("{}", query_params.to_query_string())
-                                        class="btn"
-                                      >
-                                        "Prev"
-                                      </A>
-                                    </span>
-                                  }
-                              } else {
-                                  view! { <span></span> }
-                              }
-                          } else {
-                              view! { <span></span> }
-                          }}
-                          {if let Some(n) = p.next_page.clone() {
-                              let s = ssr_prev().unwrap_or_default();
-                              let mut st = s.split(',').collect::<Vec<_>>();
-                              let f = if let Some(PaginationCursor(g)) = from_func() {
-                                  g
-                              } else {
-                                  "".to_string()
-                              };
-                              st.push(&f);
-                              let mut query_params = query.get();
-                              query_params.insert("prev".into(), st.join(",").to_string());
-                              query_params.insert("from".into(), n.0);
-                              view! {
-                                <span>
-                                  <A href=format!("{}", query_params.to_query_string()) class="btn">
-                                    "Next"
-                                  </A>
-                                </span>
-                              }
-                          } else {
-                              view! { <span></span> }
-                          }}
+                        //   {if let Some(s) = ssr_prev() {
+                        //       if !s.is_empty() {
+                        //           let mut st = s.split(',').collect::<Vec<_>>();
+                        //           let p = st.pop().unwrap_or("");
+                        //           let mut query_params = query.get();
+                        //           query_params.insert("prev".into(), st.join(",").to_string());
+                        //           query_params.insert("from".into(), p.into());
+                        //           view! {
+                        //             <span>
+                        //               <A
+                        //                 href=format!("{}", query_params.to_query_string())
+                        //                 class="btn"
+                        //               >
+                        //                 "Prev"
+                        //               </A>
+                        //             </span>
+                        //           }
+                        //       } else {
+                        //           view! { <span></span> }
+                        //       }
+                        //   } else {
+                        //       view! { <span></span> }
+                        //   }}
+                        //   {if let Some(n) = p.next_page.clone() {
+                        //       let s = ssr_prev().unwrap_or_default();
+                        //       let mut st = s.split(',').collect::<Vec<_>>();
+                        //       let f = if let Some(PaginationCursor(g)) = from_func() {
+                        //           g
+                        //       } else {
+                        //           "".to_string()
+                        //       };
+                        //       st.push(&f);
+                        //       let mut query_params = query.get();
+                        //       query_params.insert("prev".into(), st.join(",").to_string());
+                        //       query_params.insert("from".into(), n.0);
+                        //       view! {
+                        //         <span>
+                        //           <A href=format!("{}", query_params.to_query_string()) class="btn">
+                        //             "Next"
+                        //           </A>
+                        //         </span>
+                        //       }
+                        //   } else {
+                        //       view! { <span></span> }
+                        //   }}
 
-                        </div>
+                        // </div>
                       </div>
                     }
                 })
