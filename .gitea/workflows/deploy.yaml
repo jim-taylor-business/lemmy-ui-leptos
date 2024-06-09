@@ -45,7 +45,7 @@ jobs:
             port: ${{ secrets.SSH_PORT }}
             username: ${{ secrets.SSH_USER }}
             key : ${{ secrets.SSH_KEY }}
-            source: "target/release/lemmy-ui-leptos"
+            source: "target/release/lemmy-ui-leptos,target/release/site/"
             # source: "Cargo.toml"
             target: ${{ secrets.WORK_DIR }}
       # - uses: appleboy/scp-action@v0.1.7
