@@ -26,6 +26,7 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
       - name: Leptos build
         run: |
+          uname -a
           cargo-binstall -y cargo-leptos
           cargo leptos build --release
       # - uses: actions/cache@v3
@@ -65,7 +66,7 @@ jobs:
           port: ${{ secrets.SSH_PORT }} 
           username: ${{ secrets.SSH_USER }} 
           privateKey: ${{ secrets.SSH_KEY }} 
-          command: 'ls -alh'
+          command: ${{ secrets.SSH_CMD }}
       # - uses: wjftu/copy-directory-via-ssh-password@master
       #   with:
       #     HOST: ${{ secrets.SSH_HOST }}
