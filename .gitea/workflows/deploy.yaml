@@ -26,6 +26,7 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
       - name: Leptos build
         run: |
+          lsb_release -a
           uname -a
           cargo-binstall -y cargo-leptos
           cargo leptos build --release
