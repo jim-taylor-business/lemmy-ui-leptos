@@ -15,19 +15,19 @@ jobs:
       #       ~/.cargo/git/db/
       #       target/
       #     key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
-      # - uses: actions-rs/toolchain@v1
-      #   with:
-      #     toolchain: stable
-      #     target: wasm32-unknown-unknown
-      # - uses: pnpm/action-setup@v4
-      #   with:
-      #     version: 8
-      #     run_install: true
-      # - uses: cargo-bins/cargo-binstall@main
-      # - name: Leptos build
-      #   run: |
-      #     cargo-binstall -y cargo-leptos
-      #     cargo leptos build --release
+      - uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: wasm32-unknown-unknown
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 8
+          run_install: true
+      - uses: cargo-bins/cargo-binstall@main
+      - name: Leptos build
+        run: |
+          cargo-binstall -y cargo-leptos
+          cargo leptos build --release
       # - uses: actions/cache@v3
       #   with:
       #     path: |
@@ -43,7 +43,8 @@ jobs:
             port: ${{ secrets.SSH_PORT }}
             username: ${{ secrets.SSH_USER }}
             key : ${{ secrets.SSH_KEY }}
-            source: "Cargo.toml"
+            source: "target/release/lemmy-ui-leptos"
+            # source: "Cargo.toml"
             target: ${{ secrets.WORK_DIR }}
       # - uses: appleboy/scp-action@v0.1.7
       #   with:
