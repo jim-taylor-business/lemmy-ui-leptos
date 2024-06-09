@@ -24,12 +24,13 @@ jobs:
           version: 8
           run_install: true
       - uses: cargo-bins/cargo-binstall@main
-      - name: Leptos build
-        run: |
-          lsb_release -a
-          uname -a
-          cargo-binstall -y cargo-leptos
-          cargo leptos build --release
+      # - name: Leptos build
+      #   run: |
+      #     lsb_release -a
+      #     uname -a
+      #     cargo-binstall -y cargo-leptos
+      #     cargo leptos build --release
+
       # - uses: actions/cache@v3
       #   with:
       #     path: |
@@ -45,8 +46,8 @@ jobs:
             port: ${{ secrets.SSH_PORT }}
             username: ${{ secrets.SSH_USER }}
             key : ${{ secrets.SSH_KEY }}
-            source: "target/release/lemmy-ui-leptos"
-            # source: "Cargo.toml"
+            # source: "target/release/lemmy-ui-leptos"
+            source: "Cargo.toml"
             target: ${{ secrets.WORK_DIR }}
       - uses: moonpathbg/scp_uploader@latest
         with:
@@ -54,8 +55,7 @@ jobs:
             port: ${{ secrets.SSH_PORT }}
             username: ${{ secrets.SSH_USER }}
             key : ${{ secrets.SSH_KEY }}
-            source: "target/release/site"
-            # source: "Cargo.toml"
+            source: "src"
             target: ${{ secrets.WORK_DIR }}
       # - uses: appleboy/scp-action@v0.1.7
       #   with:
