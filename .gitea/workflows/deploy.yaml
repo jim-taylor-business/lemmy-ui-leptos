@@ -6,15 +6,15 @@ jobs:
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v3
-      # - uses: actions/cache/restore@v4
-      #   with:
-      #     path: |
-      #       ~/.cargo/bin/
-      #       ~/.cargo/registry/index/
-      #       ~/.cargo/registry/cache/
-      #       ~/.cargo/git/db/
-      #       target/
-      #     key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
+      - uses: actions/cache/restore@v4
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
       - uses: actions-rs/toolchain@v1
         with:
           toolchain: stable
@@ -24,6 +24,7 @@ jobs:
           version: 8
           run_install: true
       - uses: cargo-bins/cargo-binstall@main
+
       - name: Leptos build
         run: |
           rustc --version
@@ -36,15 +37,15 @@ jobs:
           ls -la .
           ls -la target
 
-      # - uses: actions/cache@v3
-      #   with:
-      #     path: |
-      #       ~/.cargo/bin/
-      #       ~/.cargo/registry/index/
-      #       ~/.cargo/registry/cache/
-      #       ~/.cargo/git/db/
-      #       target/
-      #     key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            target/
+          key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
       - uses: moonpathbg/scp_uploader@latest
         with:
             host: ${{ secrets.SSH_HOST }}
@@ -52,7 +53,6 @@ jobs:
             username: ${{ secrets.SSH_USER }}
             key : ${{ secrets.SSH_KEY }}
             source: "target/release/lemmy-ui-leptos"
-            # source: "Cargo.toml"
             target: ${{ secrets.WORK_DIR }}
       - uses: moonpathbg/scp_uploader@latest
         with:
@@ -60,7 +60,6 @@ jobs:
             port: ${{ secrets.SSH_PORT }}
             username: ${{ secrets.SSH_USER }}
             key : ${{ secrets.SSH_KEY }}
-            # source: "src"
             source: "target/site"
             target: ${{ secrets.WORK_DIR }}
       - uses: tiyee/action-ssh@v1.0.1
