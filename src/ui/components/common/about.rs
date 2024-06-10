@@ -342,6 +342,9 @@ pub fn About(
 
   view! {
     <div class="info">
+      <div>"About this site"</div>
+
+      <div>"About this site"</div>
     </div>
 //     <nav class="container navbar mx-auto hidden sm:flex">
 //       <div class="navbar-start w-auto"></div>
