@@ -1,6 +1,6 @@
 [package]
 name = "lemmy-ui-leptos"
-version = "0.0.2"
+version = "0.19.3-alpha.1"
 edition = "2021"
 
 [lib]
@@ -15,7 +15,7 @@ lemmy_api_common = { tag = "0.19.3", git = "https://github.com/LemmyNet/lemmy.gi
 #lemmy_api_common = { branch = "main", git = "https://github.com/LemmyNet/lemmy.git", default-features = false }
 
 # the new lemmy client
-lemmy-client = "0"
+# lemmy-client = "0"
 
 # for testing potential lemmy changes
 # lemmy_api_common = { path = "../lemmy/crates/api_common", default-features = false }
