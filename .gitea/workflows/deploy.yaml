@@ -26,8 +26,11 @@ jobs:
       - uses: cargo-bins/cargo-binstall@main
       - name: Leptos build
         run: |
+          rustc --version
           lsb_release -a
           uname -a
+          export LEMMY_UI_LEPTOS_LEMMY_HOST=${{ secrets.APP_HOST }}
+          export LEMMY_UI_LEPTOS_LEMMY_HTTPS=${{ secrets.APP_SSL }}
           cargo-binstall -y cargo-leptos
           cargo leptos build --release
           ls -la .
