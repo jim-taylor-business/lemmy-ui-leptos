@@ -250,7 +250,7 @@ pub fn TopNav(
                     <A href="/login">{t!(i18n, login)}</A>
                   </li>
                   <li>
-                    <A href="/signup" class="disabled">{t!(i18n, signup)}</A>
+                    <A href="/signup" class="pointer-events-none">{t!(i18n, signup)}</A>
                   </li>
                 }
             }
