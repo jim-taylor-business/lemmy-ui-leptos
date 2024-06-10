@@ -13,16 +13,34 @@ pub fn PostActivity() -> impl IntoView {
   let post_id = move || params.get().get("id").cloned().unwrap_or_default();
 
   let post = create_resource(post_id, move |id_string| async move {
-    let id = id_string.parse::<i32>()?;
+    // let id = id_string.parse::<i32>()?;
+    if let Ok(id) = id_string.parse::<i32>() {
+
     let form = GetPost {
       id: Some(PostId(id)),
       comment_id: None,
     };
-    LemmyClient.get_post(form).await
+    // LemmyClient.get_post(form).await
+
+    let result = LemmyClient.get_post(form).await;
+
+    match result {
+      Ok(o) => Some(o),
+      Err(e) => {
+        // error.set(Some(e));
+        None
+      }
+    }
+
+    } else {
+      None
+    }
   });
 
   let comments = create_resource(post_id, move |id_string| async move {
-    let id = id_string.parse::<i32>()?;
+    // let id = id_string.parse::<i32>()?;
+    if let Ok(id) = id_string.parse::<i32>() {
+
     let form = GetComments {
       post_id: Some(PostId(id)),
       community_id: None,
@@ -37,28 +55,47 @@ pub fn PostActivity() -> impl IntoView {
       disliked_only: None,
       liked_only: None,
     };
-    LemmyClient.get_comments(form).await
+    // LemmyClient.get_comments(form).await
+
+    let result = LemmyClient.get_comments(form).await;
+
+    match result {
+      Ok(o) => Some(o),
+      Err(e) => {
+        // error.set(Some(e));
+        None
+      }
+    }
+
+    } else {
+      None
+    }
   });
 
   view! {
-    <main class="mx-auto">
-      <h2 class="p-6 text-4xl">"Post page"</h2>
+    <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
+      <div class="flex flex-col ">
+        <div class="columns-1 2xl:columns-2 4xl:columns-3 gap-3">
+
+    // <main class="mx-auto">
       <Transition fallback=|| {
           view! { "Loading..." }
       }>
         {move || {
             post.get()
-                .map(|res| match res {
-                    Err(e) => {
-                        view! { <div>{e.to_string()}</div> }
-                    }
-                    Ok(res) => {
+                .unwrap_or(None)
+                .map(|res| 
+                  // match res {
+                  //   Err(e) => {
+                  //       view! { <table>{e.to_string()}</table> }
+                  //   }
+                  //   Ok(res) => {
                         view! {
-                          <div>
+                          <table class="table">
                             <PostListing post_view=res.post_view.into()/>
-                          </div>
-                        }
-                    }
+                          </table>
+                    //     }
+                    // }
                 })
         }}
 
@@ -69,21 +106,26 @@ pub fn PostActivity() -> impl IntoView {
         {move || {
             comments
                 .get()
-                .map(|res| match res {
-                    Err(e) => {
-                        view! { <div>{e.to_string()}</div> }
-                    }
-                    Ok(res) => {
+                .unwrap_or(None)
+                .map(|res| 
+                  // match res {
+                  //   Err(e) => {
+                  //       view! { <div>{e.to_string()}</div> }
+                  //   }
+                  //   Ok(res) => {
                         view! {
-                          <div>
+                          <div class="w-full">
                             <CommentNodes comments=res.comments.into()/>
                           </div>
                         }
-                    }
-                })
+                    // }
+                // }
+                )
         }}
 
       </Transition>
+        </div>
+      </div>
     </main>
   }
 }

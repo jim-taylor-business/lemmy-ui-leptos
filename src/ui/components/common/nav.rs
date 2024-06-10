@@ -164,12 +164,12 @@ pub fn TopNav(
             </A>
           </li>
           <li>
-            <A href="/create_post" class="text-md disabled">
+            <A href="/create_post" class="text-md pointer-events-none text-base-content/50">
               {t!(i18n, create_post)}
             </A>
           </li>
           <li>
-            <A href="/create_community" class="text-md disabled">
+            <A href="/create_community" class="text-md pointer-events-none text-base-content/50">
               {t!(i18n, create_community)}
             </A>
           </li>
@@ -185,7 +185,7 @@ pub fn TopNav(
       <div class="navbar-end">
         <ul class="menu menu-horizontal flex-nowrap items-center">
           <li>
-            <A href="/search" class="accent">
+            <A href="/search" class="pointer-events-none text-base-content/50">
               <span title="t!(i18n, search)">
                 <Icon icon=Search/>
               </span>
@@ -250,7 +250,7 @@ pub fn TopNav(
                     <A href="/login">{t!(i18n, login)}</A>
                   </li>
                   <li>
-                    <A href="/signup" class="pointer-events-none text-neutral">{t!(i18n, signup)}</A>
+                    <A href="/signup" class="pointer-events-none text-base-content/50">{t!(i18n, signup)}</A>
                   </li>
                 }
             }
@@ -346,7 +346,7 @@ pub fn BottomNav(
       <div class="navbar-end grow w-auto">
         <ul class="menu menu-horizontal flex-nowrap items-center">
           <li>
-            <a href="//github.com/LemmyNet/lemmy-ui-leptos/releases" class="text-md">
+            <a href="//github.com/jim-taylor-business/lemmy-ui-leptos/releases" class="text-md">
               "FE: "
               {FE_VERSION}
             </a>
@@ -361,12 +361,12 @@ pub fn BottomNav(
             </a>
           </li>
           <li>
-            <A href="/modlog" class="text-md pointer-events-none text-primary">
+            <A href="/modlog" class="text-md pointer-events-none text-base-content/50">
               {t!(i18n, modlog)}
             </A>
           </li>
           <li>
-            <A href="/instances" class="text-md pointer-events-none text-accent">
+            <A href="/instances" class="text-md pointer-events-none text-base-content/50">
               {t!(i18n, instances)}
             </A>
           </li>

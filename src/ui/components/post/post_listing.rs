@@ -130,6 +130,7 @@ pub async fn report_post_fn(
 #[component]
 pub fn PostListing(post_view: MaybeSignal<PostView>) -> impl IntoView {
   let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let user = expect_context::<RwSignal<Option<bool>>>();
 
   let post_view = create_rw_signal(post_view.get());
 
@@ -317,10 +318,16 @@ pub fn PostListing(post_view: MaybeSignal<PostView>) -> impl IntoView {
                     { if Some(1) == post_view.get().my_vote { " text-accent" } else { "" } },
                 )
             }
+            disabled=move || Some(true) != user.get()
 
             title="Up vote"
           >
-            <Icon icon=Upvote/>
+            <Icon icon=Upvote class={
+              format!(
+                "{}",
+                    { if Some(true) != user.get() { " text-base-content/50" } else { "" } },
+                )
+            }.into() />
           </button>
         </ActionForm>
         <span class="block text-sm">{move || post_view.get().counts.score}</span>
@@ -339,10 +346,16 @@ pub fn PostListing(post_view: MaybeSignal<PostView>) -> impl IntoView {
                     { if Some(-1) == post_view.get().my_vote { " text-accent" } else { "" } },
                 )
             }
+            disabled=move || Some(true) != user.get()
 
             title="Down vote"
           >
-            <Icon icon=Downvote/>
+            <Icon icon=Downvote class={
+              format!(
+                "{}",
+                    { if Some(true) != user.get() { " text-base-content/50" } else { "" } },
+                )
+            }.into() />
           </button>
         </ActionForm>
       </td>
@@ -460,7 +473,7 @@ pub fn PostListing(post_view: MaybeSignal<PostView>) -> impl IntoView {
             </button>
           </ActionForm>
           <span title="Cross post">
-            <A href="/create_post">
+            <A href="/create_post" class="pointer-events-none text-base-content/50">
               <Icon icon=Crosspost/>
             </A>
           </span>
