@@ -1,12 +1,12 @@
 use crate::{
-//   cookie::{remove_cookie, set_cookie},
+  //   cookie::{remove_cookie, set_cookie},
   errors::{message_from_error, LemmyAppError},
-//   i18n::*,
-//   lemmy_client::*,
-//   ui::components::common::icon::{
-//     Icon,
-//     IconType::{Donate, Notifications, Search},
-//   },
+  //   i18n::*,
+  //   lemmy_client::*,
+  //   ui::components::common::icon::{
+  //     Icon,
+  //     IconType::{Donate, Notifications, Search},
+  //   },
 };
 use lemmy_api_common::site::GetSiteResponse;
 use leptos::*;
@@ -337,62 +337,69 @@ use leptos::*;
 pub fn About(
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
 ) -> impl IntoView {
-//   let i18n = use_i18n();
-//   const FE_VERSION: &str = env!("CARGO_PKG_VERSION");
+  //   let i18n = use_i18n();
+  //   const FE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
   view! {
-    <div class="container mx-auto alert alert-info">
-    // <div class="info">
-      <h3>"About this site"</h3>
-      <p>"This is a techinical demo and proof of concept of the technical objectives specified by myself on my " <a href="//github.com/jim-taylor_business/lemmy-ui-leptos"> "Lemmy UI Leptos homepage" </a></p>
-      <p>"It is also intended to be a near feature complete with the homepage of " <a href="//lemmy.world"> "Lemmy world" </a> ". This site is not affiliated with Lemmy World in any way." </p>
-    </div>
-//     <nav class="container navbar mx-auto hidden sm:flex">
-//       <div class="navbar-start w-auto"></div>
-//       <div class="navbar-end grow w-auto">
-//         <ul class="menu menu-horizontal flex-nowrap items-center">
-//           <li>
-//             <a href="//github.com/LemmyNet/lemmy-ui-leptos/releases" class="text-md">
-//               "FE: "
-//               {FE_VERSION}
-//             </a>
-//           </li>
-//           <li>
-//             <a href="//github.com/LemmyNet/lemmy/releases" class="text-md">
-//               "BE: "
-//               {move || {
-//                   if let Some(Ok(m)) = site_signal.get() { m.version } else { "Lemmy".to_string() }
-//               }}
+      <div class="container mx-auto alert">
+        <div>
+          <h3 class="font-bold text-3xl">"About this site"</h3>
+          <p>"This is a techinical demo and proof of concept of the technical objectives specified by myself on my "<a class="link" href="//github.com/jim-taylor_business/lemmy-ui-leptos">"Lemmy UI Leptos homepage"</a>"."</p>
+          <p>"It is also intended to be a near feature complete with the homepage of "<a class="link" href="//lemmy.world">"Lemmy world"</a>". This site is not affiliated with Lemmy World in any way."</p>
+        </div>
+      </div>
+      // <div class="container mx-auto alert alert-info">
+      // // <div class="info">
+      //   <h3>"About this site"</h3>
+      //   <p>"This is a techinical demo and proof of concept of the technical objectives specified by myself on my " <a href="//github.com/jim-taylor_business/lemmy-ui-leptos"> "Lemmy UI Leptos homepage" </a></p>
+      //   <p>"It is also intended to be a near feature complete with the homepage of " <a href="//lemmy.world"> "Lemmy world" </a> ". This site is not affiliated with Lemmy World in any way." </p>
+      // </div>
+  //     <nav class="container navbar mx-auto hidden sm:flex">
+  //       <div class="navbar-start w-auto"></div>
+  //       <div class="navbar-end grow w-auto">
+  //         <ul class="menu menu-horizontal flex-nowrap items-center">
+  //           <li>
+  //             <a href="//github.com/LemmyNet/lemmy-ui-leptos/releases" class="text-md">
+  //               "FE: "
+  //               {FE_VERSION}
+  //             </a>
+  //           </li>
+  //           <li>
+  //             <a href="//github.com/LemmyNet/lemmy/releases" class="text-md">
+  //               "BE: "
+  //               {move || {
+  //                   if let Some(Ok(m)) = site_signal.get() { m.version } else { "Lemmy".to_string() }
+  //               }}
 
-//             </a>
-//           </li>
-//           <li>
-//             <A href="/modlog" class="text-md">
-//               {t!(i18n, modlog)}
-//             </A>
-//           </li>
-//           <li>
-//             <A href="/instances" class="text-md">
-//               {t!(i18n, instances)}
-//             </A>
-//           </li>
-//           <li>
-//             <a href="//join-lemmy.org/docs/en/index.html" class="text-md">
-//               {t!(i18n, docs)}
-//             </a>
-//           </li>
-//           <li>
-//             <a href="//github.com/LemmyNet" class="text-md">
-//               {t!(i18n, code)}
-//             </a>
-//           </li>
-//           <li>
-//             <a href="//join-lemmy.org" class="text-md">
-//               "join-lemmy.org"
-//             </a>
-//           </li>
-//         </ul>
-//       </div>
-//     </nav>
-  }
+  //             </a>
+  //           </li>
+  //           <li>
+  //             <A href="/modlog" class="text-md">
+  //               {t!(i18n, modlog)}
+  //             </A>
+  //           </li>
+  //           <li>
+  //             <A href="/instances" class="text-md">
+  //               {t!(i18n, instances)}
+  //             </A>
+  //           </li>
+  //           <li>
+  //             <a href="//join-lemmy.org/docs/en/index.html" class="text-md">
+  //               {t!(i18n, docs)}
+  //             </a>
+  //           </li>
+  //           <li>
+  //             <a href="//github.com/LemmyNet" class="text-md">
+  //               {t!(i18n, code)}
+  //             </a>
+  //           </li>
+  //           <li>
+  //             <a href="//join-lemmy.org" class="text-md">
+  //               "join-lemmy.org"
+  //             </a>
+  //           </li>
+  //         </ul>
+  //       </div>
+  //     </nav>
+    }
 }
