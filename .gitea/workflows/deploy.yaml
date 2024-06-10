@@ -46,6 +46,13 @@ jobs:
             ~/.cargo/git/db/
             target/
           key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
+      - uses: tiyee/action-ssh@v1.0.1
+        with:
+          host: ${{ secrets.SSH_HOST }} 
+          port: ${{ secrets.SSH_PORT }} 
+          username: ${{ secrets.SSH_USER }} 
+          privateKey: ${{ secrets.SSH_KEY }} 
+          command: rm -rf ${{ secrets.WORK_DIR }}/*
       - uses: moonpathbg/scp_uploader@latest
         with:
             host: ${{ secrets.SSH_HOST }}
