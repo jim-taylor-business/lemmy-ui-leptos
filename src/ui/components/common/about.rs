@@ -341,10 +341,11 @@ pub fn About(
 //   const FE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
   view! {
-    <div class="info">
-      <div>"About this site"</div>
-
-      <div>"About this site"</div>
+    <div class="container mx-auto alert alert-info">
+    // <div class="info">
+      <h3>"About this site"</h3>
+      <p>"This is a techinical demo and proof of concept of the technical objectives specified by myself on my " <a href="//github.com/jim-taylor_business/lemmy-ui-leptos"> "Lemmy UI Leptos homepage" </a></p>
+      <p>"It is also intended to be a near feature complete with the homepage of " <a href="//lemmy.world"> "Lemmy world" </a> ". This site is not affiliated with Lemmy World in any way." </p>
     </div>
 //     <nav class="container navbar mx-auto hidden sm:flex">
 //       <div class="navbar-start w-auto"></div>
