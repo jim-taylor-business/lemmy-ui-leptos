@@ -3,8 +3,7 @@ use crate::{
   i18n::*,
   lemmy_client::*,
   ui::components::{
-    home::{site_summary::SiteSummary, trending::Trending},
-    post::post_listings::PostListings,
+    common::about::About, home::{site_summary::SiteSummary, trending::Trending}, post::post_listings::PostListings
   },
 };
 use lemmy_api_common::{
@@ -399,6 +398,7 @@ pub fn HomeActivity(
       </Transition>
 
       <div class="sm:w-1/3 md:1/4 w-full flex-shrink flex-grow-0 hidden lg:block">
+        <About /* site_signal=RwSignal::new(None)  *//>
         <Trending/>
         <SiteSummary site_signal/>
       </div>

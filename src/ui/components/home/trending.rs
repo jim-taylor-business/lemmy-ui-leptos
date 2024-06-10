@@ -78,7 +78,7 @@ pub fn Trending() -> impl IntoView {
                             <A class="btn" href="/create_community">
                               "Create a community"
                             </A>
-                            <A class="btn" href="/communities">
+                            <A class="btn btn-disabled" href="/communities">
                               "Explore communities"
                             </A>
                           </div>

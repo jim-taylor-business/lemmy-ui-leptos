@@ -32,6 +32,7 @@ jobs:
           uname -a
           export LEMMY_UI_LEPTOS_LEMMY_HOST=${{ secrets.APP_HOST }}
           export LEMMY_UI_LEPTOS_LEMMY_HTTPS=${{ secrets.APP_SSL }}
+          export LEPTOS_TAILWIND_VERSION=v3.4.4
           cargo-binstall -y cargo-leptos
           cargo leptos build --release
           ls -la .
