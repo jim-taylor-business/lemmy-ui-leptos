@@ -185,7 +185,7 @@ pub fn TopNav(
       <div class="navbar-end">
         <ul class="menu menu-horizontal flex-nowrap items-center">
           <li>
-            <A href="/search" class="disabled">
+            <A href="/search" class="accent">
               <span title="t!(i18n, search)">
                 <Icon icon=Search/>
               </span>
@@ -250,7 +250,7 @@ pub fn TopNav(
                     <A href="/login">{t!(i18n, login)}</A>
                   </li>
                   <li>
-                    <A href="/signup" class="pointer-events-none text-primary-200">{t!(i18n, signup)}</A>
+                    <A href="/signup" class="pointer-events-none text-neutral">{t!(i18n, signup)}</A>
                   </li>
                 }
             }
@@ -361,12 +361,12 @@ pub fn BottomNav(
             </a>
           </li>
           <li>
-            <A href="/modlog" class="text-md text-disabled">
+            <A href="/modlog" class="text-md pointer-events-none text-primary">
               {t!(i18n, modlog)}
             </A>
           </li>
           <li>
-            <A href="/instances" class="text-md disabled">
+            <A href="/instances" class="text-md pointer-events-none text-accent">
               {t!(i18n, instances)}
             </A>
           </li>
