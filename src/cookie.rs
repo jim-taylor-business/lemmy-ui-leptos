@@ -29,7 +29,8 @@ pub async fn set_cookie(path: &str, value: &str, expires: &Duration) -> Result<(
       same_site: SameSite::Lax,
       secure: true,
       expires: Some(std::borrow::Cow::Borrowed(&d.to_rfc2822())),
-      domain: Some(domain),
+      // domain: Some(domain),
+      domain: None,
       path: Some("/"),
     },
   );
@@ -55,7 +56,8 @@ pub async fn remove_cookie(path: &str) -> Result<(), LemmyAppError> {
       same_site: SameSite::Lax,
       secure: true,
       expires: Some(std::borrow::Cow::Borrowed(&d.to_rfc2822())),
-      domain: Some(domain),
+      domain: None,
+      // domain: Some(domain),
       path: Some("/"),
     },
   );
@@ -78,11 +80,11 @@ pub async fn set_cookie(path: &str, value: &str, expires: &Duration) -> Result<(
   let now = OffsetDateTime::now_utc();
   let d = now + *expires;
 
-  let domain = &get_browser_host()[..];
+  // let domain = &get_browser_host()[..];
 
   cookie.set_expires(d);
   cookie.set_path("/");
-  cookie.set_domain(domain);
+  // cookie.set_domain(domain);
   cookie.set_secure(Some(true));
   cookie.set_same_site(Some(SameSite::Lax));
 
@@ -108,10 +110,10 @@ pub async fn remove_cookie(path: &str) -> Result<(), LemmyAppError> {
   let now = OffsetDateTime::now_utc();
   let d = now - Duration::from_secs(604800);
 
-  let domain = &get_browser_host()[..];
+  // let domain = &get_browser_host()[..];
 
   cookie.set_expires(d);
-  cookie.set_domain(domain);
+  // cookie.set_domain(domain);
   cookie.set_path("/");
 
   if let Ok(cookie) = HeaderValue::from_str(&cookie.to_string()) {
