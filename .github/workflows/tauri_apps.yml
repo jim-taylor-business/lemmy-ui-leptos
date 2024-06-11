@@ -1,0 +1,76 @@
+on:
+  pull_request:
+    branches: [ "jim-taylor-business-patch-1", "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v3
+      # - uses: actions/cache/restore@v4
+      #   with:
+      #     path: |
+      #       ~/.cargo/bin/
+      #       ~/.cargo/registry/index/
+      #       ~/.cargo/registry/cache/
+      #       ~/.cargo/git/db/
+      #       target/
+      #     key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
+      # - uses: actions-rs/toolchain@v1
+      #   with:
+      #     toolchain: stable
+      #     target: wasm32-unknown-unknown
+      # - uses: pnpm/action-setup@v4
+      #   with:
+      #     version: 8
+      #     run_install: true
+      # - uses: cargo-bins/cargo-binstall@main
+      # - name: Leptos build
+      #   run: |
+      #     cargo-binstall -y cargo-leptos
+      #     cargo leptos build --release
+      # - uses: actions/cache@v3
+      #   with:
+      #     path: |
+      #       ~/.cargo/bin/
+      #       ~/.cargo/registry/index/
+      #       ~/.cargo/registry/cache/
+      #       ~/.cargo/git/db/
+      #       target/
+      #     key: ${{ runner.os }}-cargo-lemmy-ui-leptos}
+      # - uses: moonpathbg/scp_uploader@latest
+      #   with:
+      #       host: ${{ secrets.SSH_HOST }}
+      #       port: ${{ secrets.SSH_PORT }}
+      #       username: ${{ secrets.SSH_USER }}
+      #       key : ${{ secrets.SSH_KEY }}
+      #       source: "target/"
+      #       target: ${{ secrets.WORK_DIR }}
+      # - uses: appleboy/scp-action@v0.1.7
+      #   with:
+      #     host: ${{ secrets.SSH_HOST }}
+      #     username: ${{ secrets.SSH_USER }}
+      #     password: ${{ secrets.SSH_PASS }}
+      #     port: ${{ secrets.SSH_PORT }}
+      #     source: src/
+      #     target: ${{ secrets.WORK_DIR }}
+      #     # source: "target/release/lemmy-ui-leptos"
+      #     # target: ${{ secrets.WORK_DIR }}
+      #     timeout: 120s
+      #     # source: "tests/a.txt,tests/b.txt"
+      #     # target: your_server_target_folder_path
+      # - uses: tiyee/action-ssh@v1.0.1
+      #   with:
+      #     host: ${{ secrets.SSH_HOST }} 
+      #     port: ${{ secrets.SSH_PORT }} 
+      #     username: ${{ secrets.SSH_USER }} 
+      #     privateKey: ${{ secrets.SSH_KEY }} 
+      #     command: 'ls -alh'
+      # - uses: wjftu/copy-directory-via-ssh-password@master
+      #   with:
+      #     HOST: ${{ secrets.SSH_HOST }}
+      #     USERNAME: ${{ secrets.SSH_USER }}
+      #     PASSWORD: ${{ secrets.SSH_PASS }}
+      #     SOURCE: src/
+      #     TARGET: ${{ secrets.WORK_DIR }}
+      
