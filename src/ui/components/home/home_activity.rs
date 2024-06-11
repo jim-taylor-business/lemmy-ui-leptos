@@ -348,11 +348,11 @@ pub fn HomeActivity(
                       <div class="flex flex-col ">
                         <div class="columns-1 2xl:columns-2 4xl:columns-3 gap-3">
 
-                          <PostListings posts=p.posts.into()/>
+                          <PostListings posts=p.posts.into() site_signal/>
                           <PostListings posts=csr_infinite_scroll_posts
                               .get()
                               .unwrap_or_default()
-                              .into()/>
+                              .into() site_signal />
                         </div>
                         <div class=" hidden sm:block">
 

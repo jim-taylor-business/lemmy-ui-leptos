@@ -1,13 +1,14 @@
 use crate::{
-  lemmy_client::*,
-  ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing},
+  errors::LemmyAppError, lemmy_client::*, ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing}
 };
-use lemmy_api_common::{comment::GetComments, lemmy_db_schema::newtypes::PostId, post::GetPost};
+use lemmy_api_common::{comment::GetComments, lemmy_db_schema::newtypes::PostId, post::GetPost, site::GetSiteResponse};
 use leptos::*;
 use leptos_router::use_params_map;
 
 #[component]
-pub fn PostActivity() -> impl IntoView {
+pub fn PostActivity(
+  site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
+) -> impl IntoView {
   let params = use_params_map();
 
   let post_id = move || params.get().get("id").cloned().unwrap_or_default();
@@ -92,7 +93,7 @@ pub fn PostActivity() -> impl IntoView {
                   //   Ok(res) => {
                         view! {
                           <table class="table">
-                            <PostListing post_view=res.post_view.into()/>
+                            <PostListing post_view=res.post_view.into() site_signal/>
                           </table>
                     //     }
                     // }

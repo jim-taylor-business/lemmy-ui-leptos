@@ -6,7 +6,7 @@ use crate::{
     IconType::{Block, Comments, Crosspost, Downvote, Report, Save, Upvote, VerticalDots},
   },
 };
-use lemmy_api_common::{lemmy_db_views::structs::*, person::*, post::*};
+use lemmy_api_common::{lemmy_db_views::structs::*, person::*, post::*, site::GetSiteResponse};
 use leptos::*;
 use leptos_router::*;
 use web_sys::SubmitEvent;
@@ -128,9 +128,18 @@ pub async fn report_post_fn(
 }
 
 #[component]
-pub fn PostListing(post_view: MaybeSignal<PostView>) -> impl IntoView {
+pub fn PostListing(
+  post_view: MaybeSignal<PostView>,
+  site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
+) -> impl IntoView {
   let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
-  let user = expect_context::<RwSignal<Option<bool>>>();
+  let user = Signal::derive(move || {
+    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
+      Some(true)
+    } else {
+      Some(false)
+    }
+  });
 
   let post_view = create_rw_signal(post_view.get());
 
@@ -314,20 +323,23 @@ pub fn PostListing(post_view: MaybeSignal<PostView>) -> impl IntoView {
             type="submit"
             class=move || {
                 format!(
-                    "align-bottom{}",
-                    { if Some(1) == post_view.get().my_vote { " text-accent" } else { "" } },
+                    "align-bottom{}{}",
+                    { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-secondary/50" } },
+                    { if Some(1) == post_view.get().my_vote { " text-secondary" } else { "" } },
                 )
             }
             disabled=move || Some(true) != user.get()
 
             title="Up vote"
           >
-            <Icon icon=Upvote class={
-              format!(
-                "{}",
-                    { if Some(true) != user.get() { " text-base-content/50" } else { "" } },
-                )
-            }.into() />
+            <Icon icon=Upvote
+            //  class={
+            //   format!(
+            //     "{}",
+            //         { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-secondary/50" } },
+            //     )
+            // }.into() 
+            />
           </button>
         </ActionForm>
         <span class="block text-sm">{move || post_view.get().counts.score}</span>
@@ -342,20 +354,23 @@ pub fn PostListing(post_view: MaybeSignal<PostView>) -> impl IntoView {
             type="submit"
             class=move || {
                 format!(
-                    "align-top{}",
-                    { if Some(-1) == post_view.get().my_vote { " text-accent" } else { "" } },
+                    "align-top{}{}",
+                    { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-primary/50" } },
+                    { if Some(-1) == post_view.get().my_vote { " text-primary" } else { "" } },
                 )
             }
             disabled=move || Some(true) != user.get()
 
             title="Down vote"
           >
-            <Icon icon=Downvote class={
-              format!(
-                "{}",
-                    { if Some(true) != user.get() { " text-base-content/50" } else { "" } },
-                )
-            }.into() />
+            <Icon icon=Downvote 
+            // class={
+            //   format!(
+            //     "{}",
+            //         { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-primary/50" } },
+            //     )
+            // }.into() 
+            />
           </button>
         </ActionForm>
       </td>
