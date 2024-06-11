@@ -1,39 +1,8 @@
-on: [pull_request]
-
-#jobs:
-#  run_pull:
-#    name: run pull
-#    runs-on: ubuntu-latest
-#    
-#    steps:
-#    - name: install ssh keys
-#      # check this thread to understand why its needed:
-#      # https://stackoverflow.com/a/70447517
-#      run: |
- ##       install -m 600 -D /dev/null ~/.ssh/id_rsa
- #       echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
- #       ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
- #   - name: connect and pull
- #     run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }} && git checkout ${{ secrets.MAIN_BRANCH }} && git pull && exit"
- #   - name: cleanup
- #     run: rm -rf ~/.ssh
-
-
-#name: Rust
-
-#on:
-#  pull_request:
-#    branches: [ "main" ]
-    
-#  workflow_dispatch:
-
-#env:
-#  CARGO_TERM_COLOR: always
-#  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-#  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+on:
+  pull_request:
+    branches: [ "jim-taylor-business-patch-1" ]
 
 jobs:
-
   build:
     runs-on: ubuntu-24.04
     steps:
@@ -104,96 +73,4 @@ jobs:
       #     PASSWORD: ${{ secrets.SSH_PASS }}
       #     SOURCE: src/
       #     TARGET: ${{ secrets.WORK_DIR }}
-
-      - name: install ssh keys
-        # check this thread to understand why its needed:
-        # https://stackoverflow.com/a/70447517
-        run: |
-          mkdir ~/.ssh
-          echo "${{ secrets.SSH_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
-          ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
-          # install -m 600 -D /dev/null ~/.ssh/id_rsa
-      - name: connect and pull
-        run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "ls -la"
-      - name: cleanup
-        run: rm -rf ~/.ssh
-
-      - name: Run some stuff
-        run: |
-          ls -la
-
-          
-#          pnpm install
-#          rustup target add wasm32-unknown-unknown
-#          cd end2end
-#          pnpm install
-#          cd ..
-#          LEMMY_UI_LEPTOS_LEMMY_HOST=lemmy:8536 LEMMY_UI_LEPTOS_LEMMY_HTTPS=false LEPTOS_TAILWIND_VERSION=v3.4.4 cargo leptos build --release
       
-#  fmt:
-##    name: fmt
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: dtolnay/rust-toolchain@nightly
-#        with:
-#          components: rustfmt
-#      - name: Enforce formatting
-#        run: cargo fmt --check
-
-#  clippy:
-#    name: Clippy
-#    runs-on: ubuntu-latest
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: dtolnay/rust-toolchain@nightly
-#        with:
-#          components: clippy
-#      - uses: Swatinem/rust-cache@v2
-#      - name: Linting
-#        run: cargo clippy -- -D warnings
-
-#  test:
-##    name: Test
-#    runs-on: ubuntu-latest
-##    needs: [fmt, clippy]
-#    needs: [fmt]
-#    steps:
-#      - uses: actions/checkout@v3
-#      - uses: dtolnay/rust-toolchain@nightly
-#      - uses: Swatinem/rust-cache@v2
-#      - name: Run tests
-#        run: cargo test
-
-#  build-and-preview-deploy:
-#    runs-on: ubuntu-latest
-#    name: Build and Preview Deploy
-#    needs: [test]
-#    permissions:
-#      pull-requests: write
-#    environment:
-#      name: preview
-#      url: ${{ steps.deploy.outputs.preview-url }}
-#    steps:
-#      - name: git-checkout
-#        uses: actions/checkout@v3
-
-#      - uses: dtolnay/rust-toolchain@nightly
-#      - uses: Swatinem/rust-cache@v2
-#      - uses: jetli/trunk-action@v0.4.0
-#      - name: Build
-#        run: |
-#          cargo build --verbose
-#          rustup target add wasm32-unknown-unknown
-#          trunk build
-#      - name: Preview Deploy
-#        id: deploy
-#        uses: amondnet/vercel-action@v20
-#        with:
-#          vercel-token: ${{ secrets.VERCEL_TOKEN }}
-#          github-token: ${{ secrets.GITHUB_TOKEN }}
-#          vercel-org-id: ${{ secrets.VERCEL_ORG_ID }}
-#          vercel-project-id: ${{ secrets.VERCEL_PROJECT_ID }}
-#          github-comment: true
-#          working-directory: ./dist
