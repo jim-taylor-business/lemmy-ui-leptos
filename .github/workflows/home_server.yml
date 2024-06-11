@@ -1,6 +1,6 @@
 on:
   pull_request:
-    branches: [ "jim-taylor-business-patch-1" ]
+    branches: [ "jim-taylor-business-patch-1", "main" ]
 
 jobs:
   build:
