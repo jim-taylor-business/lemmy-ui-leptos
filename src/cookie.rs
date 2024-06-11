@@ -1,5 +1,6 @@
 use crate::errors::*;
 use core::time::Duration;
+use crate::host::get_browser_host;
 
 #[cfg(not(feature = "ssr"))]
 pub async fn get_cookie(path: &str) -> Result<Option<String>, LemmyAppError> {
@@ -19,14 +20,16 @@ pub async fn set_cookie(path: &str, value: &str, expires: &Duration) -> Result<(
   let now = Utc::now();
   let d = now + *expires;
 
+  let domain = &get_browser_host()[..];
+
   set(
     path,
     value,
     &CookieOptions {
-      same_site: SameSite::Strict,
-      secure: false,
+      same_site: SameSite::Lax,
+      secure: true,
       expires: Some(std::borrow::Cow::Borrowed(&d.to_rfc2822())),
-      domain: Some("localhost"),
+      domain: Some(domain),
       path: Some("/"),
     },
   );
@@ -43,14 +46,16 @@ pub async fn remove_cookie(path: &str) -> Result<(), LemmyAppError> {
   let now = Utc::now();
   let d = now - core::time::Duration::from_secs(604800);
 
+  let domain = &get_browser_host()[..];
+
   set(
     path,
     "value",
     &CookieOptions {
-      same_site: SameSite::Strict,
-      secure: false,
+      same_site: SameSite::Lax,
+      secure: true,
       expires: Some(std::borrow::Cow::Borrowed(&d.to_rfc2822())),
-      domain: Some("localhost"),
+      domain: Some(domain),
       path: Some("/"),
     },
   );
@@ -73,11 +78,13 @@ pub async fn set_cookie(path: &str, value: &str, expires: &Duration) -> Result<(
   let now = OffsetDateTime::now_utc();
   let d = now + *expires;
 
+  let domain = &get_browser_host()[..];
+
   cookie.set_expires(d);
   cookie.set_path("/");
-  cookie.set_domain("localhost");
-  cookie.set_secure(Some(false));
-  cookie.set_same_site(Some(SameSite::Strict));
+  cookie.set_domain(domain);
+  cookie.set_secure(Some(true));
+  cookie.set_same_site(Some(SameSite::Lax));
 
   if let Ok(cookie) = HeaderValue::from_str(&cookie.to_string()) {
     response.insert_header(header::SET_COOKIE, cookie);
@@ -101,8 +108,10 @@ pub async fn remove_cookie(path: &str) -> Result<(), LemmyAppError> {
   let now = OffsetDateTime::now_utc();
   let d = now - Duration::from_secs(604800);
 
+  let domain = &get_browser_host()[..];
+
   cookie.set_expires(d);
-  cookie.set_domain("localhost");
+  cookie.set_domain(domain);
   cookie.set_path("/");
 
   if let Ok(cookie) = HeaderValue::from_str(&cookie.to_string()) {
