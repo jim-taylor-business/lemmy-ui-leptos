@@ -19,7 +19,7 @@ pub async fn set_cookie(path: &str, value: &str, expires: &Duration) -> Result<(
   let now = Utc::now();
   let d = now + *expires;
 
-  let domain = &get_browser_host()[..];
+  // let domain = &get_browser_host()[..];
 
   set(
     path,
@@ -46,7 +46,7 @@ pub async fn remove_cookie(path: &str) -> Result<(), LemmyAppError> {
   let now = Utc::now();
   let d = now - core::time::Duration::from_secs(604800);
 
-  let domain = &get_browser_host()[..];
+  // let domain = &get_browser_host()[..];
 
   set(
     path,

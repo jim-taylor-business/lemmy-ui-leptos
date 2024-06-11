@@ -30,7 +30,7 @@ pub fn Layout(
       let r = get_cookie("theme").await;
       match r {
         Ok(Some(o)) => o,
-        _ => "retro".to_string(),
+        _ => "".to_string(),
       }
     },
   );
