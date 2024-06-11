@@ -437,7 +437,7 @@ pub fn HomeActivity(
       </Transition>
 
       <div class="sm:w-1/3 md:1/4 w-full flex-shrink flex-grow-0 hidden lg:block">
-        <About /* site_signal=RwSignal::new(None)  *//>
+        <About/>
         <Trending/>
         <SiteSummary site_signal/>
       </div>

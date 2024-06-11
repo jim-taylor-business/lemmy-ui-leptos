@@ -332,14 +332,7 @@ pub fn PostListing(
 
             title="Up vote"
           >
-            <Icon icon=Upvote
-            //  class={
-            //   format!(
-            //     "{}",
-            //         { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-secondary/50" } },
-            //     )
-            // }.into() 
-            />
+            <Icon icon=Upvote />
           </button>
         </ActionForm>
         <span class="block text-sm">{move || post_view.get().counts.score}</span>
@@ -363,14 +356,7 @@ pub fn PostListing(
 
             title="Down vote"
           >
-            <Icon icon=Downvote 
-            // class={
-            //   format!(
-            //     "{}",
-            //         { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-primary/50" } },
-            //     )
-            // }.into() 
-            />
+            <Icon icon=Downvote />
           </button>
         </ActionForm>
       </td>

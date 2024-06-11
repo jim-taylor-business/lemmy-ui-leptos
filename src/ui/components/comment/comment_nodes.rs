@@ -5,12 +5,8 @@ use leptos::*;
 #[component]
 pub fn CommentNodes(comments: MaybeSignal<Vec<CommentView>>) -> impl IntoView {
   view! {
-    // <ul>
-      <For each=move || comments.get() key=|cv| cv.comment.id let:cv>
-        // <li>
-          <CommentNode comment_view=cv.into()/>
-        // </li>
-      </For>
-    // </ul>
+    <For each=move || comments.get() key=|cv| cv.comment.id let:cv>
+      <CommentNode comment_view=cv.into()/>
+    </For>
   }
 }

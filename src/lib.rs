@@ -89,7 +89,7 @@ pub fn App() -> impl IntoView {
           <Route path="" view=move || view! { <HomeActivity site_signal/> }/>
 
           <Route path="create_post" view=CommunitiesActivity/>
-          <Route path="post/:id" /* view=PostActivity  */view=move || view! { <PostActivity site_signal/> }/>
+          <Route path="post/:id" view=move || view! { <PostActivity site_signal/> }/>
 
           <Route path="search" view=CommunitiesActivity/>
           <Route path="communities" view=CommunitiesActivity/>

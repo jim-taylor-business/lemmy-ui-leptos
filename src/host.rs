@@ -1,10 +1,5 @@
-use crate::config::{LEMMY_UI_LEPTOS_HOST, LEMMY_UI_LEPTOS_LEMMY_HOST, LEMMY_UI_LEPTOS_LEMMY_HTTPS};
+use crate::config::{LEMMY_UI_LEPTOS_LEMMY_HOST, LEMMY_UI_LEPTOS_LEMMY_HTTPS};
 use cfg_if::cfg_if;
-// use lemmy_client::{ClientOptions, LemmyClient};
-
-pub fn get_browser_host() -> String {
-  std::env::var("LEMMY_UI_LEPTOS_HOST").unwrap_or_else(|_| LEMMY_UI_LEPTOS_HOST.into())
-}
 
 #[cfg(feature = "ssr")]
 pub fn get_internal_host() -> String {
@@ -43,24 +38,3 @@ pub fn get_https() -> String {
       }
   }
 }
-
-// maybe for use with lemmy client
-// fn should_use_https() -> bool {
-//   let https_env_var;
-//   cfg_if! {
-//       if #[cfg(feature="ssr")] {
-//         https_env_var = std::env::var("LEMMY_UI_HTTPS");
-//       } else {
-//         https_env_var = option_env!("LEMMY_UI_HTTPS");
-//       }
-//   }
-
-//   https_env_var.map_or(LEMMY_UI_LEPTOS_LEMMY_HTTPS, |var| var == "true")
-// }
-
-// pub fn get_client() -> LemmyClient {
-//   LemmyClient::new(ClientOptions {
-//     domain: get_host(),
-//     secure: should_use_https(),
-//   })
-// }

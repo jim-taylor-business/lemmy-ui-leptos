@@ -1,6 +1,5 @@
 use crate::errors::*;
 use core::time::Duration;
-use crate::host::get_browser_host;
 
 #[cfg(not(feature = "ssr"))]
 pub async fn get_cookie(path: &str) -> Result<Option<String>, LemmyAppError> {
