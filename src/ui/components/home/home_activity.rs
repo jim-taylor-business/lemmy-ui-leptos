@@ -33,7 +33,7 @@ pub fn HomeActivity(
         .get()
         .get("list")
         .cloned()
-        .unwrap_or("\"Local\"".to_string()),
+        .unwrap_or("\"All\"".to_string()),
     )
     .ok()
   };
@@ -94,9 +94,15 @@ pub fn HomeActivity(
   let csr_infinite_scroll_posts = RwSignal::new(None::<Vec<PostView>>);
   let csr_paginator = RwSignal::new(None::<PaginationCursor>);
 
+  let page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
+  let prev_cursor_stack = create_rw_signal::<Vec<Option<PaginationCursor>>>(vec![]);
+  let next_page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
+  let refresh = create_rw_signal(true);
+
   let ssr_posts = create_resource(
     move || {
       (
+        refresh.get(),
         user.get(),
         list_func(),
         sort_func(),
@@ -104,7 +110,7 @@ pub fn HomeActivity(
         ssr_limit(),
       )
     },
-    move |(_user, list_type, sort_type, /* from, */ limit)| async move {
+    move |(_refresh, _user, list_type, sort_type, /* from, */ limit)| async move {
       let form = GetPosts {
         type_: list_type,
         sort: sort_type,
@@ -116,14 +122,19 @@ pub fn HomeActivity(
         disliked_only: None,
         liked_only: None,
         // page_cursor: from,
-        page_cursor: None,
+        // page_cursor: None,
+        page_cursor: page_cursor.get(),
         // show_hidden: None,
       };
+
 
       let result = LemmyClient.list_posts(form).await;
 
       match result {
-        Ok(o) => Some(o),
+        Ok(o) => {
+          next_page_cursor.set(o.next_page.clone());
+          Some(o)
+        },
         Err(e) => {
           error.set(Some(e));
           None
@@ -185,6 +196,8 @@ pub fn HomeActivity(
         let b = f64::from(document().body().map(|b| b.offset_height()).unwrap_or(1));
 
         let endOfPage = h + o >= b;
+
+        logging::log!("{} {} {} {}", endOfPage, h, o, b);
 
         if endOfPage {
           create_local_resource(
@@ -341,7 +354,7 @@ pub fn HomeActivity(
                               .unwrap_or_default()
                               .into()/>
                         </div>
-                        // <div class=" hidden sm:block">
+                        <div class=" hidden sm:block">
 
                         //   {if let Some(s) = ssr_prev() {
                         //       if !s.is_empty() {
@@ -389,7 +402,33 @@ pub fn HomeActivity(
                         //       view! { <span></span> }
                         //   }}
 
-                        // </div>
+                          <button
+                            class="btn"
+                            on:click=move |_| {
+                                let mut p = prev_cursor_stack.get();
+                                let s = p.pop().unwrap_or(None);
+                                prev_cursor_stack.set(p);
+                                page_cursor.set(s);
+                                refresh.set(!refresh.get());
+                            }
+                          >
+
+                            "Prev"
+                          </button>
+                          <button
+                            class="btn"
+                            on:click=move |_| {
+                                let mut p = prev_cursor_stack.get();
+                                p.push(page_cursor.get());
+                                prev_cursor_stack.set(p);
+                                page_cursor.set(next_page_cursor.get());
+                                refresh.set(!refresh.get());
+                            }
+                          >
+
+                            "Next"
+                          </button>
+                        </div>
                       </div>
                     }
                 })

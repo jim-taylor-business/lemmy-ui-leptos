@@ -1,6 +1,6 @@
 [package]
 name = "lemmy-ui-leptos"
-version = "0.19.3-alpha.1"
+version = "0.19.3-lw-demo-alpha.1"
 edition = "2021"
 
 [lib]
@@ -12,7 +12,7 @@ crate-type = ["cdylib", "rlib"]
 lemmy_api_common = { tag = "0.19.3", git = "https://github.com/LemmyNet/lemmy.git", default-features = false }
 
 # test against unstable main dev branch of Lemmy
-#lemmy_api_common = { branch = "main", git = "https://github.com/LemmyNet/lemmy.git", default-features = false }
+# lemmy_api_common = { branch = "main", git = "https://github.com/LemmyNet/lemmy.git", default-features = false }
 
 # the new lemmy client
 # lemmy-client = "0"
