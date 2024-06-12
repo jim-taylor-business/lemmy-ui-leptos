@@ -173,10 +173,10 @@ pub fn HomeActivity(
       }
 
       let navigate = leptos_router::use_navigate();
-      navigate(
-        &format!("{}", query_params.to_query_string()),
-        Default::default(),
-      );
+      // navigate(
+      //   &format!("{}", query_params.to_query_string()),
+      //   Default::default(),
+      // );
     };
 
     window_event_listener_untyped("resize", on_resize);
@@ -241,6 +241,7 @@ pub fn HomeActivity(
 
   view! {
     <div class="block">
+      // <a name="top"></a>
       <div class="join mr-3 hidden sm:inline-block">
         <button class="btn join-item btn-active">"Posts"</button>
         <button class="btn join-item btn-disabled">"Comments"</button>
@@ -335,6 +336,8 @@ pub fn HomeActivity(
       </div>
     </div>
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
+      <div class="w-full lg:w-2/3">
+      // <div class="flex flex-col w-full">
       <Transition fallback=|| {}>
         {move || {
             ssr_posts
@@ -345,7 +348,6 @@ pub fn HomeActivity(
                         csr_paginator.set(p.next_page.clone());
                     }
                     view! {
-                      <div class="flex flex-col ">
                         <div class="columns-1 2xl:columns-2 4xl:columns-3 gap-3">
 
                           <PostListings posts=p.posts.into() site_signal/>
@@ -401,7 +403,17 @@ pub fn HomeActivity(
                         //   } else {
                         //       view! { <span></span> }
                         //   }}
-
+                          // <A 
+                          //   href="#top"
+                          //   class="btn"
+                          //   on:click=move |_| {
+                          //       let mut p = prev_cursor_stack.get();
+                          //       p.push(page_cursor.get());
+                          //       prev_cursor_stack.set(p);
+                          //       page_cursor.set(next_page_cursor.get());
+                          //       refresh.set(!refresh.get());
+                          //   }
+                          // > "Next" </A>
                           <button
                             class="btn"
                             on:click=move |_| {
@@ -423,20 +435,23 @@ pub fn HomeActivity(
                                 prev_cursor_stack.set(p);
                                 page_cursor.set(next_page_cursor.get());
                                 refresh.set(!refresh.get());
+                                // let r = document().body();
+                                window().scroll_to_with_x_and_y(0.0, 0.0);
+
                             }
                           >
 
                             "Next"
                           </button>
                         </div>
-                      </div>
                     }
                 })
         }}
 
-      </Transition>
-
-      <div class="sm:w-1/3 md:1/4 w-full flex-shrink flex-grow-0 hidden lg:block">
+        </Transition>
+      </div>
+      // <div class="sm:w-1/3 md:w-1/4 w-full flex-shrink flex-grow-0 hidden lg:block">
+      <div class="lg:w-1/3 hidden lg:block">
         <About/>
         <Trending/>
         <SiteSummary site_signal/>

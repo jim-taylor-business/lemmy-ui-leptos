@@ -1,7 +1,7 @@
 use crate::{
   errors::LemmyAppError, lemmy_client::*, ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing}
 };
-use lemmy_api_common::{comment::GetComments, lemmy_db_schema::newtypes::PostId, post::GetPost, site::GetSiteResponse};
+use lemmy_api_common::{comment::GetComments, lemmy_db_schema::{newtypes::PostId, CommentSortType}, post::GetPost, site::GetSiteResponse};
 use leptos::*;
 use leptos_router::use_params_map;
 
@@ -44,7 +44,7 @@ pub fn PostActivity(
       post_id: Some(PostId(id)),
       community_id: None,
       type_: None,
-      sort: None,
+      sort: Some(CommentSortType::Top),
       max_depth: Some(8),
       page: None,
       limit: None,

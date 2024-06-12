@@ -143,7 +143,7 @@ pub fn TopNav(
   };
 
   view! {
-    <nav class="navbar container mx-auto hidden sm:flex sticky top-0 bg-base-100 z-[1]">
+    <nav class="navbar container mx-auto hidden lg:flex sticky top-0 bg-base-100 z-[1]">
       <div class="navbar-start">
         <ul class="menu menu-horizontal flex-nowrap items-center">
           <li>
@@ -341,7 +341,7 @@ pub fn BottomNav(
   const FE_VERSION: &str = env!("CARGO_PKG_VERSION");
 
   view! {
-    <nav class="container navbar mx-auto hidden sm:flex">
+    <nav class="container navbar mx-auto hidden lg:flex">
       <div class="navbar-start w-auto"></div>
       <div class="navbar-end grow w-auto">
         <ul class="menu menu-horizontal flex-nowrap items-center">
