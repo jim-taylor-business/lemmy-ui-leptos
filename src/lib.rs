@@ -29,8 +29,30 @@ use leptos_router::*;
 
 leptos_i18n::load_locales!();
 
+// use once_cell::sync::Lazy;
+
+// // static PARSER: Lazy<markdown_it::MarkdownIt> = Lazy::new(|| {
+// static PARSER: Lazy<markdown_it::MarkdownIt> = Lazy::new(|| {
+//   let mut parser = markdown_it::MarkdownIt::new();
+//   markdown_it::plugins::cmark::add(&mut parser);
+//   markdown_it::plugins::extra::add(&mut parser);
+
+
+
+//   parser
+
+//   // Create parser with example Markdown text.
+//   // let markdown_input = "hello world";
+//   // let parser = pulldown_cmark::Parser::new(markdown_input);
+
+//   // // Write to a new String buffer.
+//   // let mut html_output = String::new();
+//   // pulldown_cmark::html::push_html(&mut html_output, parser);
+// });
+
 #[component]
 pub fn App() -> impl IntoView {
+    
   provide_meta_context();
   provide_i18n_context();
 

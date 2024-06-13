@@ -172,7 +172,7 @@ pub fn HomeActivity(
         csr_paginator.set(None);
       }
 
-      let navigate = leptos_router::use_navigate();
+      // let navigate = leptos_router::use_navigate();
       // navigate(
       //   &format!("{}", query_params.to_query_string()),
       //   Default::default(),

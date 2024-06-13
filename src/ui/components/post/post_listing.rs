@@ -459,7 +459,7 @@ pub fn PostListing(
             >
               <Icon icon=Comments class="inline".into()/>
               " "
-              {post_view.get().unread_comments}
+              {post_view.get().counts.comments}
             </A>
           </span>
           <ActionForm action=save_post_action on:submit=on_save_submit class="flex items-center">
