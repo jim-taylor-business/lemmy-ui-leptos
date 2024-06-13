@@ -1,5 +1,5 @@
 use crate::{
-  errors::LemmyAppError, lemmy_client::*, ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing}
+  errors::LemmyAppError, lemmy_client::*, ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing}, TitleSetter
 };
 use lemmy_api_common::{comment::GetComments, lemmy_db_schema::{newtypes::PostId, CommentSortType}, post::GetPost, site::GetSiteResponse};
 use leptos::*;
@@ -13,6 +13,7 @@ pub fn PostActivity(
 
   let post_id = move || params.get().get("id").cloned().unwrap_or_default();
   let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
   let post = create_resource(post_id, move |id_string| async move {
     if let Ok(id) = id_string.parse::<i32>() {
@@ -25,7 +26,11 @@ pub fn PostActivity(
     let result = LemmyClient.get_post(form).await;
 
     match result {
-      Ok(o) => Some(o),
+      Ok(o) => {
+        ui_title.set(Some(TitleSetter(o.post_view.post.name.clone())));
+        logging::log!("{}", o.post_view.post.name.clone());
+        Some(o)
+      },
       Err(e) => {
         error.set(Some(e));
         None

@@ -1,7 +1,7 @@
 use crate::{
   cookie::get_cookie,
   errors::LemmyAppError,
-  ui::components::common::nav::{BottomNav, TopNav},
+  ui::components::common::nav::{BottomNav, TopNav}, TitleSetter,
 };
 use lemmy_api_common::site::GetSiteResponse;
 use leptos::*;
@@ -12,6 +12,7 @@ use leptos_router::Outlet;
 pub fn Layout(
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
 ) -> impl IntoView {
+  let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
   let title = move || match site_signal.get() {
     Some(Ok(o)) => {
       if let Some(s) = o.site_view.site.description {
@@ -42,7 +43,7 @@ pub fn Layout(
     // debug console when there is no dev tools (mobile/desktop)
     // <Script src="//cdn.jsdelivr.net/npm/eruda"/>
     // <Script>eruda.init();</Script>
-    <Title text=title/>
+    <Title text=move || { if let Some(TitleSetter(t)) = ui_title.get() { format!("{} - {}", t, title()) } else { title() } }/>
     <Transition fallback=|| {}>
       {move || {
           theme

@@ -4,7 +4,7 @@ use crate::{
   lemmy_client::*,
   ui::components::{
     common::about::About, home::{site_summary::SiteSummary, trending::Trending}, post::post_listings::PostListings
-  },
+  }, TitleSetter,
 };
 use lemmy_api_common::{
   lemmy_db_schema::{ListingType, SortType},
@@ -24,6 +24,7 @@ pub fn HomeActivity(
 
   let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
   let user = expect_context::<RwSignal<Option<bool>>>();
+  let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
   let query = use_query_map();
 
@@ -133,6 +134,7 @@ pub fn HomeActivity(
       match result {
         Ok(o) => {
           next_page_cursor.set(o.next_page.clone());
+          ui_title.set(None);
           Some(o)
         },
         Err(e) => {

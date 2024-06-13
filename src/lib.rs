@@ -50,6 +50,9 @@ leptos_i18n::load_locales!();
 //   // pulldown_cmark::html::push_html(&mut html_output, parser);
 // });
 
+#[derive(/* Copy,  */Clone)]
+struct TitleSetter(String);
+
 #[component]
 pub fn App() -> impl IntoView {
     
@@ -62,6 +65,8 @@ pub fn App() -> impl IntoView {
   provide_context(user);
   let ui_theme = create_rw_signal::<Option<String>>(None);
   provide_context(ui_theme);
+  let ui_title = create_rw_signal::<Option<TitleSetter>>(None);
+  provide_context(ui_title);
 
   let site_signal = create_rw_signal::<Option<Result<GetSiteResponse, LemmyAppError>>>(None);
 
