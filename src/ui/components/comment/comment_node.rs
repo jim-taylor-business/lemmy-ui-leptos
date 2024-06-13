@@ -43,7 +43,7 @@ pub fn CommentNode(
     <div class="pl-4">
       <div class="pb-2">
       // <span> { comment_view.get().comment.content }</span>
-      <div class="prose max-w-none prose-img:w-24 prose-img:my-2 prose-p:my-0 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-2 prose-li:my-0" inner_html=html/>
+      <div class="prose max-w-none prose-img:w-24 prose-img:my-2 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
         // <div inner_html=html/>
       // <div class="inline-block"> " - " </div>
       // <span class="font-bold"> { comment_view.get().creator.name }</span>

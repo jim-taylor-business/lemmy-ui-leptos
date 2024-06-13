@@ -28,7 +28,7 @@ pub fn PostActivity(
     match result {
       Ok(o) => {
         ui_title.set(Some(TitleSetter(o.post_view.post.name.clone())));
-        logging::log!("{}", o.post_view.post.name.clone());
+        // logging::log!("{}", o.post_view.post.name.clone());
         Some(o)
       },
       Err(e) => {
