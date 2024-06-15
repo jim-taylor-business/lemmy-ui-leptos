@@ -27,8 +27,21 @@ pub fn PostActivity(
 
     match result {
       Ok(o) => {
-        ui_title.set(Some(TitleSetter(o.post_view.post.name.clone())));
-        // logging::log!("{}", o.post_view.post.name.clone());
+        // let tit = match site_signal.get() {
+        //   Some(Ok(site)) => {
+        //     logging::log!("oofts");
+        //     // let q = if let Some(TitleSetter(t)) = ui_t { t } else { "", to_string() };
+        //     if let Some(d) = site.site_view.site.description {
+        //       format!("{} - Tech Demo UI for {} - {}", o.post_view.post.name.clone(), site.site_view.site.name, d)
+        //     } else {
+        //       format!("{} - Tech Demo UI for {}", o.post_view.post.name.clone(), site.site_view.site.name)
+        //     }
+        //   }
+        //   _ => "Lemmy".to_string(),
+        // };
+  
+        // ui_title.set(Some(TitleSetter(tit)));
+        // ui_title.set(Some(TitleSetter(o.post_view.post.name.clone())));
         Some(o)
       },
       Err(e) => {
@@ -85,13 +98,14 @@ pub fn PostActivity(
             {move || {
                 post.get()
                     .unwrap_or(None)
-                    .map(|res| 
+                    .map(|res| {
+                      ui_title.set(Some(TitleSetter(res.post_view.post.name.clone())));
                       view! {
                         <table class="table">
                           <PostListing post_view=res.post_view.into() site_signal/>
                         </table>
                       }
-                    )
+                    })
             }}
           </Transition>
           <Transition fallback=|| {

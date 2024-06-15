@@ -100,6 +100,8 @@ pub fn HomeActivity(
   let next_page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
   let refresh = create_rw_signal(true);
 
+  ui_title.set(None);
+
   let ssr_posts = create_resource(
     move || {
       (
@@ -358,7 +360,7 @@ pub fn HomeActivity(
                               .unwrap_or_default()
                               .into() site_signal />
                         </div>
-                        <div class=" hidden sm:block">
+                        <div class="join hidden sm:block">
 
                         //   {if let Some(s) = ssr_prev() {
                         //       if !s.is_empty() {
@@ -417,7 +419,7 @@ pub fn HomeActivity(
                           //   }
                           // > "Next" </A>
                           <button
-                            class="btn"
+                            class="btn join-item"
                             on:click=move |_| {
                                 let mut p = prev_cursor_stack.get();
                                 let s = p.pop().unwrap_or(None);
@@ -430,7 +432,7 @@ pub fn HomeActivity(
                             "Prev"
                           </button>
                           <button
-                            class="btn"
+                            class="btn join-item"
                             on:click=move |_| {
                                 let mut p = prev_cursor_stack.get();
                                 p.push(page_cursor.get());

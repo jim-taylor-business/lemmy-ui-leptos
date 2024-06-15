@@ -309,6 +309,9 @@ pub fn PostListing(
     );
   };
 
+  let title = post_view.get().post.name.clone();
+  let title_encoded = html_escape::encode_text(&title).to_string();
+
   view! {
     <tr class="flex sm:table-row">
       <td class="flex flex-col items-center text-center w-16 hidden sm:table-cell">
@@ -392,9 +395,9 @@ pub fn PostListing(
       </td>
       <td class="w-full">
         <A href=move || format!("/post/{}", post_view.get().post.id) class="block">
-          <span class="text-lg">{move || post_view.get().post.name}</span>
+          <span class="text-lg" inner_html=title_encoded />
         </A>
-        <span class="block">
+        <span class="block mb-1">
           <A
             href=move || format!("/u/{}", post_view.get().creator.name)
             class="text-sm inline-block"
