@@ -493,7 +493,7 @@ pub fn PostListing(
               <Icon icon=Comments class="inline".into()/>
               " "
               {post_view.get().counts.comments}
-              {if post_view.get().unread_comments > 0 { format!(" ({})", post_view.get().unread_comments) } else { "".to_string() }}
+              {if post_view.get().unread_comments != post_view.get().counts.comments && post_view.get().unread_comments > 0 { format!(" ({})", post_view.get().unread_comments) } else { "".to_string() }}
             </A>
           </span>
           <ActionForm action=save_post_action on:submit=on_save_submit class="flex items-center">
