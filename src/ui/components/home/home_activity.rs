@@ -136,6 +136,10 @@ pub fn HomeActivity(
         Ok(o) => {
           next_page_cursor.set(o.next_page.clone());
           ui_title.set(None);
+          #[cfg(not(feature = "ssr"))]
+          {
+            window().scroll_to_with_x_and_y(0.0, 0.0);
+          }
           Some(o)
         },
         Err(e) => {
@@ -356,6 +360,10 @@ pub fn HomeActivity(
                     if csr_infinite_scroll_posts.get().is_none() {
                         csr_paginator.set(p.next_page.clone());
                     }
+
+                    if next_page_cursor.get().is_none() {
+                        next_page_cursor.set(p.next_page.clone());
+                    }
                     view! {
                         <div class="columns-1 2xl:columns-2 4xl:columns-3 gap-3">
 
@@ -414,7 +422,6 @@ pub fn HomeActivity(
                                 prev_cursor_stack.set(p);
                                 page_cursor.set(s);
                                 refresh.set(!refresh.get());
-                                window().scroll_to_with_x_and_y(0.0, 0.0);
                             }
                           >
 
@@ -430,7 +437,6 @@ pub fn HomeActivity(
                                 page_cursor.set(next_page_cursor.get());
                                 refresh.set(!refresh.get());
                                 // let r = document().body();
-                                window().scroll_to_with_x_and_y(0.0, 0.0);
 
                             }
                           >
