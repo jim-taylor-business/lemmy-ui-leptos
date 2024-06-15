@@ -312,6 +312,33 @@ pub fn PostListing(
   let title = post_view.get().post.name.clone();
   let title_encoded = html_escape::encode_text(&title).to_string();
 
+  let now_in_millis = {
+    #[cfg(not(feature = "ssr"))]
+    {
+      // logging::log!("{}", chrono::offset::Utc::now().timestamp_millis() as u64);
+      chrono::offset::Utc::now().timestamp_millis() as u64
+    }
+    #[cfg(feature = "ssr")]
+    {
+      // logging::log!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64);
+      std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64 
+    }
+  };
+  let duration_in_text = pretty_duration::pretty_duration(
+    &std::time::Duration::from_millis(now_in_millis - post_view.get().post.published.timestamp_millis() as u64),
+    Some(pretty_duration::PrettyDurationOptions {
+        output_format: Some(pretty_duration::PrettyDurationOutputFormat::Compact),
+        singular_labels: None,
+        plural_labels: None,
+    }),
+  ); 
+  let abbr_duration = if let Some((index, _)) = duration_in_text.match_indices(' ').nth(1) {
+    duration_in_text.split_at(index)
+  } else {
+    (&duration_in_text[..], "")
+  }.0.to_string();
+  // .map(|(index, _)| s.split_at(index));
+
   view! {
     <tr class="flex sm:table-row">
       <td class="flex flex-col items-center text-center w-16 hidden sm:table-cell">
@@ -378,14 +405,14 @@ pub fn PostListing(
               if let Some(t) = post_view.get().post.thumbnail_url {
                   let h = t.inner().to_string();
                   view! {
-                    <span class="block w-24 truncate">
-                      <img class="w-24" src=h/>
+                    <span class="block w-24 h-24 truncate flex items-center">
+                      <img class="w-24 min-h-16" src=h/>
                     </span>
                   }
               } else {
                   view! {
-                    <span class="block w-24 truncate">
-                      <img class="w-24"/>
+                    <span class="block w-24 h-24 truncate flex items-center">
+                      <img class="w-24 h-16" src="/favicon.svg"/>
                     </span>
                   }
               }
@@ -394,18 +421,21 @@ pub fn PostListing(
         </a>
       </td>
       <td class="w-full">
-        <A href=move || format!("/post/{}", post_view.get().post.id) class="block">
+        <A href=move || format!("/post/{}", post_view.get().post.id) class="block hover:text-accent ">
           <span class="text-lg" inner_html=title_encoded />
         </A>
         <span class="block mb-1">
+          <span>
+            { abbr_duration }
+          </span> " ago, by "
           <A
             href=move || format!("/u/{}", post_view.get().creator.name)
-            class="text-sm inline-block"
+            class="text-sm inline-block hover:text-secondary"
           >
             {post_view.get().creator.name}
           </A>
-          " to "
-          <A class="text-sm inline-block" href=format!("/c/{}", post_view.get().community.name)>
+          ", to "
+          <A class="text-sm inline-block hover:text-secondary" href=format!("/c/{}", post_view.get().community.name)>
             {post_view.get().community.title}
           </A>
         </span>
@@ -423,7 +453,7 @@ pub fn PostListing(
             />
             <button
               type="submit"
-              class=move || { if Some(1) == post_view.get().my_vote { " text-accent" } else { "" } }
+              class=move || { if Some(1) == post_view.get().my_vote { " text-secondary" } else { "" } }
               title="Up vote"
             >
               <Icon icon=Upvote/>
@@ -444,7 +474,7 @@ pub fn PostListing(
             <button
               type="submit"
               class=move || {
-                  if Some(-1) == post_view.get().my_vote { " text-accent" } else { "" }
+                  if Some(-1) == post_view.get().my_vote { " text-primary" } else { "" }
               }
 
               title="Down vote"
@@ -458,11 +488,12 @@ pub fn PostListing(
           >
             <A
               href=move || { format!("/post/{}", post_view.get().post.id) }
-              class="text-sm whitespace-nowrap"
+              class="text-sm whitespace-nowrap hover:text-accent "
             >
               <Icon icon=Comments class="inline".into()/>
               " "
               {post_view.get().counts.comments}
+              {if post_view.get().unread_comments > 0 { format!(" ({})", post_view.get().unread_comments) } else { "".to_string() }}
             </A>
           </span>
           <ActionForm action=save_post_action on:submit=on_save_submit class="flex items-center">
@@ -471,7 +502,7 @@ pub fn PostListing(
             <button
               type="submit"
               title="Save post"
-              class=move || if post_view.get().saved { " text-accent" } else { "" }
+              class=move || if post_view.get().saved { "text-primary hover:text-primary/50" } else { "hover:text-primary/50" }
             >
               <Icon icon=Save/>
             </button>
