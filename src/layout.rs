@@ -30,7 +30,7 @@ pub fn Layout(
 
   let title = move || match site_signal.get() {
     Some(Ok(site)) => {
-      logging::log!("1");
+      // logging::log!("1");
       if let Some(TitleSetter(t)) = ui_title.get() { 
         if let Some(d) = site.site_view.site.description {
           format!("{} - Tech Demo UI for {} - {}", t, site.site_view.site.name, d)
@@ -46,7 +46,7 @@ pub fn Layout(
       }
     },
     _ => {
-      logging::log!("2");
+      // logging::log!("2");
       "Lemmy".to_string()
     },
   };

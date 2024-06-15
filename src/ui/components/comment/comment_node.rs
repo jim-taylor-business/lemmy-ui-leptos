@@ -1,4 +1,4 @@
-use ev::MouseEvent;
+// use ev::MouseEvent;
 use lemmy_api_common::lemmy_db_views::structs::CommentView;
 use leptos::*;
 

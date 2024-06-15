@@ -130,7 +130,6 @@ pub fn HomeActivity(
         // show_hidden: None,
       };
 
-
       let result = LemmyClient.list_posts(form).await;
 
       match result {
@@ -241,6 +240,12 @@ pub fn HomeActivity(
 
       window_event_listener_untyped("scroll", on_scroll);
     }
+  }
+
+  let thingy = RwSignal::new(false);
+  #[cfg(not(feature = "ssr"))]
+  {
+    thingy.set(true);
   }
 
   view! {
@@ -360,6 +365,7 @@ pub fn HomeActivity(
                               .unwrap_or_default()
                               .into() site_signal />
                         </div>
+  
                         <div class="join hidden sm:block">
 
                         //   {if let Some(s) = ssr_prev() {
@@ -377,25 +383,7 @@ pub fn HomeActivity(
                         //               >
                         //                 "Prev"
                         //               </A>
-                        //             </span>
-                        //           }
-                        //       } else {
-                        //           view! { <span></span> }
-                        //       }
-                        //   } else {
-                        //       view! { <span></span> }
-                        //   }}
-                        //   {if let Some(n) = p.next_page.clone() {
-                        //       let s = ssr_prev().unwrap_or_default();
-                        //       let mut st = s.split(',').collect::<Vec<_>>();
-                        //       let f = if let Some(PaginationCursor(g)) = from_func() {
-                        //           g
-                        //       } else {
-                        //           "".to_string()
-                        //       };
-                        //       st.push(&f);
-                        //       let mut query_params = query.get();
-                        //       query_params.insert("prev".into(), st.join(",").to_string());
+                        //             </span>disabledst.join(",").to_string());
                         //       query_params.insert("from".into(), n.0);
                         //       view! {
                         //         <span>
@@ -419,20 +407,22 @@ pub fn HomeActivity(
                           //   }
                           // > "Next" </A>
                           <button
-                            class="btn join-item"
+                            class=move || format!("btn join-item{}", if prev_cursor_stack.get().len() > 0 { "" } else { " btn-disabled" } ) 
                             on:click=move |_| {
                                 let mut p = prev_cursor_stack.get();
                                 let s = p.pop().unwrap_or(None);
                                 prev_cursor_stack.set(p);
                                 page_cursor.set(s);
                                 refresh.set(!refresh.get());
+                                window().scroll_to_with_x_and_y(0.0, 0.0);
                             }
                           >
 
                             "Prev"
                           </button>
                           <button
-                            class="btn join-item"
+                            class=move || format!("btn join-item{}", if thingy.get() { "" } else { " btn-disabled" } ) 
+                          // class="btn join-item"
                             on:click=move |_| {
                                 let mut p = prev_cursor_stack.get();
                                 p.push(page_cursor.get());
@@ -448,8 +438,8 @@ pub fn HomeActivity(
                             "Next"
                           </button>
                         </div>
-                    }
-                })
+                }
+              })
         }}
 
         </Transition>
