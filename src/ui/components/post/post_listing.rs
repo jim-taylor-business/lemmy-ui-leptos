@@ -420,7 +420,7 @@ pub fn PostListing(
 
         </a>
       </td>
-      <td class="w-full">
+      <td class="table-cell">
         <A href=move || format!("/post/{}", post_view.get().post.id) class="block hover:text-accent ">
           <span class="text-lg" inner_html=title_encoded />
         </A>
@@ -434,7 +434,7 @@ pub fn PostListing(
           >
             {post_view.get().creator.name}
           </A>
-          ", to "
+          ", in "
           <A class="text-sm inline-block hover:text-secondary" href=format!("/c/{}", post_view.get().community.name)>
             {post_view.get().community.title}
           </A>

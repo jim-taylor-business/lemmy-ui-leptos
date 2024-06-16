@@ -117,7 +117,7 @@ pub fn PostActivity(
                     .unwrap_or(None)
                     .map(|res| 
                       view! {
-                        <div class="w-full -ml-4">
+                        <div class="w-full">
                           <CommentNodes comments=res.comments.into()/>
                         </div>
                       }

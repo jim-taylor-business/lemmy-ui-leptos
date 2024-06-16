@@ -124,7 +124,7 @@ pub fn Layout(
                       <div class="w-full flex flex-col flex-grow">
                         <div class="sm:container sm:mx-auto">
     // <span> { move || { if let Some(TitleSetter(t)) = ui_title.get() { logging::log!("yes"); format!("{} - {}", t, test()) } else { logging::log!("no"); test() } } } </span>
-                        <div class="w-full flex flex-col flex-grow p-6">
+                          <div class="w-full flex flex-col flex-grow px-0 lg:px-6">
                             <Outlet/>
                           </div>
                         </div>

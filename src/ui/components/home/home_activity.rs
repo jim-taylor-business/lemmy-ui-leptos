@@ -150,13 +150,16 @@ pub fn HomeActivity(
     },
   );
 
+
   #[cfg(not(feature = "ssr"))]
   {
-    let iw = window()
-      .inner_width()
-      .ok()
-      .map(|b| b.as_f64().unwrap_or(0.0))
-      .unwrap_or(0.0);
+    // let mut iw = window()
+    //   .inner_width()
+    //   .ok()
+    //   .map(|b| b.as_f64().unwrap_or(0.0))
+    //   .unwrap_or(0.0);
+
+    // let width = RwSignal::new(0f64);
 
     let on_resize = move |_| {
       let iw = window()
@@ -166,24 +169,61 @@ pub fn HomeActivity(
         .unwrap_or(0.0);
 
       let mut query_params = query.get();
-      if iw >= 2560f64 {
+
+      let prev_limit = if let Some(l) = query_params.get("limit".into()) {
+        Some(l.clone())
+      } else {
+        None
+      };
+//      let prev_limit = query_params.get("limit".into());
+
+      // width.set(window()
+      //   .inner_width()
+      //   .ok()
+      //   .map(|b| b.as_f64().unwrap_or(0.0))
+      //   .unwrap_or(0.0));
+
+      // logging::log!("carlos {}", width.get());
+      logging::log!("carlos {}", iw);
+
+      let new_limit = if iw >= 2560f64 {
+        query_params.insert("limit".into(), "40".to_string());
+        Some("40".to_string())
+      } else if iw >= 1920f64 {
         query_params.insert("limit".into(), "30".to_string());
+        Some("30".to_string())
       } else if iw >= 1536f64 {
         query_params.insert("limit".into(), "20".to_string());
+        Some("20".to_string())
       } else {
         query_params.remove("limit");
-      }
+        None
+      };
+      // if iw >= 2560f64 {
+      //   query_params.insert("limit".into(), "30".to_string());
+      // } else if iw >= 1536f64 {
+      //   query_params.insert("limit".into(), "20".to_string());
+      // } else {
+      //   query_params.remove("limit");
+      // }
 
       if iw >= 640f64 {
         csr_infinite_scroll_posts.set(None);
         csr_paginator.set(None);
+        // let navigate = leptos_router::use_navigate();
+        // navigate(
+        //   &format!("{}", query_params.to_query_string()),
+        //   Default::default(),
+        // );
       }
 
-      // let navigate = leptos_router::use_navigate();
-      // navigate(
-      //   &format!("{}", query_params.to_query_string()),
-      //   Default::default(),
-      // );
+      if prev_limit.ne(&new_limit) {
+        let navigate = leptos_router::use_navigate();
+        navigate(
+          &format!("{}", query_params.to_query_string()),
+          Default::default(),
+        );
+      }
     };
 
     window_event_listener_untyped("resize", on_resize);
@@ -192,58 +232,74 @@ pub fn HomeActivity(
       on_resize(e);
     }
 
-    if iw < 640f64 {
-      let on_scroll = move |_| {
-        let h = window()
-          .inner_height()
-          .ok()
-          .map(|b| b.as_f64().unwrap_or(0.0))
-          .unwrap_or(0.0);
-        let o = window().page_y_offset().ok().unwrap_or(0.0);
-        let b = f64::from(document().body().map(|b| b.offset_height()).unwrap_or(1));
+    
 
-        let endOfPage = h + o >= b;
+    let on_scroll = move |_| {
+      let iw = window()
+        .inner_width()
+        .ok()
+        .map(|b| b.as_f64().unwrap_or(0.0))
+        .unwrap_or(0.0);
 
-        logging::log!("{} {} {} {}", endOfPage, h, o, b);
+      if iw < 640f64 {
 
-        if endOfPage {
-          create_local_resource(
-            move || (user.get(), list_func(), sort_func()),
-            move |(_user, list_type, sort_type)| async move {
-              let form = GetPosts {
-                type_: list_type,
-                sort: sort_type,
-                community_name: None,
-                community_id: None,
-                page: None,
-                limit: None,
-                saved_only: None,
-                disliked_only: None,
-                liked_only: None,
-                page_cursor: csr_paginator.get(),
-                // show_hidden: None,
-              };
+      let h = window()
+        .inner_height()
+        .ok()
+        .map(|b| b.as_f64().unwrap_or(0.0))
+        .unwrap_or(0.0);
+      let o = window().page_y_offset().ok().unwrap_or(0.0);
+      let b = f64::from(document().body().map(|b| b.offset_height()).unwrap_or(1));
 
-              let result = LemmyClient.list_posts(form).await;
+      let endOfPage = (h + o) >= b;
 
-              match result {
-                Ok(mut o) => {
-                  csr_paginator.set(o.next_page);
-                  let mut p = csr_infinite_scroll_posts.get().unwrap_or(vec![]);
-                  p.append(&mut o.posts);
-                  csr_infinite_scroll_posts.set(Some(p));
-                }
-                Err(e) => {
-                  error.set(Some(e));
-                }
+      logging::log!("carlos {} {} {} {} {}", endOfPage, h, o, h + o, b);
+
+      if endOfPage {
+        // create_blocking_resource(
+        create_local_resource(
+        //   // move || (user.get(), list_func(), sort_func()),
+        //   // move |(_user, list_type, sort_type)| async move {
+          move || (),
+          move |()| async move {
+            logging::log!("esquerra");
+            let form = GetPosts {
+              type_: list_func(),
+              sort: sort_func(),
+              // type_: list_type,
+              // sort: sort_type,
+              community_name: None,
+              community_id: None,
+              page: None,
+              limit: None,
+              saved_only: None,
+              disliked_only: None,
+              liked_only: None,
+              page_cursor: csr_paginator.get(),
+              // show_hidden: None,
+            };
+
+            let result = LemmyClient.list_posts(form).await;
+
+            match result {
+              Ok(mut o) => {
+                csr_paginator.set(o.next_page);
+                let mut p = csr_infinite_scroll_posts.get().unwrap_or(vec![]);
+                p.append(&mut o.posts);
+                csr_infinite_scroll_posts.set(Some(p));
               }
-            },
-          );
-        }
-      };
+              Err(e) => {
+                error.set(Some(e));
+              }
+            }
+          },
+        );
+      }
 
-      window_event_listener_untyped("scroll", on_scroll);
-    }
+      }
+    };
+
+    window_event_listener_untyped("scroll", on_scroll);
   }
 
   let thingy = RwSignal::new(false);
@@ -268,8 +324,9 @@ pub fn HomeActivity(
                 href=move || query_params.to_query_string()
                 class=move || {
                     format!(
-                        "btn join-item {}",
-                        if Some(ListingType::Subscribed) == list_func() { "btn-active" } else { "" },
+                        "btn join-item{}{}",
+                        if Some(ListingType::Subscribed) == list_func() { " btn-active" } else { "" },
+                        { if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() { "" } else { " btn-disabled" } },
                     )
                 }
               >
@@ -349,7 +406,7 @@ pub fn HomeActivity(
       </div>
     </div>
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
-      <div class="w-full lg:w-2/3">
+      <div class="w-full lg:w-2/3 2xl:w-3/4 3xl:w-4/5 4xl:w-5/6">
       // <div class="flex flex-col w-full">
       <Transition fallback=|| {}>
         {move || {
@@ -365,7 +422,7 @@ pub fn HomeActivity(
                         next_page_cursor.set(p.next_page.clone());
                     }
                     view! {
-                        <div class="columns-1 2xl:columns-2 4xl:columns-3 gap-3">
+                        <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
 
                           <PostListings posts=p.posts.into() site_signal/>
                           <PostListings posts=csr_infinite_scroll_posts
@@ -451,7 +508,7 @@ pub fn HomeActivity(
         </Transition>
       </div>
       // <div class="sm:w-1/3 md:w-1/4 w-full flex-shrink flex-grow-0 hidden lg:block">
-      <div class="lg:w-1/3 hidden lg:block">
+      <div class="lg:w-1/3 hidden lg:block 2xl:w-1/4 3xl:w-1/5 4xl:w-1/6">
         <About/>
         <Trending/>
         <SiteSummary site_signal/>
