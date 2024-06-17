@@ -102,7 +102,7 @@ pub fn PostActivity(
                       ui_title.set(Some(TitleSetter(res.post_view.post.name.clone())));
                       view! {
                         <table class="table">
-                          <PostListing post_view=res.post_view.into() site_signal/>
+                          <PostListing post_view=res.post_view.into() site_signal post_number=RwSignal::new(0usize)/>
                         </table>
                       }
                     })

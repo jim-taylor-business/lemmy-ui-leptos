@@ -19,38 +19,38 @@ pub enum HttpType {
   Put,
 }
 
-pub struct LemmyRequest<R: Serialize> {
-  pub body: Option<R>,
-  pub jwt: Option<String>,
-}
+// pub struct LemmyRequest<R: Serialize> {
+//   pub body: Option<R>,
+// }
 
-impl<R: Serialize> From<R> for LemmyRequest<R> {
-  fn from(body: R) -> Self {
-    LemmyRequest {
-      body: Some(body),
-      jwt: None,
-    }
-  }
-}
+// impl<R: Serialize> From<R> for LemmyRequest<R> {
+//   fn from(body: R) -> Self {
+//     LemmyRequest {
+//       body: Some(body),
+//     }
+//   }
+// }
 
 mod private_trait {
-  use super::{HttpType, LemmyRequest};
+  use super::{HttpType/* , LemmyRequest */};
   use crate::errors::LemmyAppResult;
   use leptos::Serializable;
   use serde::{Deserialize, Serialize};
 
   pub trait PrivateFetch {
-    async fn make_request<Response, Form, Request>(
+    async fn make_request<Response, Form/* , Request */>(
       &self,
       method: HttpType,
       path: &str,
-      form: Request,
+      // form: Request,
+      form: Form,
     ) -> LemmyAppResult<Response>
     where
       Response: Serializable + for<'de> Deserialize<'de> + 'static,
-      Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug,
-      Request: Into<LemmyRequest<Form>>;
-  }
+      Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug; //,
+      // Request: Into<LemmyRequest<Form>>;
+      // Request: Form;
+    }
 }
 
 pub trait PublicFetch: private_trait::PrivateFetch {
@@ -60,9 +60,9 @@ pub trait PublicFetch: private_trait::PrivateFetch {
 
   async fn logout(&self) -> LemmyAppResult<()> {
     let _ = self
-      .make_request::<(), (), ()>(HttpType::Post, "user/logout", ())
+      .make_request::<(), ()>(HttpType::Post, "user/logout", ())
       .await;
-    // TODO: do not ignore error due to not being able to decode enpty http response cleanly
+    // TODO: do not ignore error due to not being able to decode empty http response cleanly
     Ok(())
   }
 
@@ -132,24 +132,27 @@ cfg_if! {
         }
 
         impl private_trait::PrivateFetch for LemmyClient {
-            async fn make_request<Response, Form, Request>(
+            async fn make_request<Response, Form/* , Request */>(
                 &self,
                 method: HttpType,
                 path: &str,
-                req: Request,
+                // req: Request,
+                form: Form,
             ) -> LemmyAppResult<Response>
             where
                 Response: Serializable + for<'de> Deserialize<'de> + 'static,
                 Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug,
-                Request: Into<LemmyRequest<Form>>,
+                // Request: Into<LemmyRequest<Form>>,
+                // Request: Serializable + Serialize,
             {
-                let LemmyRequest {body, ..} = req.into();
+                // let LemmyRequest {body, ..} = req.into();
+                // let body = req;
 
                 let jwt = get_cookie("jwt").await?;
 
                 let route = build_route(path);
 
-                leptos::logging::log!("{}", format!("{}?{}", route, serde_urlencoded::to_string(&body).unwrap_or("".to_string())));
+                leptos::logging::log!("{}", format!("{}?{}", route, serde_urlencoded::to_string(&form).unwrap_or("".to_string())));
 
                 let client = extract::<web::Data<Client>>().await?;
 
@@ -157,16 +160,16 @@ cfg_if! {
                     HttpType::Get => client
                         .get(&route)
                         .maybe_bearer_auth(jwt.clone())
-                        .query(&body)?
+                        .query(&form)?
                         .send(),
                     HttpType::Post => client
                         .post(&route)
                         .maybe_bearer_auth(jwt.clone())
-                        .send_json(&body),
+                        .send_json(&form),
                     HttpType::Put => client
                         .put(&route)
                         .maybe_bearer_auth(jwt.clone())
-                        .send_json(&body)
+                        .send_json(&form)
                 }.await?;
 
                 match r.status().as_u16() {
@@ -215,18 +218,21 @@ cfg_if! {
         }
 
         impl private_trait::PrivateFetch for LemmyClient {
-            async fn make_request<Response, Form, Request>(
+            async fn make_request<Response, Form/* , Request */>(
                 &self,
                 method: HttpType,
                 path: &str,
-                req: Request,
+                // req: Request,
+                form: Form,
             ) -> LemmyAppResult<Response>
             where
                 Response: Serializable + for<'de> Deserialize<'de> + 'static,
                 Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug,
-                Request: Into<LemmyRequest<Form>>,
+                // Request: Into<LemmyRequest<Form>>,
+                // Request: Serializable,
             {
-                let LemmyRequest { body, .. } = req.into();
+                // let LemmyRequest { form, .. } = req.into();
+                // let form = req.into();
                 let route = &build_route(path);
 
                 let jwt = get_cookie("jwt").await?;
@@ -241,7 +247,7 @@ cfg_if! {
 
                 let r = match method {
                     HttpType::Get => http::Request::
-                        get(&build_fetch_query(path, body))
+                        get(&build_fetch_query(path, form))
                         .maybe_bearer_auth(jwt.as_deref())
                         .abort_signal(abort_signal.as_ref())
                         .build()
@@ -249,13 +255,13 @@ cfg_if! {
                     HttpType::Post => http::Request::post(route)
                         .maybe_bearer_auth(jwt.as_deref())
                         .abort_signal(abort_signal.as_ref())
-                        .json(&body)
-                        .expect_throw("Could not parse json body"),
+                        .json(&form)
+                        .expect_throw("Could not parse json form"),
                     HttpType::Put => http::Request::put(route)
                         .maybe_bearer_auth(jwt.as_deref())
                         .abort_signal(abort_signal.as_ref())
-                        .json(&body)
-                        .expect_throw("Could not parse json body")
+                        .json(&form)
+                        .expect_throw("Could not parse json form")
                 }.send().await?;
 
                 match r.status() {

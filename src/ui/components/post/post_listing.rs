@@ -131,6 +131,7 @@ pub async fn report_post_fn(
 pub fn PostListing(
   post_view: MaybeSignal<PostView>,
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
+  post_number: RwSignal<usize>,
 ) -> impl IntoView {
   let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
   let user = Signal::derive(move || {
@@ -321,6 +322,7 @@ pub fn PostListing(
     #[cfg(feature = "ssr")]
     {
       // logging::log!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64);
+      // actix_web::cookie::time::OffsetDateTime::now_utc().to_hms_milli() as u64
       std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64 
     }
   };
@@ -549,6 +551,7 @@ pub fn PostListing(
               </li>
             </ul>
           </div>
+          <span class="grow text-right text-base-content/25"> { post_number.get() } </span>
         </span>
       </td>
     </tr>

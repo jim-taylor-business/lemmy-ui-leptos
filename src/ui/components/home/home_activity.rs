@@ -1,3 +1,5 @@
+use std::usize;
+
 use crate::{
   errors::LemmyAppError,
   i18n::*,
@@ -99,6 +101,7 @@ pub fn HomeActivity(
   let prev_cursor_stack = create_rw_signal::<Vec<Option<PaginationCursor>>>(vec![]);
   let next_page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
   let refresh = create_rw_signal(true);
+  let page_number = create_rw_signal(0usize);
 
   ui_title.set(None);
 
@@ -302,10 +305,10 @@ pub fn HomeActivity(
     window_event_listener_untyped("scroll", on_scroll);
   }
 
-  let thingy = RwSignal::new(false);
+  let page_cursors_writable = RwSignal::new(false);
   #[cfg(not(feature = "ssr"))]
   {
-    thingy.set(true);
+    page_cursors_writable.set(true);
   }
 
   view! {
@@ -424,82 +427,45 @@ pub fn HomeActivity(
                     view! {
                         <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
 
-                          <PostListings posts=p.posts.into() site_signal/>
+                          <PostListings posts=p.posts.into() site_signal page_number />
                           <PostListings posts=csr_infinite_scroll_posts
                               .get()
                               .unwrap_or_default()
-                              .into() site_signal />
+                              .into() site_signal page_number />
                         </div>
   
-                        <div class="join hidden sm:block">
+                        <div class=move || format!("join hidden{}", if page_cursors_writable.get() { " sm:block" } else { "" })>
 
-                        //   {if let Some(s) = ssr_prev() {
-                        //       if !s.is_empty() {
-                        //           let mut st = s.split(',').collect::<Vec<_>>();
-                        //           let p = st.pop().unwrap_or("");
-                        //           let mut query_params = query.get();
-                        //           query_params.insert("prev".into(), st.join(",").to_string());
-                        //           query_params.insert("from".into(), p.into());
-                        //           view! {
-                        //             <span>
-                        //               <A
-                        //                 href=format!("{}", query_params.to_query_string())
-                        //                 class="btn"
-                        //               >
-                        //                 "Prev"
-                        //               </A>
-                        //             </span>disabledst.join(",").to_string());
-                        //       query_params.insert("from".into(), n.0);
-                        //       view! {
-                        //         <span>
-                        //           <A href=format!("{}", query_params.to_query_string()) class="btn">
-                        //             "Next"
-                        //           </A>
-                        //         </span>
-                        //       }
-                        //   } else {
-                        //       view! { <span></span> }
-                        //   }}
-                          // <A 
-                          //   href="#top"
-                          //   class="btn"
-                          //   on:click=move |_| {
-                          //       let mut p = prev_cursor_stack.get();
-                          //       p.push(page_cursor.get());
-                          //       prev_cursor_stack.set(p);
-                          //       page_cursor.set(next_page_cursor.get());
-                          //       refresh.set(!refresh.get());
-                          //   }
-                          // > "Next" </A>
                           <button
                             class=move || format!("btn join-item{}", if prev_cursor_stack.get().len() > 0 { "" } else { " btn-disabled" } ) 
                             on:click=move |_| {
+                                // PageCursors are not writable in v 0.19.3
                                 let mut p = prev_cursor_stack.get();
                                 let s = p.pop().unwrap_or(None);
                                 prev_cursor_stack.set(p);
                                 page_cursor.set(s);
                                 refresh.set(!refresh.get());
+                                page_number.update(|p| *p = *p - ssr_limit().unwrap_or(10i64) as usize);
                             }
                           >
-
                             "Prev"
                           </button>
                           <button
-                            class=move || format!("btn join-item{}", if thingy.get() { "" } else { " btn-disabled" } ) 
-                          // class="btn join-item"
+                            class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() { "" } else { " btn-disabled" } ) 
                             on:click=move |_| {
+                                // PageCursors are not writable in v 0.19.3
                                 let mut p = prev_cursor_stack.get();
                                 p.push(page_cursor.get());
                                 prev_cursor_stack.set(p);
                                 page_cursor.set(next_page_cursor.get());
                                 refresh.set(!refresh.get());
-                                // let r = document().body();
-
+                                next_page_cursor.set(None);
+                                page_number.update(|p| *p = *p + ssr_limit().unwrap_or(10i64) as usize);
                             }
                           >
-
                             "Next"
                           </button>
+
                         </div>
                 }
               })
@@ -510,8 +476,8 @@ pub fn HomeActivity(
       // <div class="sm:w-1/3 md:w-1/4 w-full flex-shrink flex-grow-0 hidden lg:block">
       <div class="lg:w-1/3 hidden lg:block 2xl:w-1/4 3xl:w-1/5 4xl:w-1/6">
         <About/>
-        <Trending/>
         <SiteSummary site_signal/>
+        <Trending/>
       </div>
     </main>
   }
