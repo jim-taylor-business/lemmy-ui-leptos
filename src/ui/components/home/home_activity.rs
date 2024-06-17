@@ -1,4 +1,4 @@
-use std::usize;
+use std::{collections::{BTreeMap, HashMap}, usize, vec};
 
 use crate::{
   errors::LemmyAppError,
@@ -94,14 +94,20 @@ pub fn HomeActivity(
     }
   };
 
-  let csr_infinite_scroll_posts = RwSignal::new(None::<Vec<PostView>>);
+  // let csr_infinite_scroll_posts = RwSignal::new(None::<Vec<PostView>>);
   let csr_paginator = RwSignal::new(None::<PaginationCursor>);
+  // let csr_infinite_scroll_hashmap: RwSignal<HashMap<usize, Vec<PostView>>> = RwSignal::new(HashMap::new());
+  let csr_infinite_scroll_hashmap: RwSignal<BTreeMap<usize, Vec<PostView>>> = RwSignal::new(BTreeMap::new());
+  // csr_infinite_scroll_hashmap.get().insert(k, v)
+  // csr_infinite_scroll_hashmap.
 
   let page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
   let prev_cursor_stack = create_rw_signal::<Vec<Option<PaginationCursor>>>(vec![]);
   let next_page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
   let refresh = create_rw_signal(true);
+  let loading = create_rw_signal(false);
   let page_number = create_rw_signal(0usize);
+  let csr_page_number = create_rw_signal(10usize);
 
   ui_title.set(None);
 
@@ -139,9 +145,14 @@ pub fn HomeActivity(
         Ok(o) => {
           next_page_cursor.set(o.next_page.clone());
           ui_title.set(None);
+          loading.set(false);
           #[cfg(not(feature = "ssr"))]
           {
             window().scroll_to_with_x_and_y(0.0, 0.0);
+            // if csr_infinite_scroll_posts.get().is_none() {
+            //   logging::log!("tinkerbell");
+            //   csr_paginator.set(o.next_page.clone());
+            // }            
           }
           Some(o)
         },
@@ -187,7 +198,7 @@ pub fn HomeActivity(
       //   .unwrap_or(0.0));
 
       // logging::log!("carlos {}", width.get());
-      logging::log!("carlos {}", iw);
+      // logging::log!("carlos {}", iw);
 
       let new_limit = if iw >= 2560f64 {
         query_params.insert("limit".into(), "40".to_string());
@@ -211,8 +222,12 @@ pub fn HomeActivity(
       // }
 
       if iw >= 640f64 {
-        csr_infinite_scroll_posts.set(None);
+        // csr_infinite_scroll_posts.set(None);
         csr_paginator.set(None);
+        csr_page_number.set(10usize);
+        csr_infinite_scroll_hashmap.set(BTreeMap::new());
+        page_cursor.set(None);
+        page_number.set(0usize);
         // let navigate = leptos_router::use_navigate();
         // navigate(
         //   &format!("{}", query_params.to_query_string()),
@@ -235,8 +250,6 @@ pub fn HomeActivity(
       on_resize(e);
     }
 
-    
-
     let on_scroll = move |_| {
       let iw = window()
         .inner_width()
@@ -254,18 +267,22 @@ pub fn HomeActivity(
       let o = window().page_y_offset().ok().unwrap_or(0.0);
       let b = f64::from(document().body().map(|b| b.offset_height()).unwrap_or(1));
 
-      let endOfPage = (h + o) >= b;
+      let endOfPage = (h + o) >= (b - h);
 
-      logging::log!("carlos {} {} {} {} {}", endOfPage, h, o, h + o, b);
+      // logging::log!("carlos {} {} {} {} {}", endOfPage, h, o, h + o, b);
 
       if endOfPage {
         // create_blocking_resource(
+        if csr_infinite_scroll_hashmap.get().get(&csr_page_number.get()).is_none() {
+          csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), vec![]); });
+
         create_local_resource(
         //   // move || (user.get(), list_func(), sort_func()),
         //   // move |(_user, list_type, sort_type)| async move {
           move || (),
           move |()| async move {
-            logging::log!("esquerra");
+            logging::log!("carlos {} {} {} {} {}", endOfPage, h, o, h + o, b);
+            // logging::log!("esquerra");
             let form = GetPosts {
               type_: list_func(),
               sort: sort_func(),
@@ -287,9 +304,12 @@ pub fn HomeActivity(
             match result {
               Ok(mut o) => {
                 csr_paginator.set(o.next_page);
-                let mut p = csr_infinite_scroll_posts.get().unwrap_or(vec![]);
-                p.append(&mut o.posts);
-                csr_infinite_scroll_posts.set(Some(p));
+                // let mut p = csr_infinite_scroll_posts.get().unwrap_or(vec![]);
+                logging::log!(" {} {} ", csr_page_number.get(), o.posts.len());
+                csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), o.posts.clone()); });
+                // p.append(&mut o.posts);
+                csr_page_number.update(|p| *p = *p + ssr_limit().unwrap_or(10i64) as usize);
+                // csr_infinite_scroll_posts.set(Some(p));
               }
               Err(e) => {
                 error.set(Some(e));
@@ -297,6 +317,8 @@ pub fn HomeActivity(
             }
           },
         );
+
+        }
       }
 
       }
@@ -417,7 +439,10 @@ pub fn HomeActivity(
                 .get()
                 .unwrap_or(None)
                 .map(|p| {
-                    if csr_infinite_scroll_posts.get().is_none() {
+                    // if csr_infinite_scroll_posts.get().is_none() {
+                    //     csr_paginator.set(p.next_page.clone());
+                    // }
+                    if csr_infinite_scroll_hashmap.get().keys().len() == 0 {
                         csr_paginator.set(p.next_page.clone());
                     }
 
@@ -428,10 +453,17 @@ pub fn HomeActivity(
                         <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
 
                           <PostListings posts=p.posts.into() site_signal page_number />
-                          <PostListings posts=csr_infinite_scroll_posts
-                              .get()
-                              .unwrap_or_default()
-                              .into() site_signal page_number />
+
+                          <For each=move || csr_infinite_scroll_hashmap.get().into_iter() key=|h| h.0 let:h>
+                          // <For each=move || csr_infinite_scroll_hashmap.get().keys() key=|k| k let:k>
+                            // <PostListings posts=csr_infinite_scroll_hashmap.get().get(k).unwrap().into() site_signal page_number=k.into() />
+                            <PostListings posts=h.1.into() site_signal page_number=h.0.into() />
+                          </For>
+                  
+                          // <PostListings posts=csr_infinite_scroll_posts
+                          //     .get()
+                          //     .unwrap_or_default()
+                          //     .into() site_signal page_number />
                         </div>
   
                         <div class=move || format!("join hidden{}", if page_cursors_writable.get() { " sm:block" } else { "" })>
@@ -451,15 +483,15 @@ pub fn HomeActivity(
                             "Prev"
                           </button>
                           <button
-                            class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() { "" } else { " btn-disabled" } ) 
+                            class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
                             on:click=move |_| {
                                 // PageCursors are not writable in v 0.19.3
                                 let mut p = prev_cursor_stack.get();
                                 p.push(page_cursor.get());
                                 prev_cursor_stack.set(p);
                                 page_cursor.set(next_page_cursor.get());
+                                loading.set(true);
                                 refresh.set(!refresh.get());
-                                next_page_cursor.set(None);
                                 page_number.update(|p| *p = *p + ssr_limit().unwrap_or(10i64) as usize);
                             }
                           >

@@ -422,7 +422,7 @@ pub fn PostListing(
 
         </a>
       </td>
-      <td class="table-cell">
+      <td class="w-full">
         <A href=move || format!("/post/{}", post_view.get().post.id) class="block hover:text-accent ">
           <span class="text-lg" inner_html=title_encoded />
         </A>
