@@ -6,6 +6,7 @@ use crate::{
     IconType::{Block, Comments, Crosspost, Downvote, Report, Save, Upvote, VerticalDots},
   },
 };
+use ev::MouseEvent;
 use lemmy_api_common::{lemmy_db_views::structs::*, person::*, post::*, site::GetSiteResponse};
 use leptos::*;
 use leptos_router::*;
@@ -131,7 +132,7 @@ pub async fn report_post_fn(
 pub fn PostListing(
   post_view: MaybeSignal<PostView>,
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
-  post_number: RwSignal<usize>,
+  post_number: usize,
 ) -> impl IntoView {
   let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
   let user = Signal::derive(move || {
@@ -426,7 +427,7 @@ pub fn PostListing(
         <A href=move || format!("/post/{}", post_view.get().post.id) class="block hover:text-accent ">
           <span class="text-lg" inner_html=title_encoded />
         </A>
-        <span class="block mb-1">
+        <span class="block mb-1" on:click=move |e: MouseEvent| { if e.ctrl_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
           <span>
             { abbr_duration }
           </span> " ago, by "
@@ -514,13 +515,13 @@ pub fn PostListing(
               <Icon icon=Crosspost/>
             </A>
           </span>
-          <div class="dropdown hidden sm:block">
+          <div class="dropdown max-sm:dropdown-end">
             <label tabindex="0">
               <Icon icon=VerticalDots/>
             </label>
             <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
               <li>
-                <ActionForm action=report_post_action on:submit=on_report_submit>
+                <ActionForm action=report_post_action on:submit=on_report_submit class="flex flex-col items-start">
                   <input type="hidden" name="post_id" value=format!("{}", post_view.get().post.id)/>
                   <input
                     class=move || format!("input input-bordered {}", report_validation.get())
@@ -531,7 +532,7 @@ pub fn PostListing(
                   />
                   <button class="text-xs whitespace-nowrap" title="Report post" type="submit">
                     <Icon icon=Report class="inline-block".into()/>
-                    " Report post"
+                    "Report post"
                   </button>
                 </ActionForm>
               </li>
@@ -545,13 +546,13 @@ pub fn PostListing(
                   <input type="hidden" name="block" value="true"/>
                   <button class="text-xs whitespace-nowrap" title="Block user" type="submit">
                     <Icon icon=Block class="inline-block".into()/>
-                    " Block user"
+                    "Block user"
                   </button>
                 </ActionForm>
               </li>
             </ul>
           </div>
-          <span class="grow text-right text-base-content/25"> { post_number.get() } </span>
+          <span class="grow text-right text-base-content/25"> { if post_number != 0 { format!("{}", post_number) } else { "".into() } } </span>
         </span>
       </td>
     </tr>

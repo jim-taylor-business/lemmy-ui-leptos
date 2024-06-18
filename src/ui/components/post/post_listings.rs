@@ -16,7 +16,7 @@ pub fn PostListings(
           post_number.set(post_number.get() + 1); 
 
           view! {
-            <PostListing post_view=pv.into() site_signal post_number/>
+            <PostListing post_view=pv.into() site_signal post_number=post_number.get()/>
           }
         }
       </For>

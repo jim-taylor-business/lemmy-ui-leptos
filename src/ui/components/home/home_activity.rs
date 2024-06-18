@@ -1,12 +1,9 @@
-use std::{collections::{BTreeMap, HashMap}, usize, vec};
+use std::{collections::BTreeMap, usize, vec};
 
 use crate::{
-  errors::LemmyAppError,
-  i18n::*,
-  lemmy_client::*,
-  ui::components::{
+  errors::LemmyAppError, i18n::*, lemmy_client::*, ui::components::{
     common::about::About, home::{site_summary::SiteSummary, trending::Trending}, post::post_listings::PostListings
-  }, TitleSetter,
+  }, TitleSetter
 };
 use lemmy_api_common::{
   lemmy_db_schema::{ListingType, SortType},
@@ -176,6 +173,9 @@ pub fn HomeActivity(
     // let width = RwSignal::new(0f64);
 
     let on_resize = move |_| {
+      logging::log!(">{}<", use_route().path());
+      if use_route().path().eq("/") {
+
       let iw = window()
         .inner_width()
         .ok()
@@ -242,89 +242,94 @@ pub fn HomeActivity(
           Default::default(),
         );
       }
-    };
 
-    window_event_listener_untyped("resize", on_resize);
+      }
+    };
 
     if let Ok(e) = web_sys::Event::new("resize") {
       on_resize(e);
     }
 
+    let resize_handle = window_event_listener_untyped("resize", on_resize);
+
     let on_scroll = move |_| {
-      let iw = window()
-        .inner_width()
-        .ok()
-        .map(|b| b.as_f64().unwrap_or(0.0))
-        .unwrap_or(0.0);
+      if use_route().path().eq("/") {
 
-      if iw < 640f64 {
 
-      let h = window()
-        .inner_height()
-        .ok()
-        .map(|b| b.as_f64().unwrap_or(0.0))
-        .unwrap_or(0.0);
-      let o = window().page_y_offset().ok().unwrap_or(0.0);
-      let b = f64::from(document().body().map(|b| b.offset_height()).unwrap_or(1));
+        let iw = window()
+          .inner_width()
+          .ok()
+          .map(|b| b.as_f64().unwrap_or(0.0))
+          .unwrap_or(0.0);
 
-      let endOfPage = (h + o) >= (b - h);
+        if iw < 640f64 {
 
-      // logging::log!("carlos {} {} {} {} {}", endOfPage, h, o, h + o, b);
+          let h = window()
+            .inner_height()
+            .ok()
+            .map(|b| b.as_f64().unwrap_or(0.0))
+            .unwrap_or(0.0);
+          let o = window().page_y_offset().ok().unwrap_or(0.0);
+          let b = f64::from(document().body().map(|b| b.offset_height()).unwrap_or(1));
 
-      if endOfPage {
-        // create_blocking_resource(
-        if csr_infinite_scroll_hashmap.get().get(&csr_page_number.get()).is_none() {
-          csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), vec![]); });
+          let endOfPage = (h + o) >= (b - h);
 
-        create_local_resource(
-        //   // move || (user.get(), list_func(), sort_func()),
-        //   // move |(_user, list_type, sort_type)| async move {
-          move || (),
-          move |()| async move {
-            logging::log!("carlos {} {} {} {} {}", endOfPage, h, o, h + o, b);
-            // logging::log!("esquerra");
-            let form = GetPosts {
-              type_: list_func(),
-              sort: sort_func(),
-              // type_: list_type,
-              // sort: sort_type,
-              community_name: None,
-              community_id: None,
-              page: None,
-              limit: None,
-              saved_only: None,
-              disliked_only: None,
-              liked_only: None,
-              page_cursor: csr_paginator.get(),
-              // show_hidden: None,
-            };
+          // logging::log!("carlos {} {} {} {} {}", endOfPage, h, o, h + o, b);
 
-            let result = LemmyClient.list_posts(form).await;
+          if endOfPage {
+            if csr_infinite_scroll_hashmap.get().get(&csr_page_number.get()).is_none() {
+              csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), vec![]); });
 
-            match result {
-              Ok(mut o) => {
-                csr_paginator.set(o.next_page);
-                // let mut p = csr_infinite_scroll_posts.get().unwrap_or(vec![]);
-                logging::log!(" {} {} ", csr_page_number.get(), o.posts.len());
-                csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), o.posts.clone()); });
-                // p.append(&mut o.posts);
-                csr_page_number.update(|p| *p = *p + ssr_limit().unwrap_or(10i64) as usize);
-                // csr_infinite_scroll_posts.set(Some(p));
-              }
-              Err(e) => {
-                error.set(Some(e));
-              }
+              create_local_resource(
+              //   // move || (user.get(), list_func(), sort_func()),
+              //   // move |(_user, list_type, sort_type)| async move {
+                move || (),
+                move |()| async move {
+                  logging::log!("carlos {} {} {} {} {}", endOfPage, h, o, h + o, b);
+                  // logging::log!("esquerra");
+                  let form = GetPosts {
+                    type_: list_func(),
+                    sort: sort_func(),
+                    // type_: list_type,
+                    // sort: sort_type,
+                    community_name: None,
+                    community_id: None,
+                    page: None,
+                    limit: None,
+                    saved_only: None,
+                    disliked_only: None,
+                    liked_only: None,
+                    page_cursor: csr_paginator.get(),
+                    // show_hidden: None,
+                  };
+
+                  let result = LemmyClient.list_posts(form).await;
+
+                  match result {
+                    Ok(mut o) => {
+                      csr_paginator.set(o.next_page);
+                      // let mut p = csr_infinite_scroll_posts.get().unwrap_or(vec![]);
+                      logging::log!(" {} {} ", csr_page_number.get(), o.posts.len());
+                      csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), o.posts.clone()); });
+                      // p.append(&mut o.posts);
+                      csr_page_number.update(|p| *p = *p + ssr_limit().unwrap_or(10i64) as usize);
+                      // csr_infinite_scroll_posts.set(Some(p));
+                    }
+                    Err(e) => {
+                      error.set(Some(e));
+                    }
+                  }
+                },
+              );
+
             }
-          },
-        );
+          }
 
         }
       }
-
-      }
     };
 
-    window_event_listener_untyped("scroll", on_scroll);
+    let scroll_handle = window_event_listener_untyped("scroll", on_scroll);
   }
 
   let page_cursors_writable = RwSignal::new(false);
@@ -334,7 +339,7 @@ pub fn HomeActivity(
   }
 
   view! {
-    <div class="block">
+    <div class="block" on:resize=|_| { logging::log!("resize"); } on:scroll=|_| { logging::log!("scroll"); }>
       // <a name="top"></a>
       <div class="join mr-3 hidden sm:inline-block">
         <button class="btn join-item btn-active">"Posts"</button>

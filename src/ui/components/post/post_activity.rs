@@ -88,6 +88,14 @@ pub fn PostActivity(
     }
   });
 
+  #[cfg(not(feature = "ssr"))]
+  {
+    let on_resize = move |_| { };
+    window_event_listener_untyped("resize", on_resize);
+    let on_scroll = move |_| { };
+    window_event_listener_untyped("scroll", on_scroll);
+  }
+
   view! {
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
       <div class="flex flex-col ">
@@ -102,7 +110,7 @@ pub fn PostActivity(
                       ui_title.set(Some(TitleSetter(res.post_view.post.name.clone())));
                       view! {
                         <table class="table">
-                          <PostListing post_view=res.post_view.into() site_signal post_number=RwSignal::new(0usize)/>
+                          <PostListing post_view=res.post_view.into() site_signal post_number=0/>
                         </table>
                       }
                     })

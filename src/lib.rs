@@ -51,7 +51,7 @@ leptos_i18n::load_locales!();
 // });
 
 #[derive(/* Copy,  */Clone)]
-struct TitleSetter(String);
+pub struct TitleSetter(String);
 
 #[component]
 pub fn App() -> impl IntoView {
