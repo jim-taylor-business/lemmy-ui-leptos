@@ -27,21 +27,6 @@ pub fn PostActivity(
 
     match result {
       Ok(o) => {
-        // let tit = match site_signal.get() {
-        //   Some(Ok(site)) => {
-        //     logging::log!("oofts");
-        //     // let q = if let Some(TitleSetter(t)) = ui_t { t } else { "", to_string() };
-        //     if let Some(d) = site.site_view.site.description {
-        //       format!("{} - Tech Demo UI for {} - {}", o.post_view.post.name.clone(), site.site_view.site.name, d)
-        //     } else {
-        //       format!("{} - Tech Demo UI for {}", o.post_view.post.name.clone(), site.site_view.site.name)
-        //     }
-        //   }
-        //   _ => "Lemmy".to_string(),
-        // };
-  
-        // ui_title.set(Some(TitleSetter(tit)));
-        // ui_title.set(Some(TitleSetter(o.post_view.post.name.clone())));
         Some(o)
       },
       Err(e) => {
@@ -100,7 +85,6 @@ pub fn PostActivity(
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
       <div class="flex flex-col ">
         <div>
-        // <div class="columns-1 2xl:columns-2 4xl:columns-3 gap-3">
           <Transition fallback=|| {
               view! { "Loading..." }
           }>
@@ -110,11 +94,9 @@ pub fn PostActivity(
                     .map(|res| {
                       ui_title.set(Some(TitleSetter(res.post_view.post.name.clone())));
                       view! {
-                        // <table class="table">
-                        <div class="table">
+                        <div>
                           <PostListing post_view=res.post_view.into() site_signal post_number=0/>
                         </div>
-                        // </table>
                       }
                     })
             }}

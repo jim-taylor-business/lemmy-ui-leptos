@@ -19,38 +19,23 @@ pub enum HttpType {
   Put,
 }
 
-// pub struct LemmyRequest<R: Serialize> {
-//   pub body: Option<R>,
-// }
-
-// impl<R: Serialize> From<R> for LemmyRequest<R> {
-//   fn from(body: R) -> Self {
-//     LemmyRequest {
-//       body: Some(body),
-//     }
-//   }
-// }
-
 mod private_trait {
-  use super::{HttpType/* , LemmyRequest */};
+  use super::HttpType;
   use crate::errors::LemmyAppResult;
   use leptos::Serializable;
   use serde::{Deserialize, Serialize};
 
   pub trait PrivateFetch {
-    async fn make_request<Response, Form/* , Request */>(
+    async fn make_request<Response, Form>(
       &self,
       method: HttpType,
       path: &str,
-      // form: Request,
       form: Form,
     ) -> LemmyAppResult<Response>
     where
       Response: Serializable + for<'de> Deserialize<'de> + 'static,
-      Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug; //,
-      // Request: Into<LemmyRequest<Form>>;
-      // Request: Form;
-    }
+      Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug;
+  }
 }
 
 pub trait PublicFetch: private_trait::PrivateFetch {
@@ -132,21 +117,16 @@ cfg_if! {
         }
 
         impl private_trait::PrivateFetch for LemmyClient {
-            async fn make_request<Response, Form/* , Request */>(
+            async fn make_request<Response, Form>(
                 &self,
                 method: HttpType,
                 path: &str,
-                // req: Request,
                 form: Form,
             ) -> LemmyAppResult<Response>
             where
                 Response: Serializable + for<'de> Deserialize<'de> + 'static,
                 Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug,
-                // Request: Into<LemmyRequest<Form>>,
-                // Request: Serializable + Serialize,
             {
-                // let LemmyRequest {body, ..} = req.into();
-                // let body = req;
 
                 let jwt = get_cookie("jwt").await?;
 
@@ -218,21 +198,17 @@ cfg_if! {
         }
 
         impl private_trait::PrivateFetch for LemmyClient {
-            async fn make_request<Response, Form/* , Request */>(
+            async fn make_request<Response, Form>(
                 &self,
                 method: HttpType,
                 path: &str,
-                // req: Request,
                 form: Form,
             ) -> LemmyAppResult<Response>
             where
                 Response: Serializable + for<'de> Deserialize<'de> + 'static,
                 Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug,
-                // Request: Into<LemmyRequest<Form>>,
-                // Request: Serializable,
             {
-                // let LemmyRequest { form, .. } = req.into();
-                // let form = req.into();
+
                 let route = &build_route(path);
 
                 let jwt = get_cookie("jwt").await?;

@@ -10,6 +10,8 @@ mod lemmy_client;
 mod lemmy_error;
 mod ui;
 
+use std::collections::BTreeMap;
+
 use crate::{
   errors::LemmyAppError,
   i18n::*,
@@ -22,36 +24,29 @@ use crate::{
     post::post_activity::PostActivity,
   },
 };
-use lemmy_api_common::site::GetSiteResponse;
+use lemmy_api_common::{lemmy_db_views::structs::{PaginationCursor, PostView}, site::GetSiteResponse};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
 leptos_i18n::load_locales!();
 
-// use once_cell::sync::Lazy;
-
-// // static PARSER: Lazy<markdown_it::MarkdownIt> = Lazy::new(|| {
-// static PARSER: Lazy<markdown_it::MarkdownIt> = Lazy::new(|| {
-//   let mut parser = markdown_it::MarkdownIt::new();
-//   markdown_it::plugins::cmark::add(&mut parser);
-//   markdown_it::plugins::extra::add(&mut parser);
-
-
-
-//   parser
-
-//   // Create parser with example Markdown text.
-//   // let markdown_input = "hello world";
-//   // let parser = pulldown_cmark::Parser::new(markdown_input);
-
-//   // // Write to a new String buffer.
-//   // let mut html_output = String::new();
-//   // pulldown_cmark::html::push_html(&mut html_output, parser);
-// });
-
-#[derive(/* Copy,  */Clone)]
+#[derive(Clone)]
 pub struct TitleSetter(String);
+
+#[derive(Clone)]
+pub struct PageCursorSetter(Option<PaginationCursor>);
+#[derive(Clone)]
+pub struct PrevCursorStackSetter(Vec<Option<PaginationCursor>>);
+#[derive(Clone)]
+pub struct NextCursorSetter(Option<PaginationCursor>);
+#[derive(Clone)]
+pub struct PageNumberSetter(usize);
+
+#[derive(Clone)]
+pub struct CsrPageCursorSetter(Option<PaginationCursor>);
+#[derive(Clone)]
+pub struct CsrHashMapSetter(BTreeMap<usize, Vec<PostView>>);
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -68,12 +63,26 @@ pub fn App() -> impl IntoView {
   let ui_title = create_rw_signal::<Option<TitleSetter>>(None);
   provide_context(ui_title);
 
+  // workaround to maintain index state
+  let page_cursor = create_rw_signal(PageCursorSetter(None));
+  provide_context(page_cursor);
+  let prev_cursor_stack = create_rw_signal(PrevCursorStackSetter(vec![]));
+  provide_context(prev_cursor_stack);
+  let next_page_cursor = create_rw_signal(NextCursorSetter(None));
+  provide_context(next_page_cursor);
+  let page_number = create_rw_signal(PageNumberSetter(0usize));
+  provide_context(page_number);
+  let csr_paginator = RwSignal::new(CsrPageCursorSetter(None));
+  provide_context(csr_paginator);
+  let csr_infinite_scroll_hashmap = RwSignal::new(CsrHashMapSetter(BTreeMap::new()));
+  provide_context(csr_infinite_scroll_hashmap);
+
+
   let site_signal = create_rw_signal::<Option<Result<GetSiteResponse, LemmyAppError>>>(None);
 
   let ssr_site = create_resource(
     move || (user.get()),
     move |user| async move {
-      // fix login cache issue
       let result = if user == Some(false) {
         if let Some(Ok(mut s)) = site_signal.get() {
           s.my_user = None;
@@ -84,8 +93,6 @@ pub fn App() -> impl IntoView {
       } else {
         LemmyClient.get_site().await
       };
-
-      // let result = LemmyClient.get_site().await;
 
       match result {
         Ok(o) => Ok(o),

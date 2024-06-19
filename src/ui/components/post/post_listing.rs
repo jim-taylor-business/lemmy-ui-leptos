@@ -317,13 +317,10 @@ pub fn PostListing(
   let now_in_millis = {
     #[cfg(not(feature = "ssr"))]
     {
-      // logging::log!("{}", chrono::offset::Utc::now().timestamp_millis() as u64);
       chrono::offset::Utc::now().timestamp_millis() as u64
     }
     #[cfg(feature = "ssr")]
     {
-      // logging::log!("{}", std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64);
-      // actix_web::cookie::time::OffsetDateTime::now_utc().to_hms_milli() as u64
       std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64 
     }
   };
@@ -340,12 +337,9 @@ pub fn PostListing(
   } else {
     (&duration_in_text[..], "")
   }.0.to_string();
-  // .map(|(index, _)| s.split_at(index));
 
   view! {
-    // <tr class="flex sm:table-row">
     <div class="flex flex-row break-inside-avoid">
-      // <td class="flex flex-col items-center text-center w-16 hidden sm:table-cell">
       <div class="hidden sm:flex sm:flex-row items-center w-16 py-3 px-4">
       <div class="flex flex-col items-center text-center w-16">
         <ActionForm action=vote_action on:submit=on_up_vote_submit>
@@ -395,17 +389,12 @@ pub fn PostListing(
             <Icon icon=Downvote />
           </button>
         </ActionForm>
-      // </td>
       </div>
       </div>
       <div class=format!(
           "flex items-center sm:w-32 py-3 px-4{}",
           if post_view.get().post.thumbnail_url.is_none() { " hidden" } else { "" },
       )>
-      // <td class=format!(
-      //     "flex items-center sm:w-28 sm:table-cell{}",
-      //     if post_view.get().post.thumbnail_url.is_none() { " hidden" } else { "" },
-      // )>
         <a href=move || {
             if let Some(d) = post_view.get().post.url {
                 d.inner().to_string()
@@ -431,14 +420,12 @@ pub fn PostListing(
           }}
 
         </a>
-      // </td>
       </div>
       <div class="grow py-3 px-4">
-      // <td class="w-full">
         <A href=move || format!("/post/{}", post_view.get().post.id) class="block hover:text-accent ">
           <span class="text-lg" inner_html=title_encoded />
         </A>
-        <span class="block mb-1" on:click=move |e: MouseEvent| { if e.ctrl_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
+        <span class="block mb-1">
           <span>
             { abbr_duration }
           </span> " ago, by "
@@ -522,7 +509,7 @@ pub fn PostListing(
             </button>
           </ActionForm>
           <span title="Cross post">
-            <A href="/create_post" class="pointer-events-none text-base-content/50">
+            <A href="/create_post" class="text-base-content/50" on:click=move |e: MouseEvent| { if e.ctrl_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
               <Icon icon=Crosspost/>
             </A>
           </span>
@@ -565,8 +552,6 @@ pub fn PostListing(
           </div>
           <span class="grow text-right text-base-content/25"> { if post_number != 0 { format!("{}", post_number) } else { "".into() } } </span>
         </span>
-    //   </td>
-    // </tr>
       </div>
     </div>
   }
