@@ -99,7 +99,8 @@ pub fn PostActivity(
   view! {
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
       <div class="flex flex-col ">
-        <div class="columns-1 2xl:columns-2 4xl:columns-3 gap-3">
+        <div>
+        // <div class="columns-1 2xl:columns-2 4xl:columns-3 gap-3">
           <Transition fallback=|| {
               view! { "Loading..." }
           }>
@@ -109,9 +110,11 @@ pub fn PostActivity(
                     .map(|res| {
                       ui_title.set(Some(TitleSetter(res.post_view.post.name.clone())));
                       view! {
-                        <table class="table">
+                        // <table class="table">
+                        <div class="table">
                           <PostListing post_view=res.post_view.into() site_signal post_number=0/>
-                        </table>
+                        </div>
+                        // </table>
                       }
                     })
             }}

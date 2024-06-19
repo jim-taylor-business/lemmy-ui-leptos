@@ -8,6 +8,7 @@ use crate::{
     IconType::{Donate, Notifications, Search},
   },
 };
+use ev::MouseEvent;
 use lemmy_api_common::site::GetSiteResponse;
 use leptos::*;
 use leptos_router::*;
@@ -281,7 +282,15 @@ pub fn TopNav(
                 </summary>
                 <ul class="z-10">
                   <li>
-                    <A href=move || {
+                    <A on:click=move |e: MouseEvent| {
+                      if e.ctrl_key() {
+                        e.stop_propagation(); 
+                        if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = site_signal.get()
+                        {
+                          let _ = window().location().set_href(&format!("//lemmy.world/u/{}", m.local_user_view.person.name));
+                        }
+                      }
+                    } href=move || {
                         format!(
                             "/u/{}",
                             if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = site_signal

@@ -173,8 +173,9 @@ pub fn HomeActivity(
     // let width = RwSignal::new(0f64);
 
     let on_resize = move |_| {
-      logging::log!(">{}<", use_route().path());
-      if use_route().path().eq("/") {
+      logging::log!(">{} {}<", use_route().path(), use_location().pathname.get() );
+      // if use_route().path().eq("/") {
+      if use_location().pathname.get().eq("/") {
 
       let iw = window()
         .inner_width()
@@ -199,6 +200,7 @@ pub fn HomeActivity(
 
       // logging::log!("carlos {}", width.get());
       // logging::log!("carlos {}", iw);
+      logging::log!(">w {} {}<", iw, use_location().pathname.get() );
 
       let new_limit = if iw >= 2560f64 {
         query_params.insert("limit".into(), "40".to_string());
@@ -247,13 +249,14 @@ pub fn HomeActivity(
     };
 
     if let Ok(e) = web_sys::Event::new("resize") {
+      logging::log!("k >{}<", use_route().path());
       on_resize(e);
     }
 
     let resize_handle = window_event_listener_untyped("resize", on_resize);
 
     let on_scroll = move |_| {
-      if use_route().path().eq("/") {
+      if use_location().pathname.get().eq("/") {
 
 
         let iw = window()
