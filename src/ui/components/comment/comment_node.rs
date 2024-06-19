@@ -45,9 +45,9 @@ pub fn CommentNode(
     <div 
       // on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); } 
       // on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); } 
-      class=move || format!("pl-4{}{}{}", if level == 1 { " even:bg-base-100 odd:bg-base-200 pr-4" } else { "" }, if show.get() { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" }) 
+      class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4" } else { "" }, if show.get() { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" }) 
     >
-      <div class="cursor-pointer pb-2">
+      <div class="cursor-pointer py-2">
         <div on:mousedown=move |e: MouseEvent| {
           if let Some(t) = e.target() {
             if let Some(i) = t.dyn_ref::<HtmlImageElement>() {

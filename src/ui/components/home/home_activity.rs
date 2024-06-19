@@ -3,7 +3,7 @@ use std::{collections::BTreeMap, usize, vec};
 use crate::{
   errors::LemmyAppError, i18n::*, lemmy_client::*, ui::components::{
     common::about::About, home::{site_summary::SiteSummary, trending::Trending}, post::post_listings::PostListings
-  }, CsrHashMapSetter, CsrPageCursorSetter, NextCursorSetter, PageCursorSetter, PageNumberSetter, PrevCursorStackSetter, TitleSetter
+  }, TitleSetter
 };
 use lemmy_api_common::{
   lemmy_db_schema::{ListingType, SortType},
@@ -91,21 +91,21 @@ pub fn HomeActivity(
     }
   };
 
-  // let page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
-  // let prev_cursor_stack = create_rw_signal::<Vec<Option<PaginationCursor>>>(vec![]);
-  // let next_page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
-  // let page_number = create_rw_signal(0usize);
+  let page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
+  let prev_cursor_stack = create_rw_signal::<Vec<Option<PaginationCursor>>>(vec![]);
+  let next_page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
+  let page_number = create_rw_signal(0usize);
 
-  // let csr_paginator = RwSignal::new(None::<PaginationCursor>);
-  // let csr_infinite_scroll_hashmap: RwSignal<BTreeMap<usize, Vec<PostView>>> = RwSignal::new(BTreeMap::new());
+  let csr_paginator = RwSignal::new(None::<PaginationCursor>);
+  let csr_infinite_scroll_hashmap: RwSignal<BTreeMap<usize, Vec<PostView>>> = RwSignal::new(BTreeMap::new());
 
-  let page_cursor = expect_context::<RwSignal<PageCursorSetter>>();
-  let prev_cursor_stack = expect_context::<RwSignal<PrevCursorStackSetter>>();
-  let next_page_cursor = expect_context::<RwSignal<NextCursorSetter>>();
-  let page_number = expect_context::<RwSignal<PageNumberSetter>>();
+  // let page_cursor = expect_context::<RwSignal<PageCursorSetter>>();
+  // let prev_cursor_stack = expect_context::<RwSignal<PrevCursorStackSetter>>();
+  // let next_page_cursor = expect_context::<RwSignal<NextCursorSetter>>();
+  // let page_number = expect_context::<RwSignal<PageNumberSetter>>();
 
-  let csr_paginator = expect_context::<RwSignal<CsrPageCursorSetter>>();
-  let csr_infinite_scroll_hashmap = expect_context::<RwSignal<CsrHashMapSetter>>();
+  // let csr_paginator = expect_context::<RwSignal<CsrPageCursorSetter>>();
+  // let csr_infinite_scroll_hashmap = expect_context::<RwSignal<CsrHashMapSetter>>();
 
   let refresh = create_rw_signal(true);
   let loading = create_rw_signal(false);
@@ -135,7 +135,7 @@ pub fn HomeActivity(
         disliked_only: None,
         liked_only: None,
         // page_cursor: from,
-        page_cursor: page_cursor.get().0,
+        page_cursor: page_cursor.get(),
         // show_hidden: None,
       };
 
@@ -143,7 +143,7 @@ pub fn HomeActivity(
 
       match result {
         Ok(o) => {
-          next_page_cursor.set(NextCursorSetter(o.next_page.clone()));
+          next_page_cursor.set(o.next_page.clone());
           ui_title.set(None);
           loading.set(false);
           #[cfg(not(feature = "ssr"))]
@@ -196,11 +196,11 @@ pub fn HomeActivity(
         };
 
         if iw >= 640f64 {
-          csr_paginator.set(CsrPageCursorSetter(None));
+          csr_paginator.set(None);
           csr_page_number.set(10usize);
-          csr_infinite_scroll_hashmap.set(CsrHashMapSetter(BTreeMap::new()));
-          page_cursor.set(PageCursorSetter(None));
-          page_number.set(PageNumberSetter(0usize));
+          csr_infinite_scroll_hashmap.set(BTreeMap::new());
+          page_cursor.set(None);
+          page_number.set(0usize);
         }
 
         if prev_limit.ne(&new_limit) {
@@ -214,7 +214,6 @@ pub fn HomeActivity(
     };
 
     if let Ok(e) = web_sys::Event::new("resize") {
-      logging::log!("k >{}<", use_route().path());
       on_resize(e);
     }
 
@@ -240,8 +239,8 @@ pub fn HomeActivity(
           let endOfPage = (h + o) >= (b - h);
 
           if endOfPage {
-            if csr_infinite_scroll_hashmap.get().0.get(&csr_page_number.get()).is_none() {
-              csr_infinite_scroll_hashmap.update(|h| { h.0.insert(csr_page_number.get(), vec![]); });
+            if csr_infinite_scroll_hashmap.get().get(&csr_page_number.get()).is_none() {
+              csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), vec![]); });
 
               create_local_resource(
                 move || (),
@@ -256,7 +255,7 @@ pub fn HomeActivity(
                     saved_only: None,
                     disliked_only: None,
                     liked_only: None,
-                    page_cursor: csr_paginator.get().0,
+                    page_cursor: csr_paginator.get(),
                     // show_hidden: None,
                   };
 
@@ -264,8 +263,8 @@ pub fn HomeActivity(
 
                   match result {
                     Ok(o) => {
-                      csr_paginator.set(CsrPageCursorSetter(o.next_page));
-                      csr_infinite_scroll_hashmap.update(|h| { h.0.insert(csr_page_number.get(), o.posts.clone()); });
+                      csr_paginator.set(o.next_page);
+                      csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), o.posts.clone()); });
                       csr_page_number.update(|p| *p = *p + ssr_limit().unwrap_or(10i64) as usize);
                     }
                     Err(e) => {
@@ -290,7 +289,7 @@ pub fn HomeActivity(
   }
 
   view! {
-    <div class="block" on:resize=|_| { logging::log!("resize"); } on:scroll=|_| { logging::log!("scroll"); }>
+    <div class="block">
       <div class="join mr-3 hidden sm:inline-block">
         <button class="btn join-item btn-active">"Posts"</button>
         <button class="btn join-item btn-disabled">"Comments"</button>
@@ -390,48 +389,48 @@ pub fn HomeActivity(
                 .get()
                 .unwrap_or(None)
                 .map(|p| {
-                    if csr_infinite_scroll_hashmap.get().0.keys().len() == 0 {
-                        csr_paginator.set(CsrPageCursorSetter(p.next_page.clone()));
+                    if csr_infinite_scroll_hashmap.get().keys().len() == 0 {
+                        csr_paginator.set(p.next_page.clone());
                     }
 
-                    if next_page_cursor.get().0.is_none() {
-                        next_page_cursor.set(NextCursorSetter(p.next_page.clone()));
+                    if next_page_cursor.get().is_none() {
+                        next_page_cursor.set(p.next_page.clone());
                     }
                     view! {
                         <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
                           <PostListings posts=p.posts.into() site_signal page_number />
-                          <For each=move || csr_infinite_scroll_hashmap.get().0.into_iter() key=|h| h.0 let:h>
-                            <PostListings posts=h.1.into() site_signal page_number=PageNumberSetter(h.0).into() />
+                          <For each=move || csr_infinite_scroll_hashmap.get().into_iter() key=|h| h.0 let:h>
+                            <PostListings posts=h.1.into() site_signal page_number=h.0.into() />
                           </For>
                         </div>
   
                         <div class=move || format!("join hidden{}", if page_cursors_writable.get() { " sm:block" } else { "" })>
 
                           <button
-                            class=move || format!("btn join-item{}", if prev_cursor_stack.get().0.len() > 0 { "" } else { " btn-disabled" } ) 
+                            class=move || format!("btn join-item{}", if prev_cursor_stack.get().len() > 0 { "" } else { " btn-disabled" } ) 
                             on:click=move |_| {
                                 // PageCursors are not writable in v 0.19.3
-                                let mut p = prev_cursor_stack.get().0;
+                                let mut p = prev_cursor_stack.get();
                                 let s = p.pop().unwrap_or(None);
-                                prev_cursor_stack.set(PrevCursorStackSetter(p));
-                                page_cursor.set(PageCursorSetter(s));
+                                prev_cursor_stack.set(p);
+                                page_cursor.set(s);
                                 refresh.set(!refresh.get());
-                                page_number.update(|p| *p = PageNumberSetter((*p).0 - ssr_limit().unwrap_or(10i64) as usize));
+                                page_number.update(|p| *p = (*p) - ssr_limit().unwrap_or(10i64) as usize);
                             }
                           >
                             "Prev"
                           </button>
                           <button
-                            class=move || format!("btn join-item{}", if next_page_cursor.get().0.is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
+                            class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
                             on:click=move |_| {
                                 // PageCursors are not writable in v 0.19.3
-                                let mut p = prev_cursor_stack.get().0;
-                                p.push(page_cursor.get().0);
-                                prev_cursor_stack.set(PrevCursorStackSetter(p));
-                                page_cursor.set(PageCursorSetter(next_page_cursor.get().0));
+                                let mut p = prev_cursor_stack.get();
+                                p.push(page_cursor.get());
+                                prev_cursor_stack.set(p);
+                                page_cursor.set(next_page_cursor.get());
                                 loading.set(true);
                                 refresh.set(!refresh.get());
-                                page_number.update(|p| *p = PageNumberSetter((*p).0 + ssr_limit().unwrap_or(10i64) as usize));
+                                page_number.update(|p| *p = (*p) + ssr_limit().unwrap_or(10i64) as usize);
                             }
                           >
                             "Next"

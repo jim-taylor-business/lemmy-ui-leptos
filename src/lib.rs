@@ -10,7 +10,7 @@ mod lemmy_client;
 mod lemmy_error;
 mod ui;
 
-use std::collections::BTreeMap;
+// use std::collections::BTreeMap;
 
 use crate::{
   errors::LemmyAppError,
@@ -24,7 +24,7 @@ use crate::{
     post::post_activity::PostActivity,
   },
 };
-use lemmy_api_common::{lemmy_db_views::structs::{PaginationCursor, PostView}, site::GetSiteResponse};
+use lemmy_api_common::{/* lemmy_db_views::structs::{PaginationCursor, PostView}, */ site::GetSiteResponse};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -34,19 +34,19 @@ leptos_i18n::load_locales!();
 #[derive(Clone)]
 pub struct TitleSetter(String);
 
-#[derive(Clone)]
-pub struct PageCursorSetter(Option<PaginationCursor>);
-#[derive(Clone)]
-pub struct PrevCursorStackSetter(Vec<Option<PaginationCursor>>);
-#[derive(Clone)]
-pub struct NextCursorSetter(Option<PaginationCursor>);
-#[derive(Clone)]
-pub struct PageNumberSetter(usize);
+// #[derive(Clone)]
+// pub struct PageCursorSetter(Option<PaginationCursor>);
+// #[derive(Clone)]
+// pub struct PrevCursorStackSetter(Vec<Option<PaginationCursor>>);
+// #[derive(Clone)]
+// pub struct NextCursorSetter(Option<PaginationCursor>);
+// #[derive(Clone)]
+// pub struct PageNumberSetter(usize);
 
-#[derive(Clone)]
-pub struct CsrPageCursorSetter(Option<PaginationCursor>);
-#[derive(Clone)]
-pub struct CsrHashMapSetter(BTreeMap<usize, Vec<PostView>>);
+// #[derive(Clone)]
+// pub struct CsrPageCursorSetter(Option<PaginationCursor>);
+// #[derive(Clone)]
+// pub struct CsrHashMapSetter(BTreeMap<usize, Vec<PostView>>);
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -64,18 +64,18 @@ pub fn App() -> impl IntoView {
   provide_context(ui_title);
 
   // workaround to maintain index state
-  let page_cursor = create_rw_signal(PageCursorSetter(None));
-  provide_context(page_cursor);
-  let prev_cursor_stack = create_rw_signal(PrevCursorStackSetter(vec![]));
-  provide_context(prev_cursor_stack);
-  let next_page_cursor = create_rw_signal(NextCursorSetter(None));
-  provide_context(next_page_cursor);
-  let page_number = create_rw_signal(PageNumberSetter(0usize));
-  provide_context(page_number);
-  let csr_paginator = RwSignal::new(CsrPageCursorSetter(None));
-  provide_context(csr_paginator);
-  let csr_infinite_scroll_hashmap = RwSignal::new(CsrHashMapSetter(BTreeMap::new()));
-  provide_context(csr_infinite_scroll_hashmap);
+  // let page_cursor = create_rw_signal(PageCursorSetter(None));
+  // provide_context(page_cursor);
+  // let prev_cursor_stack = create_rw_signal(PrevCursorStackSetter(vec![]));
+  // provide_context(prev_cursor_stack);
+  // let next_page_cursor = create_rw_signal(NextCursorSetter(None));
+  // provide_context(next_page_cursor);
+  // let page_number = create_rw_signal(PageNumberSetter(0usize));
+  // provide_context(page_number);
+  // let csr_paginator = RwSignal::new(CsrPageCursorSetter(None));
+  // provide_context(csr_paginator);
+  // let csr_infinite_scroll_hashmap = RwSignal::new(CsrHashMapSetter(BTreeMap::new()));
+  // provide_context(csr_infinite_scroll_hashmap);
 
 
   let site_signal = create_rw_signal::<Option<Result<GetSiteResponse, LemmyAppError>>>(None);

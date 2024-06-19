@@ -93,10 +93,38 @@ pub fn PostActivity(
                     .unwrap_or(None)
                     .map(|res| {
                       ui_title.set(Some(TitleSetter(res.post_view.post.name.clone())));
+                      let text = if let Some(b) = res.post_view.post.body.clone() {
+                        if b.len() > 0 {
+                          Some(b)
+                        } else {
+                          res.post_view.post.embed_description.clone()
+                        }
+                      } else {
+                        None
+                      };
+
                       view! {
                         <div>
                           <PostListing post_view=res.post_view.into() site_signal post_number=0/>
                         </div>
+                        {
+                          if let Some(ref refer) = text {
+                            // let refer = &;
+                            let parser = pulldown_cmark::Parser::new(refer);
+                            let mut html = String::new();
+                            pulldown_cmark::html::push_html(&mut html, parser);                    
+
+                            view! {
+                              <div class="pl-4 pr-4">
+                                <div class="py-2">
+                                  <div class="prose max-w-none prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
+                                </div>
+                              </div>
+                            }
+                          } else {
+                            view! { <div class="hidden"></div> }
+                          }
+                        }
                       }
                     })
             }}
