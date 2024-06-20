@@ -140,12 +140,12 @@ pub fn HomeActivity(
       };
 
       let result = LemmyClient.list_posts(form).await;
+      loading.set(false);
 
       match result {
         Ok(o) => {
           next_page_cursor.set(o.next_page.clone());
           ui_title.set(None);
-          loading.set(false);
           #[cfg(not(feature = "ssr"))]
           {
             window().scroll_to_with_x_and_y(0.0, 0.0);
@@ -191,14 +191,17 @@ pub fn HomeActivity(
           query_params.insert("limit".into(), "20".to_string());
           Some("20".to_string())
         } else {
-          query_params.remove("limit");
-          None
+          query_params.insert("limit".into(), "10".to_string());
+          Some("10".to_string())
+          // query_params.remove("limit");
+          // None
         };
 
         if iw >= 640f64 {
           csr_paginator.set(None);
           csr_page_number.set(10usize);
           csr_infinite_scroll_hashmap.set(BTreeMap::new());
+          prev_cursor_stack.set(vec![]);
           page_cursor.set(None);
           page_number.set(0usize);
         }
@@ -268,6 +271,7 @@ pub fn HomeActivity(
                       csr_page_number.update(|p| *p = *p + ssr_limit().unwrap_or(10i64) as usize);
                     }
                     Err(e) => {
+                      csr_infinite_scroll_hashmap.update(|h| { h.remove(&csr_page_number.get()); });
                       error.set(Some(e));
                     }
                   }

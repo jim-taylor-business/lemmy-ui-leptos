@@ -359,7 +359,6 @@ pub fn PostListing(
                 )
             }
             disabled=move || Some(true) != user.get()
-
             title="Up vote"
           >
             <Icon icon=Upvote />
@@ -383,7 +382,6 @@ pub fn PostListing(
                 )
             }
             disabled=move || Some(true) != user.get()
-
             title="Down vote"
           >
             <Icon icon=Downvote />
@@ -508,48 +506,58 @@ pub fn PostListing(
               <Icon icon=Save/>
             </button>
           </ActionForm>
-          <span title="Cross post">
-            <A href="/create_post" class="text-base-content/50" on:click=move |e: MouseEvent| { if e.ctrl_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
+          <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
+            // <A href="/create_post">
               <Icon icon=Crosspost/>
-            </A>
+            // </A>
           </span>
-          <div class="dropdown max-sm:dropdown-end">
-            <label tabindex="0">
-              <Icon icon=VerticalDots/>
-            </label>
-            <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
-              <li>
-                <ActionForm action=report_post_action on:submit=on_report_submit class="flex flex-col items-start">
-                  <input type="hidden" name="post_id" value=format!("{}", post_view.get().post.id)/>
-                  <input
-                    class=move || format!("input input-bordered {}", report_validation.get())
-                    type="text"
-                    on:input=move |e| update!(| reason | * reason = event_target_value(& e))
-                    name="reason"
-                    placeholder="reason"
-                  />
-                  <button class="text-xs whitespace-nowrap" title="Report post" type="submit">
-                    <Icon icon=Report class="inline-block".into()/>
-                    "Report post"
-                  </button>
-                </ActionForm>
-              </li>
-              <li>
-                <ActionForm action=block_user_action on:submit=on_block_submit>
-                  <input
-                    type="hidden"
-                    name="person_id"
-                    value=format!("{}", post_view.get().creator.id.0)
-                  />
-                  <input type="hidden" name="block" value="true"/>
-                  <button class="text-xs whitespace-nowrap" title="Block user" type="submit">
-                    <Icon icon=Block class="inline-block".into()/>
-                    "Block user"
-                  </button>
-                </ActionForm>
-              </li>
-            </ul>
-          </div>
+          { 
+            if post_number == 0 {
+              view! {
+                <div class="dropdown max-sm:dropdown-end">
+                  <label tabindex="0">
+                    <Icon icon=VerticalDots/>
+                  </label>
+                  <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
+                    <li>
+                      <ActionForm action=report_post_action on:submit=on_report_submit class="flex flex-col items-start">
+                        <input type="hidden" name="post_id" value=format!("{}", post_view.get().post.id)/>
+                        <input
+                          class=move || format!("input input-bordered {}", report_validation.get())
+                          type="text"
+                          on:input=move |e| update!(| reason | * reason = event_target_value(& e))
+                          name="reason"
+                          placeholder="reason"
+                        />
+                        <button class="text-xs whitespace-nowrap" title="Report post" type="submit">
+                          <Icon icon=Report class="inline-block".into()/>
+                          "Report post"
+                        </button>
+                      </ActionForm>
+                    </li>
+                    <li>
+                      <ActionForm action=block_user_action on:submit=on_block_submit>
+                        <input
+                          type="hidden"
+                          name="person_id"
+                          value=format!("{}", post_view.get().creator.id.0)
+                        />
+                        <input type="hidden" name="block" value="true"/>
+                        <button class="text-xs whitespace-nowrap" title="Block user" type="submit">
+                          <Icon icon=Block class="inline-block".into()/>
+                          "Block user"
+                        </button>
+                      </ActionForm>
+                    </li>
+                  </ul>
+                </div>
+              }
+            } else {
+              view! {
+                <div class="hidden"></div>
+              }
+            } 
+          }
           <span class="grow text-right text-base-content/25"> { if post_number != 0 { format!("{}", post_number) } else { "".into() } } </span>
         </span>
       </div>

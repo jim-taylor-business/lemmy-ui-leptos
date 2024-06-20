@@ -348,6 +348,7 @@ pub fn BottomNav(
 ) -> impl IntoView {
   let i18n = use_i18n();
   const FE_VERSION: &str = env!("CARGO_PKG_VERSION");
+  const GIT_HASH: std::option::Option<&'static str> = option_env!("GIT_HASH");
 
   view! {
     <nav class="container navbar mx-auto hidden lg:flex">
@@ -357,7 +358,7 @@ pub fn BottomNav(
           <li>
             <a href="//github.com/jim-taylor-business/lemmy-ui-leptos/releases" class="text-md">
               "FE: "
-              {FE_VERSION}
+              {FE_VERSION} "." {GIT_HASH}
             </a>
           </li>
           <li>
@@ -366,7 +367,6 @@ pub fn BottomNav(
               {move || {
                   if let Some(Ok(m)) = site_signal.get() { m.version } else { "Lemmy".to_string() }
               }}
-
             </a>
           </li>
           <li>
