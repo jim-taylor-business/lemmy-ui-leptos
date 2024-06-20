@@ -283,7 +283,7 @@ pub fn TopNav(
                 <ul class="z-10">
                   <li>
                     <A on:click=move |e: MouseEvent| {
-                      if e.ctrl_key() {
+                      if e.ctrl_key() && e.shift_key() {
                         e.stop_propagation(); 
                         if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = site_signal.get()
                         {

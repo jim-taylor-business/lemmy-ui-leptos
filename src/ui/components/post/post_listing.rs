@@ -391,7 +391,7 @@ pub fn PostListing(
       </div>
       <div class=format!(
           "flex items-center sm:w-32 py-3 px-4{}",
-          if post_view.get().post.thumbnail_url.is_none() { " hidden" } else { "" },
+          if post_view.get().post.thumbnail_url.is_none() && post_view.get().post.url.is_none() { " hidden" } else { "" },
       )>
         <a href=move || {
             if let Some(d) = post_view.get().post.url {
@@ -506,7 +506,7 @@ pub fn PostListing(
               <Icon icon=Save/>
             </button>
           </ActionForm>
-          <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
+          <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() && e.shift_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
             // <A href="/create_post">
               <Icon icon=Crosspost/>
             // </A>
