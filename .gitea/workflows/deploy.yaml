@@ -30,6 +30,7 @@ jobs:
           rustc --version
           lsb_release -a
           uname -a
+          export GIT_HASH=$(git rev-parse --short HEAD)
           export LEMMY_UI_LEPTOS_HOST=${{ secrets.UI_HOST }}
           export LEMMY_UI_LEPTOS_LEMMY_HOST=${{ secrets.APP_HOST }}
           export LEMMY_UI_LEPTOS_LEMMY_HTTPS=${{ secrets.APP_SSL }}
