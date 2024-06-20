@@ -5,6 +5,8 @@
 # build
 target
 node_modules
+src-tauri/gen
+dist
 
 # test
 docker/volumes

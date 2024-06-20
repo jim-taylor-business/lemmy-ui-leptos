@@ -3,8 +3,11 @@ name = "lemmy-ui-leptos"
 version = "0.19.3-lw-demo-alpha"
 edition = "2021"
 
-[lib]
-crate-type = ["cdylib", "rlib"]
+# [lib]
+# crate-type = ["cdylib", "rlib"]
+
+[workspace]
+members = ["src-tauri"]
 
 [dependencies]
 # recommended - use the latest version tag and test against an instance that supports the same version
@@ -64,7 +67,7 @@ default = "en"
 locales = ["en", "fr"]
 
 [features]
-default = ["ssr"]
+default = ["csr"]
 hydrate = [
   "leptos/hydrate",
   "leptos_meta/hydrate",
