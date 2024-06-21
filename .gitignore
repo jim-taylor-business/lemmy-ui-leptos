@@ -5,8 +5,8 @@
 # build
 target
 node_modules
-src-tauri/gen/android/app/build
 dist
+src-tauri/gen/android/app/build
 
 # test
 docker/volumes
