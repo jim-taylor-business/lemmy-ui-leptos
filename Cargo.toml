@@ -126,7 +126,7 @@ lib-features = ["hydrate"]
 lib-default-features = false
 lib-profile-release = "wasm-release"
 
-tailwind-input-file = "style/tailwind.css"
+tailwind-input-file = "tailwind.css"
 browserquery = "defaults"
 
 site-root = "target/site"
