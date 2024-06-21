@@ -1,4 +1,5 @@
 import java.util.Properties
+import java.io.FileInputStream
 
 plugins {
     id("com.android.application")
@@ -13,6 +14,10 @@ val tauriProperties = Properties().apply {
     }
 }
 
+val keyPropertiesFile = rootProject.file("key.properties")
+val keyProperties = Properties()
+keyProperties.load(FileInputStream(keyPropertiesFile))
+
 android {
     compileSdk = 34
     namespace = "com.jimmy90.lemmy.ui.leptos.dev"
@@ -20,9 +25,17 @@ android {
         manifestPlaceholders["usesCleartextTraffic"] = "false"
         applicationId = "com.jimmy90.lemmy.ui.leptos.dev"
         minSdk = 24
-        targetSdk = 34
-        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
-        versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+        targetSdk = 33
+        versionCode = 1
+        versionName = "1.0"
+    }
+    signingConfigs {
+        create("release") {
+            keyAlias = keyProperties["keyAlias"] as String
+            keyPassword = keyProperties["keyPassword"] as String
+            storeFile = file(keyProperties["storeFile"] as String)
+            storePassword = keyProperties["storePassword"] as String
+        }
     }
     buildTypes {
         getByName("debug") {
@@ -30,7 +43,8 @@ android {
             isDebuggable = true
             isJniDebuggable = true
             isMinifyEnabled = false
-            packaging {                jniLibs.keepDebugSymbols.add("*/arm64-v8a/*.so")
+            packaging {
+                jniLibs.keepDebugSymbols.add("*/arm64-v8a/*.so")
                 jniLibs.keepDebugSymbols.add("*/armeabi-v7a/*.so")
                 jniLibs.keepDebugSymbols.add("*/x86/*.so")
                 jniLibs.keepDebugSymbols.add("*/x86_64/*.so")
@@ -38,6 +52,19 @@ android {
         }
         getByName("release") {
             isMinifyEnabled = true
+            // new
+            //minifyEnabled = true
+            //shrinkResources = true
+            //proguardFiles(getDefaultProguardFile('proguard-android.txt'), "proguard-rules.pro")
+            isShrinkResources = true
+
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro"
+            )
+
+            // old
+            signingConfig = signingConfigs.getByName("release")
             proguardFiles(
                 *fileTree(".") { include("**/*.pro") }
                     .plus(getDefaultProguardFile("proguard-android-optimize.txt"))
@@ -49,6 +76,43 @@ android {
         jvmTarget = "1.8"
     }
 }
+
+//android {
+//    compileSdk = 34
+//    namespace = "com.jimmy90.lemmy.ui.leptos.dev"
+//    defaultConfig {
+//        manifestPlaceholders["usesCleartextTraffic"] = "false"
+//        applicationId = "com.jimmy90.lemmy.ui.leptos.dev"
+//        minSdk = 24
+//        targetSdk = 34
+//        versionCode = tauriProperties.getProperty("tauri.android.versionCode", "1").toInt()
+//        versionName = tauriProperties.getProperty("tauri.android.versionName", "1.0")
+//    }
+//    buildTypes {
+//        getByName("debug") {
+//            manifestPlaceholders["usesCleartextTraffic"] = "true"
+//            isDebuggable = true
+//            isJniDebuggable = true
+//            isMinifyEnabled = false
+//            packaging {                jniLibs.keepDebugSymbols.add("*/arm64-v8a/*.so")
+//                jniLibs.keepDebugSymbols.add("*/armeabi-v7a/*.so")
+//                jniLibs.keepDebugSymbols.add("*/x86/*.so")
+//                jniLibs.keepDebugSymbols.add("*/x86_64/*.so")
+//            }
+//        }
+//        getByName("release") {
+//            isMinifyEnabled = true
+//            proguardFiles(
+//                *fileTree(".") { include("**/*.pro") }
+//                    .plus(getDefaultProguardFile("proguard-android-optimize.txt"))
+//                    .toList().toTypedArray()
+//            )
+//        }
+//    }
+//    kotlinOptions {
+//        jvmTarget = "1.8"
+//    }
+//}
 
 rust {
     rootDirRel = "../../../"
