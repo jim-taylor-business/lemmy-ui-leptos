@@ -5,7 +5,7 @@
 # build
 target
 node_modules
-src-tauri/gen
+src-tauri/gen/android/app/build
 dist
 
 # test
