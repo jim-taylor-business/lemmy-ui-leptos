@@ -339,8 +339,8 @@ pub fn PostListing(
   }.0.to_string();
 
   view! {
-    <div class="grid grid-cols-[6rem_1fr] grid-rows-[1fr_2rem] sm:grid-cols-[3rem_6rem_1fr] sm:grid-rows-[1fr_2rem] gap-y-3 gap-x-4 py-3 px-4 flex-row break-inside-avoid">
-      <div class="sm:col-span-1 sm:row-span-2 hidden sm:flex sm:flex-row items-center">
+    <div class="grid grid-cols-[6rem_1fr] grid-rows-[1fr_2rem] sm:grid-cols-[2rem_6rem_1fr] sm:grid-rows-[1fr_2rem] gap-y-3 gap-x-4 py-3 px-4 flex-row break-inside-avoid">
+      <div class="sm:col-span-1 sm:row-span-2 hidden sm:flex sm:flex-row items-start pt-2">
         <div class="flex flex-col items-center text-center w-8">
           <ActionForm action=vote_action on:submit=on_up_vote_submit>
             <input type="hidden" name="post_id" value=format!("{}", post_view.get().post.id)/>
@@ -390,7 +390,7 @@ pub fn PostListing(
         </div>
       </div>
       <div class=move || format!(
-          "row-span-1 col-span-1 sm:col-span-1 sm:row-span-2 flex items-start{}",
+          "row-span-1 col-span-1 sm:col-span-1 sm:row-span-2 flex items-start pt-2{}",
           if post_view.get().post.thumbnail_url.is_none() && post_view.get().post.url.is_none() { " hidden" } else { "" },
       )>
         <a class="h-full flex flex-col" href=move || {

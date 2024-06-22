@@ -56,7 +56,7 @@ pub fn CommentNode(
                 child_show.set(!child_show.get());
             }
           }
-        } class="prose max-w-none prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
+        } class="prose max-w-none prose-pre:relative prose-pre:h-40 prose-code:absolute prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
       </div>
       <For each=move || com_sig.get() key=|cv| cv.comment.id let:cv>
         <CommentNode show=child_show comment_view=cv.into() comments=des_sig.get().into() level=level + 1/>
