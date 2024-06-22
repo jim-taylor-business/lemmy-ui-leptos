@@ -339,61 +339,61 @@ pub fn PostListing(
   }.0.to_string();
 
   view! {
-    <div class="flex flex-row break-inside-avoid">
-      <div class="hidden sm:flex sm:flex-row items-center w-16 py-3 px-4">
-      <div class="flex flex-col items-center text-center w-16">
-        <ActionForm action=vote_action on:submit=on_up_vote_submit>
-          <input type="hidden" name="post_id" value=format!("{}", post_view.get().post.id)/>
-          <input
-            type="hidden"
-            name="score"
-            value=move || if Some(1) == post_view.get().my_vote { 0 } else { 1 }
-          />
-          <button
-            type="submit"
-            class=move || {
-                format!(
-                    "align-bottom{}{}",
-                    { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-secondary/50" } },
-                    { if Some(1) == post_view.get().my_vote { " text-secondary" } else { "" } },
-                )
-            }
-            disabled=move || Some(true) != user.get()
-            title="Up vote"
-          >
-            <Icon icon=Upvote />
-          </button>
-        </ActionForm>
-        <span class="block text-sm">{move || post_view.get().counts.score}</span>
-        <ActionForm action=vote_action on:submit=on_down_vote_submit>
-          <input type="hidden" name="post_id" value=format!("{}", post_view.get().post.id)/>
-          <input
-            type="hidden"
-            name="score"
-            value=move || if Some(-1) == post_view.get().my_vote { 0 } else { -1 }
-          />
-          <button
-            type="submit"
-            class=move || {
-                format!(
-                    "align-top{}{}",
-                    { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-primary/50" } },
-                    { if Some(-1) == post_view.get().my_vote { " text-primary" } else { "" } },
-                )
-            }
-            disabled=move || Some(true) != user.get()
-            title="Down vote"
-          >
-            <Icon icon=Downvote />
-          </button>
-        </ActionForm>
+    <div class="grid grid-cols-[6rem_1fr] grid-rows-[1fr_2rem] sm:grid-cols-[3rem_6rem_1fr] sm:grid-rows-[1fr_2rem] gap-y-3 gap-x-4 py-3 px-4 flex-row break-inside-avoid">
+      <div class="sm:col-span-1 sm:row-span-2 hidden sm:flex sm:flex-row items-center">
+        <div class="flex flex-col items-center text-center w-8">
+          <ActionForm action=vote_action on:submit=on_up_vote_submit>
+            <input type="hidden" name="post_id" value=format!("{}", post_view.get().post.id)/>
+            <input
+              type="hidden"
+              name="score"
+              value=move || if Some(1) == post_view.get().my_vote { 0 } else { 1 }
+            />
+            <button
+              type="submit"
+              class=move || {
+                  format!(
+                      "align-bottom{}{}",
+                      { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-secondary/50" } },
+                      { if Some(1) == post_view.get().my_vote { " text-secondary" } else { "" } },
+                  )
+              }
+              disabled=move || Some(true) != user.get()
+              title="Up vote"
+            >
+              <Icon icon=Upvote />
+            </button>
+          </ActionForm>
+          <span class="block text-sm">{move || post_view.get().counts.score}</span>
+          <ActionForm action=vote_action on:submit=on_down_vote_submit>
+            <input type="hidden" name="post_id" value=format!("{}", post_view.get().post.id)/>
+            <input
+              type="hidden"
+              name="score"
+              value=move || if Some(-1) == post_view.get().my_vote { 0 } else { -1 }
+            />
+            <button
+              type="submit"
+              class=move || {
+                  format!(
+                      "align-top{}{}",
+                      { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-primary/50" } },
+                      { if Some(-1) == post_view.get().my_vote { " text-primary" } else { "" } },
+                  )
+              }
+              disabled=move || Some(true) != user.get()
+              title="Down vote"
+            >
+              <Icon icon=Downvote />
+            </button>
+          </ActionForm>
+        </div>
       </div>
-      </div>
-      <div class=format!(
-          "flex items-center sm:w-32 py-3 px-4{}",
+      <div class=move || format!(
+          "row-span-1 col-span-1 sm:col-span-1 sm:row-span-2 flex items-start{}",
           if post_view.get().post.thumbnail_url.is_none() && post_view.get().post.url.is_none() { " hidden" } else { "" },
       )>
-        <a href=move || {
+        <a class="h-full flex flex-col" href=move || {
             if let Some(d) = post_view.get().post.url {
                 d.inner().to_string()
             } else {
@@ -404,24 +404,29 @@ pub fn PostListing(
               if let Some(t) = post_view.get().post.thumbnail_url {
                   let h = t.inner().to_string();
                   view! {
-                    <span class="block w-24 h-24 truncate flex items-center">
-                      <img class="w-24 min-h-16" src=h/>
-                    </span>
+                    <div class="flex shrink grow basis-0 min-h-16">
+                        <div class="shrink grow basis-0 truncate">
+                          <img class="w-24" src=h/>
+                        </div>
+                    </div>
                   }
               } else {
                   view! {
-                    <span class="block w-24 h-24 truncate flex items-center">
+                    <div class="block w-24 truncate">
                       <img class="w-24 h-16" src="/favicon.svg"/>
-                    </span>
+                    </div>
                   }
               }
           }}
 
         </a>
       </div>
-      <div class="grow py-3 px-4">
-        <A href=move || format!("/post/{}", post_view.get().post.id) class="block hover:text-accent ">
-          <span class="text-lg" inner_html=title_encoded />
+      <div class=move || format!(
+        "row-span-1 col-span-1 sm:col-span-1 sm:row-span-1{}",
+        if post_view.get().post.thumbnail_url.is_none() && post_view.get().post.url.is_none() { " col-span-2 sm:col-span-2" } else { "" },
+      )>
+        <A href=move || format!("/post/{}", post_view.get().post.id) class="block hover:text-accent">
+          <span class="text-lg break-words" inner_html=title_encoded />
         </A>
         <span class="block mb-1">
           <span>
@@ -429,16 +434,20 @@ pub fn PostListing(
           </span> " ago, by "
           <A
             href=move || format!("/u/{}", post_view.get().creator.name)
-            class="text-sm inline-block hover:text-secondary"
+            class="text-sm inline-block hover:text-secondary break-words"
           >
             {post_view.get().creator.name}
           </A>
           ", in "
-          <A class="text-sm inline-block hover:text-secondary" href=format!("/c/{}", post_view.get().community.name)>
+          <A class="text-sm inline-block hover:text-secondary break-words" href=format!("/c/{}", post_view.get().community.name)>
             {post_view.get().community.title}
           </A>
         </span>
-        <span class="flex items-center gap-x-2">
+      </div>
+      <div class=move || format!(
+        "row-span-1 col-span-2 sm:col-span-1 sm:row-span-1 flex items-center gap-x-2{}",
+        if post_view.get().post.thumbnail_url.is_none() && post_view.get().post.url.is_none() { " sm:col-span-2" } else { "" },
+      )>
           <ActionForm
             action=vote_action
             on:submit=on_up_vote_submit
@@ -559,8 +568,7 @@ pub fn PostListing(
             } 
           }
           <span class="grow text-right text-base-content/25"> { if post_number != 0 { format!("{}", post_number) } else { "".into() } } </span>
-        </span>
-      </div>
+        </div>
     </div>
   }
 }

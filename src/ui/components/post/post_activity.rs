@@ -83,7 +83,7 @@ pub fn PostActivity(
 
   view! {
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
-      <div class="flex flex-col ">
+      <div class="flex flex-col">
         <div>
           <Transition fallback=|| {
               view! { "Loading..." }
