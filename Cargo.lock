@@ -2371,17 +2371,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "lemmy_app"
-version = "0.19.3-lw-demo-alpha"
-dependencies = [
- "serde",
- "serde_json",
- "tauri",
- "tauri-build",
- "tauri-plugin-shell",
-]
-
-[[package]]
 name = "lemmy_db_schema"
 version = "0.19.3"
 source = "git+https://github.com/LemmyNet/lemmy.git?tag=0.19.3#2133bcea4e953013942ded05fbc4fe5ba615d16a"
@@ -4911,6 +4900,17 @@ checksum = "5993dc129e544393574288923d1ec447c857f3f644187f4fbf7d9a875fbfc4fb"
 dependencies = [
  "embed-resource",
  "toml 0.7.8",
+]
+
+[[package]]
+name = "tech_demo_lemmy_world"
+version = "0.19.3-lw-demo-alpha"
+dependencies = [
+ "serde",
+ "serde_json",
+ "tauri",
+ "tauri-build",
+ "tauri-plugin-shell",
 ]
 
 [[package]]
