@@ -405,7 +405,7 @@ pub fn PostListing(
                   let h = t.inner().to_string();
                   view! {
                     <div class="flex shrink grow basis-0 min-h-16">
-                        <div class="shrink grow basis-0 truncate">
+                        <div class="shrink grow basis-0 h-24 truncate">
                           <img class="w-24" src=h/>
                         </div>
                     </div>
