@@ -1,15 +1,15 @@
 // useful in development to only have errors in compiler output
-// #![allow(warnings)]
+#![allow(warnings)]
 
 use cfg_if::cfg_if;
 use lemmy_ui_leptos::*;
-// use leptos::*;
 
 cfg_if! {
     if #[cfg(feature = "ssr")] {
         use actix_files::Files;
         use actix_web::*;
 
+        use leptos::*;
         use leptos_actix::{generate_route_list, LeptosRoutes};
         use awc::Client;
 

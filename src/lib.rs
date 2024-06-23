@@ -1,5 +1,5 @@
 // useful in development to only have errors in compiler output
-// #![allow(warnings)]
+#![allow(warnings)]
 
 mod config;
 mod cookie;
