@@ -119,7 +119,7 @@ pub fn HomeActivity(
   let posts = create_resource(
     move || {
       (
-        refresh.get(),
+        // refresh.get(),
         user.get(),
         list_func(),
         sort_func(),
@@ -129,16 +129,19 @@ pub fn HomeActivity(
         ssr_limit(),
       )
     },
-    move |(_refresh, _user, list_type, sort_type, pages, limit)| async move {
+    move |(/* _refresh,  */_user, list_type, sort_type, pages, limit)| async move {
 
-      let mut page_refs: BTreeMap<usize, GetPostsResponse> = BTreeMap::new();
-      let hash_ref = hashmap.get();
+      // let mut page_refs: BTreeMap<usize, GetPostsResponse> = BTreeMap::new();
+      // let hash_ref = hashmap.get();
 
-      for p in pages.iter() {
+      // for p in pages.iter() {
 
-        if let Some(ps) = hash_ref.get(&p.0) {
-          page_refs.insert(p.0, ps.clone());
-        } else {
+      //   if let Some(ps) = hash_ref.get(&p.0) {
+      //     page_refs.insert(p.0, ps.clone());
+      //   } else {
+
+          let p = pages.last().unwrap();
+
           let form = GetPosts {
             type_: list_type,
             sort: sort_type,
@@ -160,27 +163,29 @@ pub fn HomeActivity(
     
           match result {
             Ok(o) => {
-              hashmap.update(|h| { h.insert(p.0, o.clone()); });
+              // hashmap.update(|h| { h.insert(p.0, o.clone()); });
               // let hash_ref = hashmap.get();
               // logging::log!("here");
               // next_page_cursor.set(o.next_page);
-              page_refs.insert(p.0, o);
+              // page_refs.insert(p.0, o);
               #[cfg(not(feature = "ssr"))]
               {
                 window().scroll_to_with_x_and_y(0.0, 0.0);
               }
+              Some(o)
             },
             Err(e) => {
               error.set(Some(e));
               // page_refs.insert(p.0, vec![]);
+              None
             }
           }
     
-        }
+      //   }
     
-      }
+      // }
 
-      page_refs
+      // page_refs
 
     },
   );
@@ -467,7 +472,7 @@ pub fn HomeActivity(
         {move || {
             posts
                 .get()
-                .map(|post_map| {
+                .map(|post| {
                     // if csr_infinite_scroll_hashmap.get().keys().len() == 0 {
                     //     csr_paginator.set(p.next_page.clone());
                     // }
@@ -475,49 +480,21 @@ pub fn HomeActivity(
                     // if next_page_cursor.get().is_none() {
                     //     next_page_cursor.set(p.next_page.clone());
                     // }
+                    if let Some(p) = post.clone() {
+                        hashmap.update(|h| { h.insert(pages.get().last().unwrap().0, p); });
+                    }
 
-                    let p_copy = post_map.clone();
+                    // let p_copy = post_map.clone();
                     view! {
                         <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
-                          // <PostListings posts=p.posts.into() site_signal page_number />
-                          <For each=move || p_copy.clone().into_iter() key=|h| h.0 let:h>
+                          <For each=move || hashmap.get().into_iter() key=|h| h.0 let:h>
                             <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
                           </For>
                         </div>
   
                         <div class=move || format!("join hidden{}", if page_cursors_writable.get() { " sm:block" } else { "" })>
 
-                          // <button
-                          //   class=move || format!("btn join-item{}", if prev_cursor_stack.get().len() > 0 { "" } else { " btn-disabled" } ) 
-                          //   on:click=move |_| {
-                          //       // PageCursors are not writable in v 0.19.3
-                          //       let mut p = prev_cursor_stack.get();
-                          //       let s = p.pop().unwrap_or(None);
-                          //       prev_cursor_stack.set(p);
-                          //       page_cursor.set(s);
-                          //       refresh.set(!refresh.get());
-                          //       page_number.update(|p| *p = (*p) - ssr_limit().unwrap_or(10i64) as usize);
-                          //   }
-                          // >
-                          //   "Prev"
-                          // </button>
-                          // <button
-                          //   class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
-                          //   on:click=move |_| {
-                          //       // PageCursors are not writable in v 0.19.3
-                          //       let mut p = prev_cursor_stack.get();
-                          //       p.push(page_cursor.get());
-                          //       prev_cursor_stack.set(p);
-                          //       page_cursor.set(next_page_cursor.get());
-                          //       loading.set(true);
-                          //       refresh.set(!refresh.get());
-                          //       page_number.update(|p| *p = (*p) + ssr_limit().unwrap_or(10i64) as usize);
-                          //   }
-                          // >
-                          //   "Next"
-                          // </button>
-
-                          {if let Some(s) = ssr_prev() {
+                        {if let Some(s) = ssr_prev() {
                               if !s.is_empty() {
                                   let mut st = s.split(',').collect::<Vec<_>>();
                                   let p = st.pop().unwrap_or("");
@@ -541,7 +518,7 @@ pub fn HomeActivity(
                           } else {
                               view! { <span></span> }
                           }}
-                          {if let Some(n) = post_map.into_iter().last().unwrap().1.next_page.clone() {
+                          {if let Some(n) = post.unwrap().next_page.clone() {
                               let s = ssr_prev().unwrap_or_default();
                               let mut st = s.split(',').collect::<Vec<_>>();
                               let f = if let Some(PaginationCursor(g)) = from_func() {
