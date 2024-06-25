@@ -28,49 +28,70 @@ pub fn HomeActivity(
 
   let query = use_query_map();
 
-  let list_func = move || {
+  let ssr_list = move || {
     serde_json::from_str::<ListingType>(
       &query
         .get()
         .get("list")
         .cloned()
-        .unwrap_or("\"All\"".to_string()),
+        .unwrap_or("".into()),
+        // .unwrap_or(serde_json::to_string(&ListingType::All).ok().unwrap()),
     )
-    .ok()
+    .unwrap_or(ListingType::All)
   };
 
-  let sort_func = move || {
+  let ssr_sort = move || {
     serde_json::from_str::<SortType>(
       &query
         .get()
         .get("sort")
         .cloned()
-        .unwrap_or("\"Active\"".to_string()),
+        .unwrap_or("".into()),
+        // .unwrap_or("\"Active\"".to_string()),
     )
-    .ok()
+    .unwrap_or(SortType::Active)
   };
 
-  let from_func = move || {
-    if let Some(t) = query.get().get("from").cloned() {
-      if !t.is_empty() {
-        Some(PaginationCursor(t))
-      } else {
-        None
-      }
-    } else {
-      None
-    }
+  let ssr_from = move || {
+    serde_json::from_str::<(usize, Option<PaginationCursor>)>(
+      &query
+        .get()
+        .get("from")
+        .cloned()
+        .unwrap_or("".into()),
+    )
+    .unwrap_or((0usize, None))
+    // if let Some(t) = query.get().get("from").cloned() {
+    //   if !t.is_empty() {
+    //     Some(PaginationCursor(t))
+    //   } else {
+    //     None
+    //   }
+    // } else {
+    //   None
+    // }
   };
 
-  let ssr_prev = move || query.get().get("prev").cloned();
+  let ssr_prev = move || {
+    serde_json::from_str::<Vec<(usize, Option<PaginationCursor>)>>(
+      &query
+        .get()
+        .get("prev")
+        .cloned()
+        .unwrap_or("".into()),
+    )
+    .unwrap_or(vec![])
+    // query.get().get("prev").cloned()    
+  };
+
   let ssr_limit = move || {
     query
       .get()
       .get("limit")
       .cloned()
-      .unwrap_or("".to_string())
-      .parse::<i64>()
-      .ok()
+      .unwrap_or("".into())
+      .parse::<usize>()
+      .unwrap_or(10usize)
   };
 
   let on_sort_click = move |lt: SortType| {
@@ -92,13 +113,13 @@ pub fn HomeActivity(
     }
   };
 
-  let page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
-  let prev_cursor_stack = create_rw_signal::<Vec<Option<PaginationCursor>>>(vec![]);
-  let next_page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
-  let page_number = create_rw_signal(0usize);
+  // let page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
+  // let prev_cursor_stack = create_rw_signal::<Vec<Option<PaginationCursor>>>(vec![]);
+  let next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
+  // let page_number = create_rw_signal(0usize);
 
-  let csr_paginator = RwSignal::new(None::<PaginationCursor>);
-  let csr_infinite_scroll_hashmap: RwSignal<BTreeMap<usize, Vec<PostView>>> = RwSignal::new(BTreeMap::new());
+  // let csr_paginator = RwSignal::new(None::<PaginationCursor>);
+  // let csr_infinite_scroll_hashmap: RwSignal<BTreeMap<usize, Vec<PostView>>> = RwSignal::new(BTreeMap::new());
 
   // let page_cursor = expect_context::<RwSignal<PageCursorSetter>>();
   // let prev_cursor_stack = expect_context::<RwSignal<PrevCursorStackSetter>>();
@@ -108,28 +129,27 @@ pub fn HomeActivity(
   // let csr_paginator = expect_context::<RwSignal<CsrPageCursorSetter>>();
   // let csr_infinite_scroll_hashmap = expect_context::<RwSignal<CsrHashMapSetter>>();
 
-  let refresh = create_rw_signal(true);
+  // let refresh = create_rw_signal(true);
   let loading = create_rw_signal(false);
 
   ui_title.set(None);
 
-  let hashmap: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
-  let pages: RwSignal<Vec<(usize, Option<PaginationCursor>)>> = RwSignal::new(vec![(0usize, None)]);
+  let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
+  let csr_from: RwSignal<Option<(usize, Option<PaginationCursor>)>> = RwSignal::new(None);
 
   let posts = create_resource(
     move || {
       (
-        // refresh.get(),
         user.get(),
-        list_func(),
-        sort_func(),
-        pages.get(),
-        // from_func(),
+        ssr_list(),
+        ssr_sort(),
+        ssr_from(),
+        csr_from.get(),
         // hashmap.get(), //.keys().collect::<Vec<&(usize, Option<PaginationCursor>)>>(),
         ssr_limit(),
       )
     },
-    move |(/* _refresh,  */_user, list_type, sort_type, pages, limit)| async move {
+    move |(_user, list_type, sort_type, from, csr_from, limit)| async move {
 
       // let mut page_refs: BTreeMap<usize, GetPostsResponse> = BTreeMap::new();
       // let hash_ref = hashmap.get();
@@ -140,20 +160,20 @@ pub fn HomeActivity(
       //     page_refs.insert(p.0, ps.clone());
       //   } else {
 
-          let p = pages.last().unwrap();
+          // let p = pages.last().unwrap();
 
           let form = GetPosts {
-            type_: list_type,
-            sort: sort_type,
+            type_: Some(list_type),
+            sort: Some(sort_type),
             community_name: None,
             community_id: None,
             page: None,
-            limit,
+            limit: Some(i64::try_from(limit).unwrap_or(10)),
             saved_only: None,
             disliked_only: None,
             liked_only: None,
-            // page_cursor: from,
-            page_cursor: p.1.clone(),
+            page_cursor: if let Some(ref f) = csr_from { f.1.clone() } else { from.1.clone() },
+            // page_cursor: p.1.clone(),
             // show_hidden: None,
           };
     
@@ -168,11 +188,11 @@ pub fn HomeActivity(
               // logging::log!("here");
               // next_page_cursor.set(o.next_page);
               // page_refs.insert(p.0, o);
-              #[cfg(not(feature = "ssr"))]
-              {
-                window().scroll_to_with_x_and_y(0.0, 0.0);
-              }
-              Some(o)
+              // #[cfg(not(feature = "ssr"))]
+              // {
+              //   window().scroll_to_with_x_and_y(0.0, 0.0);
+              // }
+              Some((if let Some(f) = csr_from { f } else { from }, o))
             },
             Err(e) => {
               error.set(Some(e));
@@ -241,7 +261,7 @@ pub fn HomeActivity(
 
   #[cfg(not(feature = "ssr"))]
   {
-    let csr_page_number = create_rw_signal(10usize);
+    // let csr_page_number = create_rw_signal(10usize);
 
     let on_resize = move |_| {
       if use_location().pathname.get().eq("/") {
@@ -269,27 +289,35 @@ pub fn HomeActivity(
           query_params.insert("limit".into(), "20".to_string());
           Some("20".to_string())
         } else {
-          query_params.insert("limit".into(), "10".to_string());
-          Some("10".to_string())
-          // query_params.remove("limit");
-          // None
+          // query_params.insert("limit".into(), "10".to_string());
+          // Some("10".to_string())
+          query_params.remove("limit");
+          None
         };
 
         if iw >= 640f64 {
-          csr_paginator.set(None);
-          csr_page_number.set(10usize);
-          csr_infinite_scroll_hashmap.set(BTreeMap::new());
-          prev_cursor_stack.set(vec![]);
-          page_cursor.set(None);
-          page_number.set(0usize);
+          // csr_paginator.set(None);
+          // csr_page_number.set(10usize);
+          // csr_infinite_scroll_hashmap.set(BTreeMap::new());
+          // prev_cursor_stack.set(vec![]);
+          // page_cursor.set(None);
+          // page_number.set(0usize);
         }
 
         if prev_limit.ne(&new_limit) {
           let navigate = leptos_router::use_navigate();
-          navigate(
-            &format!("{}", query_params.to_query_string()),
-            Default::default(),
-          );
+          if iw >= 640f64 {
+            // let navigate = leptos_router::use_navigate();
+            navigate(
+              &format!("{}", query_params.to_query_string()),
+              Default::default(),
+            );
+          } else {
+            navigate("/",
+              // &format!("{}", query_params.to_query_string()),
+              Default::default(),
+            );
+          }
         }
       }
     };
@@ -320,7 +348,7 @@ pub fn HomeActivity(
           let endOfPage = (h + o) >= (b - h);
 
           if endOfPage {
-            pages.update(|ps| { ps.push((ps.last().unwrap().0 + 10, next_page_cursor.get().clone())); }); 
+            csr_from.set(next_page_cursor.get()); 
 
             // if csr_infinite_scroll_hashmap.get().get(&csr_page_number.get()).is_none() {
             //   csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), vec![]); });
@@ -366,11 +394,11 @@ pub fn HomeActivity(
     let _scroll_handle = window_event_listener_untyped("scroll", on_scroll);
   }
 
-  let page_cursors_writable = RwSignal::new(false);
-  #[cfg(not(feature = "ssr"))]
-  {
-    page_cursors_writable.set(true);
-  }
+  // let page_cursors_writable = RwSignal::new(false);
+  // #[cfg(not(feature = "ssr"))]
+  // {
+  //   page_cursors_writable.set(true);
+  // }
 
   view! {
     <div class="block">
@@ -388,7 +416,7 @@ pub fn HomeActivity(
                 class=move || {
                     format!(
                         "btn join-item{}{}",
-                        if Some(ListingType::Subscribed) == list_func() { " btn-active" } else { "" },
+                        if ListingType::Subscribed == ssr_list() { " btn-active" } else { "" },
                         { if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() { "" } else { " btn-disabled" } },
                     )
                 }
@@ -401,14 +429,14 @@ pub fn HomeActivity(
         <A
           href=move || {
               let mut query_params = query.get();
-              query_params.insert("list".into(), "\"Local\"".into());
+              query_params.insert("list".into(), serde_json::to_string(&ListingType::Local).ok().unwrap());
               query_params.to_query_string()
           }
 
           class=move || {
               format!(
                   "btn join-item {}",
-                  if Some(ListingType::Local) == list_func() { "btn-active" } else { "" },
+                  if ListingType::Local == ssr_list() { "btn-active" } else { "" },
               )
           }
         >
@@ -418,14 +446,14 @@ pub fn HomeActivity(
         <A
           href=move || {
               let mut query_params = query.get();
-              query_params.insert("list".into(), "\"All\"".into());
+              query_params.insert("list".into(), serde_json::to_string(&ListingType::All).ok().unwrap());
               query_params.to_query_string()
           }
 
           class=move || {
               format!(
                   "btn join-item {}",
-                  if Some(ListingType::All) == list_func() { "btn-active" } else { "" },
+                  if ListingType::All == ssr_list() { "btn-active" } else { "" },
               )
           }
         >
@@ -440,7 +468,7 @@ pub fn HomeActivity(
         <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
           <li
             class=move || {
-                (if Some(SortType::Active) == sort_func() { "btn-active" } else { "" }).to_string()
+                (if SortType::Active == ssr_sort() { "btn-active" } else { "" }).to_string()
             }
             on:click=on_sort_click(SortType::Active)
           >
@@ -448,7 +476,7 @@ pub fn HomeActivity(
           </li>
           <li
             class=move || {
-                (if Some(SortType::Hot) == sort_func() { "btn-active" } else { "" }).to_string()
+                (if SortType::Hot == ssr_sort() { "btn-active" } else { "" }).to_string()
             }
             on:click=on_sort_click(SortType::Hot)
           >
@@ -456,7 +484,7 @@ pub fn HomeActivity(
           </li>
           <li
             class=move || {
-                (if Some(SortType::New) == sort_func() { "btn-active" } else { "" }).to_string()
+                (if SortType::New == ssr_sort() { "btn-active" } else { "" }).to_string()
             }
             on:click=on_sort_click(SortType::New)
           >
@@ -472,6 +500,7 @@ pub fn HomeActivity(
         {move || {
             posts
                 .get()
+                .unwrap_or_default()
                 .map(|post| {
                     // if csr_infinite_scroll_hashmap.get().keys().len() == 0 {
                     //     csr_paginator.set(p.next_page.clone());
@@ -480,68 +509,85 @@ pub fn HomeActivity(
                     // if next_page_cursor.get().is_none() {
                     //     next_page_cursor.set(p.next_page.clone());
                     // }
-                    if let Some(p) = post.clone() {
-                        hashmap.update(|h| { h.insert(pages.get().last().unwrap().0, p); });
-                    }
+                    // if let Some(p) = post.clone() {
+                      next_page_cursor.set(Some((post.0.0 + ssr_limit(), post.1.next_page.clone())));
+                      csr_pages.update(|h| { h.insert(post.0.0, post.1); });
+                    // }
 
                     // let p_copy = post_map.clone();
                     view! {
                         <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
-                          <For each=move || hashmap.get().into_iter() key=|h| h.0 let:h>
+                          // <PostListings posts=post.posts.into() site_signal page_number=0.into() />
+                          <For each=move || csr_pages.get().into_iter() key=|h| h.0 let:h>
                             <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
                           </For>
                         </div>
   
-                        <div class=move || format!("join hidden{}", if page_cursors_writable.get() { " sm:block" } else { "" })>
+                        <div class="join hidden sm:block">
 
-                        {if let Some(s) = ssr_prev() {
-                              if !s.is_empty() {
-                                  let mut st = s.split(',').collect::<Vec<_>>();
-                                  let p = st.pop().unwrap_or("");
+                        {
+                          // if let Some(s) = ssr_prev() {
+                          //     if !s.is_empty() {
+                                  // let mut st = ssr_prev().unwrap_or("".into()).split(',').collect::<Vec<_>>();
+                                  // let p = st.pop().unwrap_or("");
+                                  let mut st = ssr_prev();
+                                  let p = st.pop();
                                   let mut query_params = query.get();
-                                  query_params.insert("prev".into(), st.join(",").to_string());
-                                  query_params.insert("from".into(), p.into());
+                                  query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
+                                  query_params.insert("from".into(), serde_json::to_string(&p).unwrap_or("[0,None]".into()));
                                   view! {
                                     <span>
                                       <A
                                         href=format!("{}", query_params.to_query_string())
-                                        class="btn"
-                                        on:click=move |e: MouseEvent| { e.prevent_default(); pages.update(|ps| { ps.pop(); }); }
+                                        class=move || format!("btn join-item{}", if !ssr_prev().is_empty() && !loading.get() { "" } else { " btn-disabled" } ) 
+                                        // class="btn"
+                                        // on:click=move |e: MouseEvent| { e.prevent_default(); csr_from.update(|ps| { ps.pop(); }); }
                                       >
                                         "Prev"
                                       </A>
                                     </span>
                                   }
-                              } else {
-                                  view! { <span></span> }
-                              }
-                          } else {
-                              view! { <span></span> }
-                          }}
-                          {if let Some(n) = post.unwrap().next_page.clone() {
-                              let s = ssr_prev().unwrap_or_default();
-                              let mut st = s.split(',').collect::<Vec<_>>();
-                              let f = if let Some(PaginationCursor(g)) = from_func() {
-                                  g
-                              } else {
-                                  "".to_string()
-                              };
-                              st.push(&f);
+                          //     } else {
+                          //         view! { <span></span> }
+                          //     }
+                          // } else {
+                          //     view! { <span></span> }
+                          // }
+                        }
+                        {
+                          // if let Some(n) = post.unwrap().next_page.clone() {
+                              // let s = ssr_prev().unwrap_or_default();
+                              // let mut st = s.split(',').collect::<Vec<_>>();
+                              // let f = if let (_, Some(PaginationCursor(g))) = ssr_from() {
+                              //     g
+                              // } else {
+                              //     "".to_string()
+                              // };
+                              // st.push(&f);
+                              // let mut query_params = query.get();
+                              // query_params.insert("prev".into(), st.join(",").to_string());
+                              // query_params.insert("from".into(), n.0.clone());
+                              let mut st = ssr_prev();
+                              st.push(ssr_from());
+                              // let p = post.unwrap().next_page.clone();
                               let mut query_params = query.get();
-                              query_params.insert("prev".into(), st.join(",").to_string());
-                              query_params.insert("from".into(), n.0.clone());
+                              query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
+                              query_params.insert("from".into(), serde_json::to_string(&next_page_cursor.get()).unwrap_or("[0,None]".into()));
                               view! {
                                 <span>
-                                  <A href=format!("{}", query_params.to_query_string()) class="btn"
-                                    on:click=move |e: MouseEvent| { e.prevent_default(); pages.update(|ps| { ps.push((ps.last().unwrap().0 + 10, Some(n.clone()))); }); }
+                                  <A 
+                                    href=format!("{}", query_params.to_query_string())
+                                    class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
+                                  // on:click=move |e: MouseEvent| { e.prevent_default(); csr_from.update(|ps| { ps.push((ps.last().unwrap().0 + 10, Some(n.clone()))); }); }
                                   >
                                     "Next"
                                   </A>
                                 </span>
                               }
-                          } else {
-                              view! { <span></span> }
-                          }}
+                        //   } else {
+                        //       view! { <span></span> }
+                        //   }
+                        }
 
                         </div>
                 }
