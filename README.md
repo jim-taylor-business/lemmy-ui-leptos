@@ -22,7 +22,7 @@ It's a standard contemporary web development environment. The development feedba
 - use isomorphic Leptos code to ensure that features work in the following contexts:
   - SSR only - server side rendering only. Search engine bots and browsers with diverse technical requirements (JS and WASM are disabled) must be able to read and interact with all core features. There will be sophisticated (non-core) features where we agree this is not possible
   - Hydrate - features progressively enhance from being rendered on the server to running almost entirely in the browser (JS and WASM are available). Feature logic must handle this context switch gracefully
-  - CSR only - client side rendering only - when a mobile/desktop app framework target is agreed upon (e.g. Tauri) all UI and interaction code is bundled into an app that communicates directly with its Lemmy instance
+  - CSR only - client side rendering only - features will be able to run entirely in the client, without server functions, and communicate directly with the Lemmy instance. All UI and interaction code can then be bundled into an app that can run with enhancements of a native mobile/desktop app using the [Tauri app framework](//github.com/jim-taylor-business/lemmy-ui-leptos/tree/app_demo) 
 - all core features should be accessible to as diverse a user base as we agree is possible
 - all UI text must be internationalized and rendered effectively for RTL languages
 - the badge feature must be recognizable across all Lemmy front ends for ease of identification and administration

@@ -35,7 +35,6 @@ pub fn HomeActivity(
         .get("list")
         .cloned()
         .unwrap_or("".into()),
-        // .unwrap_or(serde_json::to_string(&ListingType::All).ok().unwrap()),
     )
     .unwrap_or(ListingType::All)
   };
@@ -47,7 +46,6 @@ pub fn HomeActivity(
         .get("sort")
         .cloned()
         .unwrap_or("".into()),
-        // .unwrap_or("\"Active\"".to_string()),
     )
     .unwrap_or(SortType::Active)
   };
@@ -61,15 +59,6 @@ pub fn HomeActivity(
         .unwrap_or("".into()),
     )
     .unwrap_or((0usize, None))
-    // if let Some(t) = query.get().get("from").cloned() {
-    //   if !t.is_empty() {
-    //     Some(PaginationCursor(t))
-    //   } else {
-    //     None
-    //   }
-    // } else {
-    //   None
-    // }
   };
 
   let ssr_prev = move || {
@@ -81,7 +70,6 @@ pub fn HomeActivity(
         .unwrap_or("".into()),
     )
     .unwrap_or(vec![])
-    // query.get().get("prev").cloned()    
   };
 
   let ssr_limit = move || {
@@ -113,23 +101,7 @@ pub fn HomeActivity(
     }
   };
 
-  // let page_cursor = create_rw_signal::<Option<PaginationCursor>>(None);
-  // let prev_cursor_stack = create_rw_signal::<Vec<Option<PaginationCursor>>>(vec![]);
   let next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
-  // let page_number = create_rw_signal(0usize);
-
-  // let csr_paginator = RwSignal::new(None::<PaginationCursor>);
-  // let csr_infinite_scroll_hashmap: RwSignal<BTreeMap<usize, Vec<PostView>>> = RwSignal::new(BTreeMap::new());
-
-  // let page_cursor = expect_context::<RwSignal<PageCursorSetter>>();
-  // let prev_cursor_stack = expect_context::<RwSignal<PrevCursorStackSetter>>();
-  // let next_page_cursor = expect_context::<RwSignal<NextCursorSetter>>();
-  // let page_number = expect_context::<RwSignal<PageNumberSetter>>();
-
-  // let csr_paginator = expect_context::<RwSignal<CsrPageCursorSetter>>();
-  // let csr_infinite_scroll_hashmap = expect_context::<RwSignal<CsrHashMapSetter>>();
-
-  // let refresh = create_rw_signal(true);
   let loading = create_rw_signal(false);
 
   ui_title.set(None);
@@ -145,123 +117,50 @@ pub fn HomeActivity(
         ssr_sort(),
         ssr_from(),
         csr_from.get(),
-        // hashmap.get(), //.keys().collect::<Vec<&(usize, Option<PaginationCursor>)>>(),
         ssr_limit(),
       )
     },
     move |(_user, list_type, sort_type, from, csr_from, limit)| async move {
 
-      // let mut page_refs: BTreeMap<usize, GetPostsResponse> = BTreeMap::new();
-      // let hash_ref = hashmap.get();
+      let f = if let Some(f) = csr_from { f } else { from };
 
-      // for p in pages.iter() {
+      let form = GetPosts {
+        type_: Some(list_type),
+        sort: Some(sort_type),
+        community_name: None,
+        community_id: None,
+        page: None,
+        limit: Some(i64::try_from(limit).unwrap_or(10)),
+        saved_only: None,
+        disliked_only: None,
+        liked_only: None,
+        page_cursor: f.1.clone(),
+        // show_hidden: None,
+      };
 
-      //   if let Some(ps) = hash_ref.get(&p.0) {
-      //     page_refs.insert(p.0, ps.clone());
-      //   } else {
+      let result = LemmyClient.list_posts(form).await;
+      loading.set(false);
+      ui_title.set(None);
 
-          // let p = pages.last().unwrap();
-
-          let form = GetPosts {
-            type_: Some(list_type),
-            sort: Some(sort_type),
-            community_name: None,
-            community_id: None,
-            page: None,
-            limit: Some(i64::try_from(limit).unwrap_or(10)),
-            saved_only: None,
-            disliked_only: None,
-            liked_only: None,
-            page_cursor: if let Some(ref f) = csr_from { f.1.clone() } else { from.1.clone() },
-            // page_cursor: p.1.clone(),
-            // show_hidden: None,
-          };
+      match result {
+        Ok(o) => {
+          // #[cfg(not(feature = "ssr"))]
+          // {
+          //   window().scroll_to_with_x_and_y(0.0, 0.0);
+          // }
+          Some((f, o))
+        },
+        Err(e) => {
+          error.set(Some(e));
+          None
+        }
+      }
     
-          let result = LemmyClient.list_posts(form).await;
-          // loading.set(false);
-          // ui_title.set(None);
-    
-          match result {
-            Ok(o) => {
-              // hashmap.update(|h| { h.insert(p.0, o.clone()); });
-              // let hash_ref = hashmap.get();
-              // logging::log!("here");
-              // next_page_cursor.set(o.next_page);
-              // page_refs.insert(p.0, o);
-              // #[cfg(not(feature = "ssr"))]
-              // {
-              //   window().scroll_to_with_x_and_y(0.0, 0.0);
-              // }
-              Some((if let Some(f) = csr_from { f } else { from }, o))
-            },
-            Err(e) => {
-              error.set(Some(e));
-              // page_refs.insert(p.0, vec![]);
-              None
-            }
-          }
-    
-      //   }
-    
-      // }
-
-      // page_refs
-
     },
   );
 
-  // let ssr_posts = create_resource(
-  //   move || {
-  //     (
-  //       refresh.get(),
-  //       user.get(),
-  //       list_func(),
-  //       sort_func(),
-  //       // from_func(),
-  //       ssr_limit(),
-  //     )
-  //   },
-  //   move |(_refresh, _user, list_type, sort_type, /* from, */ limit)| async move {
-  //     let form = GetPosts {
-  //       type_: list_type,
-  //       sort: sort_type,
-  //       community_name: None,
-  //       community_id: None,
-  //       page: None,
-  //       limit,
-  //       saved_only: None,
-  //       disliked_only: None,
-  //       liked_only: None,
-  //       // page_cursor: from,
-  //       page_cursor: page_cursor.get(),
-  //       // show_hidden: None,
-  //     };
-
-  //     let result = LemmyClient.list_posts(form).await;
-  //     loading.set(false);
-
-  //     match result {
-  //       Ok(o) => {
-  //         next_page_cursor.set(o.next_page.clone());
-  //         ui_title.set(None);
-  //         #[cfg(not(feature = "ssr"))]
-  //         {
-  //           window().scroll_to_with_x_and_y(0.0, 0.0);
-  //         }
-  //         Some(o)
-  //       },
-  //       Err(e) => {
-  //         error.set(Some(e));
-  //         None
-  //       }
-  //     }
-  //   },
-  // );
-
-
   #[cfg(not(feature = "ssr"))]
   {
-    // let csr_page_number = create_rw_signal(10usize);
 
     let on_resize = move |_| {
       if use_location().pathname.get().eq("/") {
@@ -296,12 +195,8 @@ pub fn HomeActivity(
         };
 
         if iw >= 640f64 {
-          // csr_paginator.set(None);
-          // csr_page_number.set(10usize);
-          // csr_infinite_scroll_hashmap.set(BTreeMap::new());
-          // prev_cursor_stack.set(vec![]);
-          // page_cursor.set(None);
-          // page_number.set(0usize);
+          // csr_pages.set(BTreeMap::new());
+          csr_from.set(None);
         }
 
         if prev_limit.ne(&new_limit) {
@@ -347,45 +242,15 @@ pub fn HomeActivity(
 
           let endOfPage = (h + o) >= (b - h);
 
+          // logging::log!("{} {} {} {} ", endOfPage, h, o, b); 
+
           if endOfPage {
-            csr_from.set(next_page_cursor.get()); 
-
-            // if csr_infinite_scroll_hashmap.get().get(&csr_page_number.get()).is_none() {
-            //   csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), vec![]); });
-
-            //   create_local_resource(
-            //     move || (),
-            //     move |()| async move {
-            //       let form = GetPosts {
-            //         type_: list_func(),
-            //         sort: sort_func(),
-            //         community_name: None,
-            //         community_id: None,
-            //         page: None,
-            //         limit: None,
-            //         saved_only: None,
-            //         disliked_only: None,
-            //         liked_only: None,
-            //         page_cursor: csr_paginator.get(),
-            //         // show_hidden: None,
-            //       };
-
-            //       let result = LemmyClient.list_posts(form).await;
-
-            //       match result {
-            //         Ok(o) => {
-            //           csr_paginator.set(o.next_page);
-            //           csr_infinite_scroll_hashmap.update(|h| { h.insert(csr_page_number.get(), o.posts.clone()); });
-            //           csr_page_number.update(|p| *p = *p + ssr_limit().unwrap_or(10i64) as usize);
-            //         }
-            //         Err(e) => {
-            //           csr_infinite_scroll_hashmap.update(|h| { h.remove(&csr_page_number.get()); });
-            //           error.set(Some(e));
-            //         }
-            //       }
-            //     },
-            //   );
-            // }
+            // csr_from.set(next_page_cursor.get()); 
+            csr_from.update(|cf| {
+              logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
+              *cf = next_page_cursor.get();
+              // logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
+            }); 
           }
         }
       }
@@ -393,12 +258,6 @@ pub fn HomeActivity(
 
     let _scroll_handle = window_event_listener_untyped("scroll", on_scroll);
   }
-
-  // let page_cursors_writable = RwSignal::new(false);
-  // #[cfg(not(feature = "ssr"))]
-  // {
-  //   page_cursors_writable.set(true);
-  // }
 
   view! {
     <div class="block">
@@ -502,22 +361,16 @@ pub fn HomeActivity(
                 .get()
                 .unwrap_or_default()
                 .map(|post| {
-                    // if csr_infinite_scroll_hashmap.get().keys().len() == 0 {
-                    //     csr_paginator.set(p.next_page.clone());
-                    // }
+                    next_page_cursor.set(Some((post.0.0 + ssr_limit(), post.1.next_page.clone())));
+                    csr_pages.update(|h| {
+                      if csr_from.get().is_none() {
+                        h.clear();
+                      }
+                      h.insert(post.0.0, post.1); 
+                    });
 
-                    // if next_page_cursor.get().is_none() {
-                    //     next_page_cursor.set(p.next_page.clone());
-                    // }
-                    // if let Some(p) = post.clone() {
-                      next_page_cursor.set(Some((post.0.0 + ssr_limit(), post.1.next_page.clone())));
-                      csr_pages.update(|h| { h.insert(post.0.0, post.1); });
-                    // }
-
-                    // let p_copy = post_map.clone();
                     view! {
                         <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
-                          // <PostListings posts=post.posts.into() site_signal page_number=0.into() />
                           <For each=move || csr_pages.get().into_iter() key=|h| h.0 let:h>
                             <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
                           </For>
@@ -526,67 +379,38 @@ pub fn HomeActivity(
                         <div class="join hidden sm:block">
 
                         {
-                          // if let Some(s) = ssr_prev() {
-                          //     if !s.is_empty() {
-                                  // let mut st = ssr_prev().unwrap_or("".into()).split(',').collect::<Vec<_>>();
-                                  // let p = st.pop().unwrap_or("");
-                                  let mut st = ssr_prev();
-                                  let p = st.pop();
-                                  let mut query_params = query.get();
-                                  query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
-                                  query_params.insert("from".into(), serde_json::to_string(&p).unwrap_or("[0,None]".into()));
-                                  view! {
-                                    <span>
-                                      <A
-                                        href=format!("{}", query_params.to_query_string())
-                                        class=move || format!("btn join-item{}", if !ssr_prev().is_empty() && !loading.get() { "" } else { " btn-disabled" } ) 
-                                        // class="btn"
-                                        // on:click=move |e: MouseEvent| { e.prevent_default(); csr_from.update(|ps| { ps.pop(); }); }
-                                      >
-                                        "Prev"
-                                      </A>
-                                    </span>
-                                  }
-                          //     } else {
-                          //         view! { <span></span> }
-                          //     }
-                          // } else {
-                          //     view! { <span></span> }
-                          // }
+                            let mut st = ssr_prev();
+                            let p = st.pop();
+                            let mut query_params = query.get();
+                            query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
+                            query_params.insert("from".into(), serde_json::to_string(&p).unwrap_or("[0,None]".into()));
+                            view! {
+                              <span>
+                                <A
+                                  href=format!("{}", query_params.to_query_string())
+                                  class=move || format!("btn join-item{}", if !ssr_prev().is_empty() && !loading.get() { "" } else { " btn-disabled" } ) 
+                                >
+                                  "Prev"
+                                </A>
+                              </span>
+                            }
                         }
                         {
-                          // if let Some(n) = post.unwrap().next_page.clone() {
-                              // let s = ssr_prev().unwrap_or_default();
-                              // let mut st = s.split(',').collect::<Vec<_>>();
-                              // let f = if let (_, Some(PaginationCursor(g))) = ssr_from() {
-                              //     g
-                              // } else {
-                              //     "".to_string()
-                              // };
-                              // st.push(&f);
-                              // let mut query_params = query.get();
-                              // query_params.insert("prev".into(), st.join(",").to_string());
-                              // query_params.insert("from".into(), n.0.clone());
-                              let mut st = ssr_prev();
-                              st.push(ssr_from());
-                              // let p = post.unwrap().next_page.clone();
-                              let mut query_params = query.get();
-                              query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
-                              query_params.insert("from".into(), serde_json::to_string(&next_page_cursor.get()).unwrap_or("[0,None]".into()));
-                              view! {
-                                <span>
-                                  <A 
-                                    href=format!("{}", query_params.to_query_string())
-                                    class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
-                                  // on:click=move |e: MouseEvent| { e.prevent_default(); csr_from.update(|ps| { ps.push((ps.last().unwrap().0 + 10, Some(n.clone()))); }); }
-                                  >
-                                    "Next"
-                                  </A>
-                                </span>
-                              }
-                        //   } else {
-                        //       view! { <span></span> }
-                        //   }
+                            let mut st = ssr_prev();
+                            st.push(ssr_from());
+                            let mut query_params = query.get();
+                            query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
+                            query_params.insert("from".into(), serde_json::to_string(&next_page_cursor.get()).unwrap_or("[0,None]".into()));
+                            view! {
+                              <span>
+                                <A 
+                                  href=format!("{}", query_params.to_query_string())
+                                  class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
+                                >
+                                  "Next"
+                                </A>
+                              </span>
+                            }
                         }
 
                         </div>
@@ -596,65 +420,6 @@ pub fn HomeActivity(
 
         </Transition>
 
-      // <Transition fallback=|| {}>
-      //   {move || {
-      //       ssr_posts
-      //           .get()
-      //           .unwrap_or(None)
-      //           .map(|p| {
-      //               if csr_infinite_scroll_hashmap.get().keys().len() == 0 {
-      //                   csr_paginator.set(p.next_page.clone());
-      //               }
-
-      //               if next_page_cursor.get().is_none() {
-      //                   next_page_cursor.set(p.next_page.clone());
-      //               }
-      //               view! {
-      //                   <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
-      //                     <PostListings posts=p.posts.into() site_signal page_number />
-      //                     <For each=move || csr_infinite_scroll_hashmap.get().into_iter() key=|h| h.0 let:h>
-      //                       <PostListings posts=h.1.into() site_signal page_number=h.0.into() />
-      //                     </For>
-      //                   </div>
-  
-      //                   <div class=move || format!("join hidden{}", if page_cursors_writable.get() { " sm:block" } else { "" })>
-
-      //                     <button
-      //                       class=move || format!("btn join-item{}", if prev_cursor_stack.get().len() > 0 { "" } else { " btn-disabled" } ) 
-      //                       on:click=move |_| {
-      //                           // PageCursors are not writable in v 0.19.3
-      //                           let mut p = prev_cursor_stack.get();
-      //                           let s = p.pop().unwrap_or(None);
-      //                           prev_cursor_stack.set(p);
-      //                           page_cursor.set(s);
-      //                           refresh.set(!refresh.get());
-      //                           page_number.update(|p| *p = (*p) - ssr_limit().unwrap_or(10i64) as usize);
-      //                       }
-      //                     >
-      //                       "Prev"
-      //                     </button>
-      //                     <button
-      //                       class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
-      //                       on:click=move |_| {
-      //                           // PageCursors are not writable in v 0.19.3
-      //                           let mut p = prev_cursor_stack.get();
-      //                           p.push(page_cursor.get());
-      //                           prev_cursor_stack.set(p);
-      //                           page_cursor.set(next_page_cursor.get());
-      //                           loading.set(true);
-      //                           refresh.set(!refresh.get());
-      //                           page_number.update(|p| *p = (*p) + ssr_limit().unwrap_or(10i64) as usize);
-      //                       }
-      //                     >
-      //                       "Next"
-      //                     </button>
-
-      //                   </div>
-      //           }
-      //         })
-      //   }}
-
-      //   </Transition>
       </div>
       <div class="lg:w-1/3 hidden lg:block 2xl:w-1/4 3xl:w-1/5 4xl:w-1/6">
         <About/>
