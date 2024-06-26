@@ -122,47 +122,39 @@ pub fn HomeActivity(
     },
     move |(_user, list_type, sort_type, from, csr_from, limit)| async move {
 
-          let f = if let Some(f) = csr_from { f } else { from };
+      let f = if let Some(f) = csr_from { f } else { from };
 
-          let form = GetPosts {
-            type_: Some(list_type),
-            sort: Some(sort_type),
-            community_name: None,
-            community_id: None,
-            page: None,
-            limit: Some(i64::try_from(limit).unwrap_or(10)),
-            saved_only: None,
-            disliked_only: None,
-            liked_only: None,
-            page_cursor: f.1.clone(),
-            // show_hidden: None,
-          };
-    
-          let result = LemmyClient.list_posts(form).await;
-          // loading.set(false);
-          // ui_title.set(None);
-    
-          match result {
-            Ok(o) => {
-              // hashmap.update(|h| { h.insert(p.0, o.clone()); });
-              // let hash_ref = hashmap.get();
-              // logging::log!("here");
-              // next_page_cursor.set(o.next_page);
-              // page_refs.insert(p.0, o);
-              // #[cfg(not(feature = "ssr"))]
-              // {
-              //   window().scroll_to_with_x_and_y(0.0, 0.0);
-              // }
+      let form = GetPosts {
+        type_: Some(list_type),
+        sort: Some(sort_type),
+        community_name: None,
+        community_id: None,
+        page: None,
+        limit: Some(i64::try_from(limit).unwrap_or(10)),
+        saved_only: None,
+        disliked_only: None,
+        liked_only: None,
+        page_cursor: f.1.clone(),
+        // show_hidden: None,
+      };
 
-              // next_page_cursor.set(o.next_page);
-              // next_page_cursor.set(Some((f.0 + ssr_limit(), o.next_page.clone())));
-              Some((f, o))
-            },
-            Err(e) => {
-              error.set(Some(e));
-              None
-            }
-          }
+      let result = LemmyClient.list_posts(form).await;
+      loading.set(false);
+      ui_title.set(None);
+
+      match result {
+        Ok(o) => {
+          // #[cfg(not(feature = "ssr"))]
+          // {
+          //   window().scroll_to_with_x_and_y(0.0, 0.0);
+          // }
+          Some((f, o))
+        },
+        Err(e) => {
+          error.set(Some(e));
+          None
+        }
+      }
     
     },
   );
@@ -203,12 +195,8 @@ pub fn HomeActivity(
         };
 
         if iw >= 640f64 {
-          // csr_paginator.set(None);
-          // csr_page_number.set(10usize);
-          // csr_infinite_scroll_hashmap.set(BTreeMap::new());
-          // prev_cursor_stack.set(vec![]);
-          // page_cursor.set(None);
-          // page_number.set(0usize);
+          // csr_pages.set(BTreeMap::new());
+          csr_from.set(None);
         }
 
         if prev_limit.ne(&new_limit) {
@@ -254,15 +242,14 @@ pub fn HomeActivity(
 
           let endOfPage = (h + o) >= (b - h);
 
-          logging::log!("{} {} {} {} ", endOfPage, h, o, b); 
+          // logging::log!("{} {} {} {} ", endOfPage, h, o, b); 
 
           if endOfPage {
             // csr_from.set(next_page_cursor.get()); 
-            // pages.update(|ps| { ps.push((ps.last().unwrap().0 + 10, next_page_cursor.get().clone())); }); 
             csr_from.update(|cf| {
               logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
               *cf = next_page_cursor.get();
-              logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
+              // logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
             }); 
           }
         }
@@ -374,24 +361,16 @@ pub fn HomeActivity(
                 .get()
                 .unwrap_or_default()
                 .map(|post| {
-                    // if csr_infinite_scroll_hashmap.get().keys().len() == 0 {
-                    //     csr_paginator.set(p.next_page.clone());
-                    // }
+                    next_page_cursor.set(Some((post.0.0 + ssr_limit(), post.1.next_page.clone())));
+                    csr_pages.update(|h| {
+                      if csr_from.get().is_none() {
+                        h.clear();
+                      }
+                      h.insert(post.0.0, post.1); 
+                    });
 
-                    // if next_page_cursor.get().is_none() {
-                    //     next_page_cursor.set(p.next_page.clone());
-                    // }
-                    // if let Some(p) = post.clone() {
-
-                      next_page_cursor.set(Some((post.0.0 + ssr_limit(), post.1.next_page.clone())));
-                      csr_pages.update(|h| { h.insert(post.0.0, post.1); });
-                    
-                    // }
-
-                    // let p_copy = post_map.clone();
                     view! {
                         <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
-                          // <PostListings posts=post.posts.into() site_signal page_number=0.into() />
                           <For each=move || csr_pages.get().into_iter() key=|h| h.0 let:h>
                             <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
                           </For>
@@ -400,67 +379,38 @@ pub fn HomeActivity(
                         <div class="join hidden sm:block">
 
                         {
-                          // if let Some(s) = ssr_prev() {
-                          //     if !s.is_empty() {
-                                  // let mut st = ssr_prev().unwrap_or("".into()).split(',').collect::<Vec<_>>();
-                                  // let p = st.pop().unwrap_or("");
-                                  let mut st = ssr_prev();
-                                  let p = st.pop();
-                                  let mut query_params = query.get();
-                                  query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
-                                  query_params.insert("from".into(), serde_json::to_string(&p).unwrap_or("[0,None]".into()));
-                                  view! {
-                                    <span>
-                                      <A
-                                        href=format!("{}", query_params.to_query_string())
-                                        class=move || format!("btn join-item{}", if !ssr_prev().is_empty() && !loading.get() { "" } else { " btn-disabled" } ) 
-                                        // class="btn"
-                                        // on:click=move |e: MouseEvent| { e.prevent_default(); csr_from.update(|ps| { ps.pop(); }); }
-                                      >
-                                        "Prev"
-                                      </A>
-                                    </span>
-                                  }
-                          //     } else {
-                          //         view! { <span></span> }
-                          //     }
-                          // } else {
-                          //     view! { <span></span> }
-                          // }
+                            let mut st = ssr_prev();
+                            let p = st.pop();
+                            let mut query_params = query.get();
+                            query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
+                            query_params.insert("from".into(), serde_json::to_string(&p).unwrap_or("[0,None]".into()));
+                            view! {
+                              <span>
+                                <A
+                                  href=format!("{}", query_params.to_query_string())
+                                  class=move || format!("btn join-item{}", if !ssr_prev().is_empty() && !loading.get() { "" } else { " btn-disabled" } ) 
+                                >
+                                  "Prev"
+                                </A>
+                              </span>
+                            }
                         }
                         {
-                          // if let Some(n) = post.unwrap().next_page.clone() {
-                              // let s = ssr_prev().unwrap_or_default();
-                              // let mut st = s.split(',').collect::<Vec<_>>();
-                              // let f = if let (_, Some(PaginationCursor(g))) = ssr_from() {
-                              //     g
-                              // } else {
-                              //     "".to_string()
-                              // };
-                              // st.push(&f);
-                              // let mut query_params = query.get();
-                              // query_params.insert("prev".into(), st.join(",").to_string());
-                              // query_params.insert("from".into(), n.0.clone());
-                              let mut st = ssr_prev();
-                              st.push(ssr_from());
-                              // let p = post.unwrap().next_page.clone();
-                              let mut query_params = query.get();
-                              query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
-                              query_params.insert("from".into(), serde_json::to_string(&next_page_cursor.get()).unwrap_or("[0,None]".into()));
-                              view! {
-                                <span>
-                                  <A 
-                                    href=format!("{}", query_params.to_query_string())
-                                    class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
-                                  // on:click=move |e: MouseEvent| { e.prevent_default(); csr_from.update(|ps| { ps.push((ps.last().unwrap().0 + 10, Some(n.clone()))); }); }
-                                  >
-                                    "Next"
-                                  </A>
-                                </span>
-                              }
-                        //   } else {
-                        //       view! { <span></span> }
-                        //   }
+                            let mut st = ssr_prev();
+                            st.push(ssr_from());
+                            let mut query_params = query.get();
+                            query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
+                            query_params.insert("from".into(), serde_json::to_string(&next_page_cursor.get()).unwrap_or("[0,None]".into()));
+                            view! {
+                              <span>
+                                <A 
+                                  href=format!("{}", query_params.to_query_string())
+                                  class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
+                                >
+                                  "Next"
+                                </A>
+                              </span>
+                            }
                         }
 
                         </div>
