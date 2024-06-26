@@ -1,6 +1,7 @@
 use ev::MouseEvent;
 use lemmy_api_common::lemmy_db_views::structs::CommentView;
 use leptos::*;
+use leptos_router::A;
 use web_sys::HtmlImageElement;
 use web_sys::wasm_bindgen::JsCast;
 
@@ -38,6 +39,8 @@ pub fn CommentNode(
   let mut html = String::new();
   pulldown_cmark::html::push_html(&mut html, parser);
 
+  // html.push_str(&format!("<A href=/u/{} class=\"text-sm hover:text-secondary break-words\">{}</A>", comment_view.get().creator.name, comment_view.get().creator.name));
+
   let child_show = RwSignal::new(true);
   let back_show = RwSignal::new(false);
 
@@ -47,7 +50,7 @@ pub fn CommentNode(
       // on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); } 
       class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" }, if show.get() { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" }) 
     >
-      <div class="cursor-pointer">
+      <div class=move || format!("pb-1{}", if com_sig.get().len() > 0 { " cursor-pointer" } else { "" })>
         <div on:mousedown=move |e: MouseEvent| {
           if let Some(t) = e.target() {
             if let Some(i) = t.dyn_ref::<HtmlImageElement>() {
@@ -57,6 +60,17 @@ pub fn CommentNode(
             }
           }
         } class="prose max-w-none prose-pre:relative prose-pre:h-40 prose-code:absolute prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
+        <A
+          href=format!("/u/{}", comment_view.get().creator.name)
+          class="text-sm inline-block hover:text-secondary break-words"
+        >
+          {comment_view.get().creator.name}
+        </A>
+        " "
+        <span class=move || format!("badge badge-neutral inline-block whitespace-nowrap{}", if !child_show.get() && com_sig.get().len() > 0 { "" } else { " hidden" })>
+          "+" { com_sig.get().len() + des_sig.get().len() }
+        </span>
+
       </div>
       <For each=move || com_sig.get() key=|cv| cv.comment.id let:cv>
         <CommentNode show=child_show comment_view=cv.into() comments=des_sig.get().into() level=level + 1/>
