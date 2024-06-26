@@ -37,9 +37,7 @@ pub fn Trending() -> impl IntoView {
   );
 
   view! {
-    <Transition fallback=|| {
-        view! { "Loading..." }
-    }>
+    <Transition fallback=|| {}>
       {move || {
           trending
               .get()

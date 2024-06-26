@@ -9,9 +9,20 @@ pub fn CommentNodes(comments: MaybeSignal<Vec<CommentView>>) -> impl IntoView {
   let com_sig = RwSignal::new(comments_clone);
   let child_show = RwSignal::new(true);
 
+  let now_in_millis = {
+    #[cfg(not(feature = "ssr"))]
+    {
+      chrono::offset::Utc::now().timestamp_millis() as u64
+    }
+    #[cfg(feature = "ssr")]
+    {
+      std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64 
+    }
+  };
+
   view! {
     <For each=move || com_sig.get() key=|cv| cv.comment.id let:cv>
-      <CommentNode show=child_show comment_view=cv.into() comments=comments.get().into() level=1/>
+      <CommentNode show=child_show comment_view=cv.into() comments=comments.get().into() level=1 now_in_millis/>
     </For>
   }
 }

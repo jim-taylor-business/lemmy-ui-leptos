@@ -1,9 +1,18 @@
 use ev::MouseEvent;
-use lemmy_api_common::lemmy_db_views::structs::CommentView;
+use lemmy_api_common::{lemmy_db_views::structs::CommentView, post::{CreatePostLike, PostResponse}};
 use leptos::*;
-use leptos_router::A;
+use leptos_dom::helpers::TimeoutHandle;
+use leptos_router::{ActionForm, A};
 use web_sys::HtmlImageElement;
 use web_sys::wasm_bindgen::JsCast;
+use crate::{
+  errors::{LemmyAppError, LemmyAppErrorType},
+  lemmy_client::*,
+  ui::components::common::icon::{
+    Icon,
+    IconType::{Block, Comments, Crosspost, Downvote, Report, Save, Upvote, VerticalDots},
+  },
+};
 
 #[component]
 pub fn CommentNode(
@@ -11,6 +20,7 @@ pub fn CommentNode(
   comments: MaybeSignal<Vec<CommentView>>,
   level: usize,
   show: RwSignal<bool>,
+  now_in_millis: u64,
 ) -> impl IntoView {
   let mut comments_descendants = comments.get().clone();
   let id = comment_view.get().comment.id.to_string();
@@ -44,14 +54,39 @@ pub fn CommentNode(
   let child_show = RwSignal::new(true);
   let back_show = RwSignal::new(false);
 
+  // let down = RwSignal::new(false);
+  let still_down = RwSignal::new(false);
+  let vote_show = RwSignal::new(false);
+  let still_handle: RwSignal<Option<TimeoutHandle>> = RwSignal::new(None);
+
+  let vote_action = create_server_action::<VotePostFn>();
+  let comment_view = create_rw_signal(comment_view.get());
+
+  let duration_in_text = pretty_duration::pretty_duration(
+    &std::time::Duration::from_millis(now_in_millis - comment_view.get().post.published.timestamp_millis() as u64),
+    Some(pretty_duration::PrettyDurationOptions {
+        output_format: Some(pretty_duration::PrettyDurationOutputFormat::Compact),
+        singular_labels: None,
+        plural_labels: None,
+    }),
+  ); 
+  let abbr_duration = if let Some((index, _)) = duration_in_text.match_indices(' ').nth(1) {
+    duration_in_text.split_at(index)
+  } else {
+    (&duration_in_text[..], "")
+  }.0.to_string();
+
+
   view! {
     <div 
       // on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); } 
       // on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); } 
       class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" }, if show.get() { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" }) 
     >
-      <div class=move || format!("pb-1{}", if com_sig.get().len() > 0 { " cursor-pointer" } else { "" })>
-        <div on:mousedown=move |e: MouseEvent| {
+      <div on:click=move |e: MouseEvent| {
+        if still_down.get() {
+          still_down.set(false);
+        } else {
           if let Some(t) = e.target() {
             if let Some(i) = t.dyn_ref::<HtmlImageElement>() {
                 let _ = window().location().set_href(&i.src());
@@ -59,22 +94,203 @@ pub fn CommentNode(
                 child_show.set(!child_show.get());
             }
           }
-        } class="prose max-w-none prose-pre:relative prose-pre:h-40 prose-code:absolute prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
-        <A
-          href=format!("/u/{}", comment_view.get().creator.name)
-          class="text-sm inline-block hover:text-secondary break-words"
-        >
-          {comment_view.get().creator.name}
-        </A>
-        " "
-        <span class=move || format!("badge badge-neutral inline-block whitespace-nowrap{}", if !child_show.get() && com_sig.get().len() > 0 { "" } else { " hidden" })>
-          "+" { com_sig.get().len() + des_sig.get().len() }
-        </span>
+        }
+        // down.set(false);
+      } on:mousedown=move |e: MouseEvent| {
+        // down.set(true);
+        still_handle.set(set_timeout_with_handle(move || {
+          // if down.get() {
+            logging::log!("still down");
+            vote_show.set(!vote_show.get());
+            still_down.set(true);
+            // down.set(false);            
+          // }
+        }, std::time::Duration::from_secs(1)).ok());
+      } on:mouseup=move |e: MouseEvent| {
+        if let Some(h) = still_handle.get() {
+          h.clear();
+        }
+        // down.set(false);
+      } class="pb-2 cursor-pointer">
+        <div class="prose max-w-none prose-pre:relative prose-pre:h-40 prose-code:absolute prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
+        // <A
+        //   href=format!("/u/{}", comment_view.get().creator.name)
+        //   class="text-sm inline-block hover:text-secondary break-words"
+        // >
+        //   {comment_view.get().creator.name}
+        // </A>
+        // " "
+        <div class=move || format!("flex items-center gap-x-2{}", if vote_show.get() { "" } else { " hidden"})>
+          <ActionForm
+            // action=vote_action
+            // on:submit=on_up_vote_submit
+            action=vote_action
+            on:submit=|_| {}
+            class="flex items-center"
+          >
+            <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
+            <input
+              type="hidden"
+              name="score"
+              value=move || if Some(1) == comment_view.get().my_vote { 0 } else { 1 }
+            />
+            <button
+              type="submit"
+              class=move || { if Some(1) == comment_view.get().my_vote { " text-secondary" } else { "" } }
+              title="Up vote"
+            >
+              <Icon icon=Upvote/>
+            </button>
+          </ActionForm>
+          <span class="block text-sm">{move || comment_view.get().counts.score}</span>
+          <ActionForm
+            // action=vote_action
+            // on:submit=on_down_vote_submit
+            action=vote_action
+            on:submit=|_| {}
+            class="flex items-center"
+          >
+            <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
+            <input
+              type="hidden"
+              name="score"
+              value=move || if Some(-1) == comment_view.get().my_vote { 0 } else { -1 }
+            />
+            <button
+              type="submit"
+              class=move || {
+                  if Some(-1) == comment_view.get().my_vote { " text-primary" } else { "" }
+              }
 
+              title="Down vote"
+            >
+              <Icon icon=Downvote/>
+            </button>
+          </ActionForm>
+          // <span
+          //   class="flex items-center"
+          //   title=move || format!("{} comments", comment_view.get().unread_comments)
+          // >
+          //   <A
+          //     href=move || { format!("/post/{}", comment_view.get().post.id) }
+          //     class="text-sm whitespace-nowrap hover:text-accent "
+          //   >
+          //     <Icon icon=Comments class="inline".into()/>
+          //     " "
+          //     {comment_view.get().counts.comments}
+          //     {if comment_view.get().unread_comments != comment_view.get().counts.comments && comment_view.get().unread_comments > 0 { format!(" ({})", comment_view.get().unread_comments) } else { "".to_string() }}
+          //   </A>
+          // </span>
+          <ActionForm 
+            action=vote_action
+            on:submit=|_| {}
+            // action=save_post_action 
+            // on:submit=on_save_submit 
+            class="flex items-center"
+          >
+            <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
+            <input type="hidden" name="save" value=move || format!("{}", !comment_view.get().saved)/>
+            <button
+              type="submit"
+              title="Save post"
+              class=move || if comment_view.get().saved { "text-primary hover:text-primary/50" } else { "hover:text-primary/50" }
+            >
+              <Icon icon=Save/>
+            </button>
+          </ActionForm>
+          <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() && e.shift_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", comment_view.get().post.id)); } }>
+            // <A href="/create_post">
+              <Icon icon=Crosspost/>
+            // </A>
+          </span>
+          <div class="dropdown max-sm:dropdown-end">
+            <label tabindex="0">
+              <Icon icon=VerticalDots/>
+            </label>
+            <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
+              <li>
+                <ActionForm
+                  action=vote_action
+                  on:submit=|_| {}
+                  // action=report_post_action 
+                  // on:submit=on_report_submit 
+                  class="flex flex-col items-start"
+                >
+                  <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
+                  <input
+                    // class=move || format!("input input-bordered {}", report_validation.get())
+                    type="text"
+                    // on:input=move |e| update!(| reason | * reason = event_target_value(& e))
+                    name="reason"
+                    placeholder="reason"
+                  />
+                  <button class="text-xs whitespace-nowrap" title="Report post" type="submit">
+                    <Icon icon=Report class="inline-block".into()/>
+                    "Report post"
+                  </button>
+                </ActionForm>
+              </li>
+              <li>
+                <ActionForm 
+                  action=vote_action
+                  on:submit=|_| {}
+                  // action=block_user_action 
+                  // on:submit=on_block_submit
+                >
+                  <input
+                    type="hidden"
+                    name="person_id"
+                    value=format!("{}", comment_view.get().creator.id.0)
+                  />
+                  <input type="hidden" name="block" value="true"/>
+                  <button class="text-xs whitespace-nowrap" title="Block user" type="submit">
+                    <Icon icon=Block class="inline-block".into()/>
+                    "Block user"
+                  </button>
+                </ActionForm>
+              </li>
+            </ul>
+          </div>
+          <span class="block mb-1">
+            <span>
+              { abbr_duration }
+            </span> " ago, by "
+            <A
+              href=move || format!("/u/{}", comment_view.get().creator.name)
+              class="text-sm inline-block hover:text-secondary break-words"
+            >
+              {comment_view.get().creator.name}
+            </A>
+          </span>
+        </div>
+        <span class=move || format!("badge badge-neutral inline-block whitespace-nowrap{}", if !child_show.get() && com_sig.get().len() > 0 { "" } else { " hidden" })>
+          { com_sig.get().len() + des_sig.get().len() } " replies"
+        </span>
       </div>
       <For each=move || com_sig.get() key=|cv| cv.comment.id let:cv>
-        <CommentNode show=child_show comment_view=cv.into() comments=des_sig.get().into() level=level + 1/>
+        <CommentNode show=child_show comment_view=cv.into() comments=des_sig.get().into() level=level + 1 now_in_millis/>
       </For>
     </div>
+  }
+}
+
+#[server(VotePostFn, "/serverfn")]
+pub async fn vote_post_fn(post_id: i32, score: i16) -> Result<Option<PostResponse>, ServerFnError> {
+  use lemmy_api_common::lemmy_db_schema::newtypes::PostId;
+
+  let form = CreatePostLike {
+    post_id: PostId(post_id),
+    score,
+  };
+  let result = LemmyClient.like_post(form).await;
+
+  use leptos_actix::redirect;
+
+  match result {
+    Ok(o) => Ok(Some(o)),
+    Err(e) => {
+      redirect(&format!("/?error={}", serde_json::to_string(&e)?)[..]);
+      Ok(None)
+    }
   }
 }

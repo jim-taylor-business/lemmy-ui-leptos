@@ -85,9 +85,7 @@ pub fn PostActivity(
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
       <div class="flex flex-col">
         <div>
-          <Transition fallback=|| {
-              view! { "Loading..." }
-          }>
+          <Transition fallback=|| {}>
             {move || {
                 post.get()
                     .unwrap_or(None)
@@ -129,9 +127,7 @@ pub fn PostActivity(
                     })
             }}
           </Transition>
-          <Transition fallback=|| {
-              view! { "Loading..." }
-          }>
+          <Transition fallback=|| {}>
             {move || {
                 comments
                     .get()
