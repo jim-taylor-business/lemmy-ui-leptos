@@ -85,9 +85,7 @@ pub fn PostActivity(
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
       <div class="flex flex-col">
         <div>
-          <Transition fallback=|| {
-              view! { "Loading..." }
-          }>
+          <Transition fallback=|| {}>
             {move || {
                 post.get()
                     .unwrap_or(None)
@@ -117,7 +115,7 @@ pub fn PostActivity(
                             view! {
                               <div class="pl-4 pr-4">
                                 <div class="py-2">
-                                  <div class="prose max-w-none prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
+                                  <div class="prose max-w-none prose-pre:relative prose-pre:h-40 prose-code:absolute prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
                                 </div>
                               </div>
                             }
@@ -129,9 +127,7 @@ pub fn PostActivity(
                     })
             }}
           </Transition>
-          <Transition fallback=|| {
-              view! { "Loading..." }
-          }>
+          <Transition fallback=|| {}>
             {move || {
                 comments
                     .get()

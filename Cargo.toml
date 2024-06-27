@@ -21,7 +21,8 @@ members = ["src-tauri"]
 # lemmy-client = "0"
 
 # for testing potential lemmy changes
-lemmy_api_common = { path = "../lemmy/crates/api_common", default-features = false }
+# lemmy_api_common = { path = "../lemmy/crates/api_common", default-features = false }
+lemmy_api_common = { branch = "deploy_demo", git = "https://github.com/jim-taylor-business/lemmy.git", default-features = false }
 # lemmy_utils = { path = "../lemmy/crates/utils", default-features = false }
 
 leptos = "0"
