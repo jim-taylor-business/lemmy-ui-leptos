@@ -185,6 +185,10 @@ pub fn CommentNode(
           h.clear();
         }
         // down.set(false);
+      } on:dblclick=move |e: MouseEvent| {
+        vote_show.set(!vote_show.get());
+        // logging::log!("still down");
+        // down.set(false);
       } class="pb-2 cursor-pointer">
         <div class="prose max-w-none prose-pre:relative prose-pre:h-40 prose-code:absolute prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
         // <A
@@ -194,7 +198,8 @@ pub fn CommentNode(
         //   {comment_view.get().creator.name}
         // </A>
         // " "
-        <div on:click=cancel class=move || format!("flex items-center gap-x-2{}", if vote_show.get() { "" } else { " hidden"})>
+        <Show when=move || vote_show.get() fallback=|| view! {  }>
+        <div on:click=cancel class="flex items-center gap-x-2" /* move || format!("flex items-center gap-x-2{}", if vote_show.get() { "" } else { " hidden"}) */>
           <Form
             on:submit=on_up_vote_submit
             action="POST"
@@ -272,69 +277,69 @@ pub fn CommentNode(
           //     <Icon icon=Crosspost/>
           //   // </A>
           // </span>
-          <div class="dropdown max-sm:dropdown-end">
-            <label tabindex="0">
-              <Icon icon=VerticalDots/>
-            </label>
-            <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
-              <li>
-                <Form
-                  action="POST"
-                  on:submit=|_| {}
-                  // on:submit=on_report_submit 
-                  class="flex flex-col items-start"
-                >
-                  <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
-                  <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Report post" type="submit">
-                    <Icon icon=Notifications class="inline-block".into()/>
-                    "Direct message"
-                  </button>
-                </Form>
-              </li>
-              <li>
-                <Form
-                  action="POST"
-                  on:submit=|_| {}
-                  // on:submit=on_report_submit 
-                  class="flex flex-col items-start"
-                >
-                  <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
-                  <input
-                    class="input input-bordered input-disabled"
-                    type="text"
-                    // on:input=move |e| update!(| reason | * reason = event_target_value(& e))
-                    name="reason"
-                    placeholder="reason"
-                  />
-                  <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Report post" type="submit">
-                    <Icon icon=Report class="inline-block".into()/>
-                    "Report comment"
-                  </button>
-                </Form>
-              </li>
-              <li>
-                <Form 
-                  action="POST"
-                  on:submit=|_| {}
-                  // on:submit=on_block_submit
-                >
-                  <input
-                    type="hidden"
-                    name="person_id"
-                    value=format!("{}", comment_view.get().creator.id.0)
-                  />
-                  <input type="hidden" name="block" value="true"/>
-                  <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Block user" type="submit">
-                    <Icon icon=Block class="inline-block".into()/>
-                    "Block user"
-                  </button>
-                </Form>
-              </li>
-            </ul>
-          </div>
+          // <div class="dropdown max-sm:dropdown-end">
+          //   <label tabindex="0">
+          //     <Icon icon=VerticalDots/>
+          //   </label>
+          //   <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
+          //     <li>
+          //       <Form
+          //         action="POST"
+          //         on:submit=|_| {}
+          //         // on:submit=on_report_submit 
+          //         class="flex flex-col items-start"
+          //       >
+          //         <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
+          //         <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Report post" type="submit">
+          //           <Icon icon=Notifications class="inline-block".into()/>
+          //           "Direct message"
+          //         </button>
+          //       </Form>
+          //     </li>
+          //     <li>
+          //       <Form
+          //         action="POST"
+          //         on:submit=|_| {}
+          //         // on:submit=on_report_submit 
+          //         class="flex flex-col items-start"
+          //       >
+          //         <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
+          //         <input
+          //           class="input input-bordered input-disabled"
+          //           type="text"
+          //           // on:input=move |e| update!(| reason | * reason = event_target_value(& e))
+          //           name="reason"
+          //           placeholder="reason"
+          //         />
+          //         <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Report post" type="submit">
+          //           <Icon icon=Report class="inline-block".into()/>
+          //           "Report comment"
+          //         </button>
+          //       </Form>
+          //     </li>
+          //     <li>
+          //       <Form 
+          //         action="POST"
+          //         on:submit=|_| {}
+          //         // on:submit=on_block_submit
+          //       >
+          //         <input
+          //           type="hidden"
+          //           name="person_id"
+          //           value=format!("{}", comment_view.get().creator.id.0)
+          //         />
+          //         <input type="hidden" name="block" value="true"/>
+          //         <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Block user" type="submit">
+          //           <Icon icon=Block class="inline-block".into()/>
+          //           "Block user"
+          //         </button>
+          //       </Form>
+          //     </li>
+          //   </ul>
+          // </div>
           <span class="block mb-1">
             <span>
-              { abbr_duration }
+              { abbr_duration.clone() }
             </span> " ago, by "
             <A
               href=move || format!("/u/{}", comment_view.get().creator.name)
@@ -344,6 +349,7 @@ pub fn CommentNode(
             </A>
           </span>
         </div>
+        </Show>
         <span class=move || format!("badge badge-neutral inline-block whitespace-nowrap{}", if !child_show.get() && com_sig.get().len() > 0 { "" } else { " hidden" })>
           { com_sig.get().len() + des_sig.get().len() } " replies"
         </span>
