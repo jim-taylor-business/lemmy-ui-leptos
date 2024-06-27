@@ -1,8 +1,8 @@
-use ev::MouseEvent;
-use lemmy_api_common::{lemmy_db_views::structs::CommentView, post::{CreatePostLike, PostResponse}};
+use ev::{MouseEvent, SubmitEvent};
+use lemmy_api_common::{comment::{CreateCommentLike, SaveComment}, lemmy_db_views::structs::CommentView, post::{CreatePostLike, PostResponse}};
 use leptos::*;
 use leptos_dom::helpers::TimeoutHandle;
-use leptos_router::{ActionForm, A};
+use leptos_router::{Form, A};
 use web_sys::HtmlImageElement;
 use web_sys::wasm_bindgen::JsCast;
 use crate::{
@@ -10,7 +10,7 @@ use crate::{
   lemmy_client::*,
   ui::components::common::icon::{
     Icon,
-    IconType::{Block, Comments, Crosspost, Downvote, Report, Save, Upvote, VerticalDots},
+    IconType::*,
   },
 };
 
@@ -59,7 +59,6 @@ pub fn CommentNode(
   let vote_show = RwSignal::new(false);
   let still_handle: RwSignal<Option<TimeoutHandle>> = RwSignal::new(None);
 
-  let vote_action = create_server_action::<VotePostFn>();
   let comment_view = create_rw_signal(comment_view.get());
 
   let duration_in_text = pretty_duration::pretty_duration(
@@ -75,6 +74,81 @@ pub fn CommentNode(
   } else {
     (&duration_in_text[..], "")
   }.0.to_string();
+
+  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+
+  let cancel = move |ev: MouseEvent| {
+    ev.stop_propagation();
+    // ev.cancel_bubble();
+  };
+
+  let on_vote_submit = move |ev: SubmitEvent, score: i16| {
+    ev.prevent_default();
+
+    create_local_resource(
+      move || (),
+      move |()| async move {
+        let form = CreateCommentLike {
+          comment_id: comment_view.get().comment.id,
+          score,
+        };
+
+        let result = LemmyClient.like_comment(form).await;
+
+        match result {
+          Ok(o) => {
+            comment_view.set(o.comment_view);
+          }
+          Err(e) => {
+            error.set(Some(e));
+          }
+        }
+      },
+    );
+  };
+
+  let on_up_vote_submit = move |ev: SubmitEvent| {
+    let score = if Some(1) == comment_view.get().my_vote {
+      0
+    } else {
+      1
+    };
+    on_vote_submit(ev, score);
+  };
+
+  let on_down_vote_submit = move |ev: SubmitEvent| {
+    let score = if Some(-1) == comment_view.get().my_vote {
+      0
+    } else {
+      -1
+    };
+    on_vote_submit(ev, score);
+  };
+
+  let on_save_submit = move |ev: SubmitEvent| {
+    ev.prevent_default();
+
+    create_local_resource(
+      move || (),
+      move |()| async move {
+        let form = SaveComment {
+          comment_id: comment_view.get().comment.id,
+          save: !comment_view.get().saved,
+        };
+
+        let result = LemmyClient.save_comment(form).await;
+
+        match result {
+          Ok(o) => {
+            comment_view.set(o.comment_view);
+          }
+          Err(e) => {
+            error.set(Some(e));
+          }
+        }
+      },
+    );
+  };
 
 
   view! {
@@ -100,12 +174,12 @@ pub fn CommentNode(
         // down.set(true);
         still_handle.set(set_timeout_with_handle(move || {
           // if down.get() {
-            logging::log!("still down");
+            // logging::log!("still down");
             vote_show.set(!vote_show.get());
             still_down.set(true);
             // down.set(false);            
           // }
-        }, std::time::Duration::from_secs(1)).ok());
+        }, std::time::Duration::from_millis(500)).ok());
       } on:mouseup=move |e: MouseEvent| {
         if let Some(h) = still_handle.get() {
           h.clear();
@@ -120,12 +194,10 @@ pub fn CommentNode(
         //   {comment_view.get().creator.name}
         // </A>
         // " "
-        <div class=move || format!("flex items-center gap-x-2{}", if vote_show.get() { "" } else { " hidden"})>
-          <ActionForm
-            // action=vote_action
-            // on:submit=on_up_vote_submit
-            action=vote_action
-            on:submit=|_| {}
+        <div on:click=cancel class=move || format!("flex items-center gap-x-2{}", if vote_show.get() { "" } else { " hidden"})>
+          <Form
+            on:submit=on_up_vote_submit
+            action="POST"
             class="flex items-center"
           >
             <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
@@ -141,12 +213,11 @@ pub fn CommentNode(
             >
               <Icon icon=Upvote/>
             </button>
-          </ActionForm>
+          </Form>
           <span class="block text-sm">{move || comment_view.get().counts.score}</span>
-          <ActionForm
-            // action=vote_action
-            // on:submit=on_down_vote_submit
-            action=vote_action
+          <Form
+            on:submit=on_down_vote_submit
+            action="POST"
             on:submit=|_| {}
             class="flex items-center"
           >
@@ -166,7 +237,7 @@ pub fn CommentNode(
             >
               <Icon icon=Downvote/>
             </button>
-          </ActionForm>
+          </Form>
           // <span
           //   class="flex items-center"
           //   title=move || format!("{} comments", comment_view.get().unread_comments)
@@ -181,11 +252,9 @@ pub fn CommentNode(
           //     {if comment_view.get().unread_comments != comment_view.get().counts.comments && comment_view.get().unread_comments > 0 { format!(" ({})", comment_view.get().unread_comments) } else { "".to_string() }}
           //   </A>
           // </span>
-          <ActionForm 
-            action=vote_action
-            on:submit=|_| {}
-            // action=save_post_action 
-            // on:submit=on_save_submit 
+          <Form 
+            action="POST"
+            on:submit=on_save_submit 
             class="flex items-center"
           >
             <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
@@ -197,44 +266,56 @@ pub fn CommentNode(
             >
               <Icon icon=Save/>
             </button>
-          </ActionForm>
-          <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() && e.shift_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", comment_view.get().post.id)); } }>
-            // <A href="/create_post">
-              <Icon icon=Crosspost/>
-            // </A>
-          </span>
+          </Form>
+          // <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() && e.shift_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", comment_view.get().post.id)); } }>
+          //   // <A href="/create_post">
+          //     <Icon icon=Crosspost/>
+          //   // </A>
+          // </span>
           <div class="dropdown max-sm:dropdown-end">
             <label tabindex="0">
               <Icon icon=VerticalDots/>
             </label>
             <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
               <li>
-                <ActionForm
-                  action=vote_action
+                <Form
+                  action="POST"
                   on:submit=|_| {}
-                  // action=report_post_action 
+                  // on:submit=on_report_submit 
+                  class="flex flex-col items-start"
+                >
+                  <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
+                  <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Report post" type="submit">
+                    <Icon icon=Notifications class="inline-block".into()/>
+                    "Direct message"
+                  </button>
+                </Form>
+              </li>
+              <li>
+                <Form
+                  action="POST"
+                  on:submit=|_| {}
                   // on:submit=on_report_submit 
                   class="flex flex-col items-start"
                 >
                   <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
                   <input
-                    // class=move || format!("input input-bordered {}", report_validation.get())
+                    class="input input-bordered input-disabled"
                     type="text"
                     // on:input=move |e| update!(| reason | * reason = event_target_value(& e))
                     name="reason"
                     placeholder="reason"
                   />
-                  <button class="text-xs whitespace-nowrap" title="Report post" type="submit">
+                  <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Report post" type="submit">
                     <Icon icon=Report class="inline-block".into()/>
-                    "Report post"
+                    "Report comment"
                   </button>
-                </ActionForm>
+                </Form>
               </li>
               <li>
-                <ActionForm 
-                  action=vote_action
+                <Form 
+                  action="POST"
                   on:submit=|_| {}
-                  // action=block_user_action 
                   // on:submit=on_block_submit
                 >
                   <input
@@ -243,11 +324,11 @@ pub fn CommentNode(
                     value=format!("{}", comment_view.get().creator.id.0)
                   />
                   <input type="hidden" name="block" value="true"/>
-                  <button class="text-xs whitespace-nowrap" title="Block user" type="submit">
+                  <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Block user" type="submit">
                     <Icon icon=Block class="inline-block".into()/>
                     "Block user"
                   </button>
-                </ActionForm>
+                </Form>
               </li>
             </ul>
           </div>
@@ -271,26 +352,5 @@ pub fn CommentNode(
         <CommentNode show=child_show comment_view=cv.into() comments=des_sig.get().into() level=level + 1 now_in_millis/>
       </For>
     </div>
-  }
-}
-
-#[server(VotePostFn, "/serverfn")]
-pub async fn vote_post_fn(post_id: i32, score: i16) -> Result<Option<PostResponse>, ServerFnError> {
-  use lemmy_api_common::lemmy_db_schema::newtypes::PostId;
-
-  let form = CreatePostLike {
-    post_id: PostId(post_id),
-    score,
-  };
-  let result = LemmyClient.like_post(form).await;
-
-  use leptos_actix::redirect;
-
-  match result {
-    Ok(o) => Ok(Some(o)),
-    Err(e) => {
-      redirect(&format!("/?error={}", serde_json::to_string(&e)?)[..]);
-      Ok(None)
-    }
   }
 }

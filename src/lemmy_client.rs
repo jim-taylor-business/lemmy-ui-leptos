@@ -91,6 +91,14 @@ pub trait PublicFetch: private_trait::PrivateFetch {
   async fn like_post(&self, form: CreatePostLike) -> LemmyAppResult<PostResponse> {
     self.make_request(HttpType::Post, "post/like", form).await
   }
+
+  async fn like_comment(&self, form: CreateCommentLike) -> LemmyAppResult<CommentResponse> {
+    self.make_request(HttpType::Post, "comment/like", form).await
+  }
+
+  async fn save_comment(&self, form: SaveComment) -> LemmyAppResult<CommentResponse> {
+    self.make_request(HttpType::Put, "comment/save", form).await
+  }
 }
 
 cfg_if! {

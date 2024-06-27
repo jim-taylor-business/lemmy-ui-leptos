@@ -10,7 +10,7 @@ pub fn About() -> impl IntoView {
         </div>
       </figure>
       <div class="card-body">
-        <p>"This is a technical demo and proof of concept of the technical objectives specified on my "<a class="link" href="//github.com/jim-taylor-business/lemmy-ui-leptos/tree/deploy_demo#objectives">"Lemmy UI Leptos homepage"</a>"."</p>
+        <p>"This is a technical demo and proof of concept of the technical objectives specified on my "<a class="link" href="//github.com/jim-taylor-business/lemmy-ui-leptos/tree/deploy_demo#objectives">"Lemmy UI Leptos repo"</a>"."</p>
         <p>"It is also intended to be near feature complete with the homepage functionality of "<a class="link" href="//lemmy.world">"Lemmy world"</a>", and near issue free."</p>
         <p>"This site is not affiliated with Lemmy World in any way."</p>
       </div>

@@ -536,7 +536,7 @@ pub fn PostListing(
                           type="text"
                           on:input=move |e| update!(| reason | * reason = event_target_value(& e))
                           name="reason"
-                          placeholder="reason"
+                          placeholder="Reason for reporting post"
                         />
                         <button class="text-xs whitespace-nowrap" title="Report post" type="submit">
                           <Icon icon=Report class="inline-block".into()/>

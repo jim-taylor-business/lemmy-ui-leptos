@@ -82,24 +82,51 @@ pub fn HomeActivity(
       .unwrap_or(10usize)
   };
 
-  let on_sort_click = move |lt: SortType| {
-    move |_me: MouseEvent| {
-      let r = serde_json::to_string::<SortType>(&lt);
+  let on_sort_click = move |s: SortType| {
+    move |_e: MouseEvent| {
+      let r = serde_json::to_string::<SortType>(&s);
+
+      let mut query_params = query.get();
 
       match r {
         Ok(o) => {
-          let mut query_params = query.get();
           query_params.insert("sort".into(), o);
-
-          let navigate = leptos_router::use_navigate();
-          navigate(&query_params.to_query_string(), Default::default());
         }
         Err(e) => {
           error.set(Some(e.into()));
         }
       }
-    }
+
+      if SortType::Active == s {
+        query_params.remove("sort".into());
+      }
+
+      let navigate = leptos_router::use_navigate();
+      navigate(&query_params.to_query_string(), Default::default());}
   };
+
+  // let list_href = move |lt: SortType| {
+  //   move |_me: MouseEvent| {
+  //     let r = serde_json::to_string::<SortType>(&lt);
+
+  //     match r {
+  //       Ok(o) => {
+  //         let mut query_params = query.get();
+  //         query_params.insert("sort".into(), o);
+
+  //         if Some(SortType::Active) == o {
+  //           query_params.remove("sort".into());
+  //         }
+
+  //         let navigate = leptos_router::use_navigate();
+  //         navigate(&query_params.to_query_string(), Default::default());
+  //       }
+  //       Err(e) => {
+  //         error.set(Some(e.into()));
+  //       }
+  //     }
+  //   }
+  // };
 
   let next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
   let loading = create_rw_signal(false);
@@ -247,7 +274,7 @@ pub fn HomeActivity(
           if endOfPage {
             // csr_from.set(next_page_cursor.get()); 
             csr_from.update(|cf| {
-              logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
+              // logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
               *cf = next_page_cursor.get();
               // logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
             }); 
@@ -266,57 +293,57 @@ pub fn HomeActivity(
         <button class="btn join-item btn-disabled">"Comments"</button>
       </div>
       <div class="join mr-3 hidden sm:inline-block">
-        {move || {
-            let mut query_params = query.get();
-            query_params.insert("list".into(), "\"Subscribed\"".into());
-            view! {
-              <A
-                href=move || query_params.to_query_string()
-                class=move || {
-                    format!(
-                        "btn join-item{}{}",
-                        if ListingType::Subscribed == ssr_list() { " btn-active" } else { "" },
-                        { if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() { "" } else { " btn-disabled" } },
-                    )
-                }
-              >
+        // {move || {
+        //     let mut query_params = query.get();
+        //     query_params.insert("list".into(), "\"Subscribed\"".into());
+        //     view! {
+        //       <A
+        //         href=move || query_params.to_query_string()
+        //         class=move || {
+        //             format!(
+        //                 "btn join-item{}{}",
+        //                 if ListingType::Subscribed == ssr_list() { " btn-active" } else { "" },
+        //                 { if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() { "" } else { " btn-disabled" } },
+        //             )
+        //         }
+        //       >
 
-                "Subscribed"
-              </A>
-            }
-        }}
+        //         "Subscribed"
+        //       </A>
+        //     }
+        // }}
+        <A
+          href=move || {
+              let mut query_params = query.get();
+              query_params.insert("list".into(), serde_json::to_string(&ListingType::Subscribed).ok().unwrap());
+              query_params.to_query_string()
+          }
+          class=move || format!(
+            "btn join-item{}{}", 
+            if ListingType::Subscribed == ssr_list() { " btn-active" } else { "" },
+            if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() { "" } else { " btn-disabled" }
+          )
+        >
+          "Subscribed"
+        </A>
         <A
           href=move || {
               let mut query_params = query.get();
               query_params.insert("list".into(), serde_json::to_string(&ListingType::Local).ok().unwrap());
               query_params.to_query_string()
           }
-
-          class=move || {
-              format!(
-                  "btn join-item {}",
-                  if ListingType::Local == ssr_list() { "btn-active" } else { "" },
-              )
-          }
+          class=move || format!("btn join-item{}", if ListingType::Local == ssr_list() { " btn-active" } else { "" })
         >
-
           "Local"
         </A>
         <A
           href=move || {
               let mut query_params = query.get();
-              query_params.insert("list".into(), serde_json::to_string(&ListingType::All).ok().unwrap());
+              query_params.remove("list".into());
               query_params.to_query_string()
           }
-
-          class=move || {
-              format!(
-                  "btn join-item {}",
-                  if ListingType::All == ssr_list() { "btn-active" } else { "" },
-              )
-          }
+          class=move || format!("btn join-item{}", if ListingType::All == ssr_list() { " btn-active" } else { "" })
         >
-
           "All"
         </A>
       </div>
@@ -340,6 +367,14 @@ pub fn HomeActivity(
             on:click=on_sort_click(SortType::Hot)
           >
             <span>{t!(i18n, hot)}</span>
+          </li>
+          <li
+            class=move || {
+                (if SortType::Scaled == ssr_sort() { "btn-active" } else { "" }).to_string()
+            }
+            on:click=on_sort_click(SortType::Scaled)
+          >
+            <span>{ "Scaled" }</span>
           </li>
           <li
             class=move || {
@@ -382,13 +417,22 @@ pub fn HomeActivity(
                             let mut st = ssr_prev();
                             let p = st.pop();
                             let mut query_params = query.get();
-                            query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
-                            query_params.insert("from".into(), serde_json::to_string(&p).unwrap_or("[0,None]".into()));
+                            if st.len() > 0 {
+                              query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
+                            } else {
+                              query_params.remove("prev".into());
+                            }
+                            if p.ne(&Some((0, None))) {
+                              query_params.insert("from".into(), serde_json::to_string(&p).unwrap_or("[0,None]".into()));
+                            } else {
+                              query_params.remove("from".into());
+                            }
                             view! {
                               <span>
                                 <A
+                                  on:click=move |_| { loading.set(true); } 
                                   href=format!("{}", query_params.to_query_string())
-                                  class=move || format!("btn join-item{}", if !ssr_prev().is_empty() && !loading.get() { "" } else { " btn-disabled" } ) 
+                                  class=move || format!("btn join-item{}", if !ssr_prev().is_empty() { "" } else { " btn-disabled" } ) 
                                 >
                                   "Prev"
                                 </A>
@@ -404,6 +448,7 @@ pub fn HomeActivity(
                             view! {
                               <span>
                                 <A 
+                                  on:click=move |_| { loading.set(true); } 
                                   href=format!("{}", query_params.to_query_string())
                                   class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
                                 >
