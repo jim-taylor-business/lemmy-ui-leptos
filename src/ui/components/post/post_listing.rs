@@ -3,7 +3,7 @@ use crate::{
   lemmy_client::*,
   ui::components::common::icon::{
     Icon,
-    IconType::{Block, Comments, Crosspost, Downvote, Report, Save, Upvote, VerticalDots},
+    IconType::*,
   },
 };
 use ev::MouseEvent;
@@ -515,6 +515,11 @@ pub fn PostListing(
               <Icon icon=Save/>
             </button>
           </ActionForm>
+          <span class=format!("text-base-content{}", if post_view.get().post.local { " hidden" } else { "" }) title="Original post">
+            <A href={ post_view.get().post.ap_id.inner().to_string() }>
+              <Icon icon=External/>
+            </A>
+          </span>
           <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() && e.shift_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
             // <A href="/create_post">
               <Icon icon=Crosspost/>

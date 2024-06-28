@@ -144,8 +144,9 @@ pub fn TopNav(
   };
 
   view! {
-    <nav class="navbar container mx-auto hidden lg:flex sticky top-0 bg-base-100 z-[1]">
+    <nav class="navbar container mx-auto flex sticky top-0 bg-base-100 z-[1]">
       <div class="navbar-start">
+        // <div class="dropdown"><div tabindex="0" role="button" class="btn btn-ghost lg:hidden"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg></div> <ul tabindex="0" class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"><li><button>Item 1</button></li> <li><button>Parent</button> <ul class="p-2 bg-base-100 w-40"><li><button>Submenu 1</button></li> <li><button>Submenu 2</button></li></ul></li> <li><button>Item 3</button></li></ul></div>
         <ul class="menu menu-horizontal flex-nowrap items-center">
           <li>
             <A href="/" class="text-xl whitespace-nowrap">
@@ -159,22 +160,22 @@ pub fn TopNav(
 
             </A>
           </li>
-          <li>
+          <li class="hidden lg:flex">
             <A href="/communities" class="text-md">
               {t!(i18n, communities)}
             </A>
           </li>
-          <li>
+          <li class="hidden lg:flex">
             <A href="/create_post" class="text-md pointer-events-none text-base-content/50">
               {t!(i18n, create_post)}
             </A>
           </li>
-          <li>
+          <li class="hidden lg:flex">
             <A href="/create_community" class="text-md pointer-events-none text-base-content/50">
               {t!(i18n, create_community)}
             </A>
           </li>
-          <li>
+          <li class="hidden lg:flex">
             <a href="//join-lemmy.org/donate">
               <span title="t!(i18n, donate)">
                 <Icon icon=Donate/>
@@ -185,14 +186,14 @@ pub fn TopNav(
       </div>
       <div class="navbar-end">
         <ul class="menu menu-horizontal flex-nowrap items-center">
-          <li>
+          <li class="hidden lg:flex">
             <A href="/search" class="pointer-events-none text-base-content/50">
               <span title="t!(i18n, search)">
                 <Icon icon=Search/>
               </span>
             </A>
           </li>
-          <li class="z-[1]">
+          <li class="z-[1] hidden lg:flex">
             <details>
               <summary>"Lang"</summary>
               <ul>
@@ -211,7 +212,7 @@ pub fn TopNav(
               </ul>
             </details>
           </li>
-          <li class="z-[1]">
+          <li class="z-[1] hidden lg:flex">
             <details>
               <summary>"Theme"</summary>
               <ul>
@@ -257,7 +258,7 @@ pub fn TopNav(
             }
           >
 
-            <li>
+            <li class="hidden lg:flex">
               <A href="/inbox">
                 <span title=t!(i18n, unread_messages)>
                   <Icon icon=Notifications/>
@@ -284,7 +285,7 @@ pub fn TopNav(
                   <li>
                     <A on:click=move |e: MouseEvent| {
                       if e.ctrl_key() && e.shift_key() {
-                        e.stop_propagation(); 
+                        e.stop_propagation();
                         if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = site_signal.get()
                         {
                           let _ = window().location().set_href(&format!("//lemmy.world/u/{}", m.local_user_view.person.name));

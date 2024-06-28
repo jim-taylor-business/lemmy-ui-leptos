@@ -190,7 +190,7 @@ pub fn CommentNode(
         // logging::log!("still down");
         // down.set(false);
       } class="pb-2 cursor-pointer">
-        <div class="prose max-w-none prose-pre:relative prose-pre:h-40 prose-code:absolute prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
+        <div class="prose max-w-none prose-ol:list-inside prose-ol:pl-0 prose-pre:relative prose-pre:h-40 prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
         // <A
         //   href=format!("/u/{}", comment_view.get().creator.name)
         //   class="text-sm inline-block hover:text-secondary break-words"
@@ -257,6 +257,9 @@ pub fn CommentNode(
           //     {if comment_view.get().unread_comments != comment_view.get().counts.comments && comment_view.get().unread_comments > 0 { format!(" ({})", comment_view.get().unread_comments) } else { "".to_string() }}
           //   </A>
           // </span>
+          <span class="text-base-content/50" title="Reply">
+            <Icon icon=Reply/>
+          </span>
           <Form 
             action="POST"
             on:submit=on_save_submit 
