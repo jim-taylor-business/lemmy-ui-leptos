@@ -112,7 +112,7 @@ lto = true
 
 [profile.wasm-release]
 inherits = "release"
-opt-level = "z"
+opt-level = "s"
 lto = true
 codegen-units = 1
 
