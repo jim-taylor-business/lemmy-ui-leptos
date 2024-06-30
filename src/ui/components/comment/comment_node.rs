@@ -44,17 +44,15 @@ pub fn CommentNode(
   let com_sig = RwSignal::new(comments_children);
   let des_sig = RwSignal::new(comments_descendants);
 
-  let refer = &comment_view.get().comment.content;
-  let parser = pulldown_cmark::Parser::new(refer);
+  let content = &comment_view.get().comment.content;
+  let parser = pulldown_cmark::Parser::new(content);
   let mut html = String::new();
   pulldown_cmark::html::push_html(&mut html, parser);
-
-  // html.push_str(&format!("<A href=/u/{} class=\"text-sm hover:text-secondary break-words\">{}</A>", comment_view.get().creator.name, comment_view.get().creator.name));
+  let safe_html = ammonia::clean(&*html);
 
   let child_show = RwSignal::new(true);
   let back_show = RwSignal::new(false);
 
-  // let down = RwSignal::new(false);
   let still_down = RwSignal::new(false);
   let vote_show = RwSignal::new(false);
   let still_handle: RwSignal<Option<TimeoutHandle>> = RwSignal::new(None);
@@ -79,7 +77,6 @@ pub fn CommentNode(
 
   let cancel = move |ev: MouseEvent| {
     ev.stop_propagation();
-    // ev.cancel_bubble();
   };
 
   let on_vote_submit = move |ev: SubmitEvent, score: i16| {
@@ -169,28 +166,22 @@ pub fn CommentNode(
             }
           }
         }
-        // down.set(false);
       } on:mousedown=move |e: MouseEvent| {
-        // down.set(true);
         still_handle.set(set_timeout_with_handle(move || {
-          // if down.get() {
-            // logging::log!("still down");
-            vote_show.set(!vote_show.get());
-            still_down.set(true);
-            // down.set(false);            
-          // }
+          vote_show.set(!vote_show.get());
+          still_down.set(true);
         }, std::time::Duration::from_millis(500)).ok());
       } on:mouseup=move |e: MouseEvent| {
         if let Some(h) = still_handle.get() {
           h.clear();
         }
-        // down.set(false);
       } on:dblclick=move |e: MouseEvent| {
         vote_show.set(!vote_show.get());
-        // logging::log!("still down");
-        // down.set(false);
       } class="pb-2 cursor-pointer">
-        <div class="prose max-w-none prose-ol:list-inside prose-ol:pl-0 prose-pre:relative prose-pre:h-40 prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-blockquote:pl-2 prose-blockquote:not-italic prose-blockquote:font-normal prose-li:my-0" inner_html=html/>
+        <div
+          class="prose max-w-none prose-ol:list-inside prose-ol:pl-0 prose-pre:relative prose-pre:h-40 prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-blockquote:pl-2 prose-blockquote:not-italic prose-blockquote:font-normal prose-li:my-0" 
+          inner_html=safe_html
+        />
         // <A
         //   href=format!("/u/{}", comment_view.get().creator.name)
         //   class="text-sm inline-block hover:text-secondary break-words"

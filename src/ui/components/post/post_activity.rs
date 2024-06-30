@@ -107,15 +107,17 @@ pub fn PostActivity(
                         </div>
                         {
                           if let Some(ref refer) = text {
-                            // let refer = &;
                             let parser = pulldown_cmark::Parser::new(refer);
                             let mut html = String::new();
-                            pulldown_cmark::html::push_html(&mut html, parser);                    
+                            pulldown_cmark::html::push_html(&mut html, parser);
+                            let safe_html = ammonia::clean(&*html);
 
                             view! {
                               <div class="pl-4 pr-4">
                                 <div class="py-2">
-                                  <div class="prose max-w-none prose-ol:list-inside prose-ol:pl-0 prose-pre:relative prose-pre:h-40 prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-blockquote:pl-2 prose-blockquote:not-italic prose-blockquote:font-normal prose-li:my-0" inner_html=html/>
+                                  <div class="prose max-w-none prose-ol:list-inside prose-ol:pl-0 prose-pre:relative prose-pre:h-40 prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-blockquote:pl-2 prose-blockquote:not-italic prose-blockquote:font-normal prose-li:my-0"
+                                    inner_html=safe_html
+                                  />
                                 </div>
                               </div>
                             }
