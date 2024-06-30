@@ -8,19 +8,14 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 # recommended - use the latest version tag and test against an instance that supports the same version
-# lemmy_api_common = { tag = "0.19.4-beta.8", git = "https://github.com/LemmyNet/lemmy.git", default-features = false }
-# lemmy_api_common = { tag = "0.19.3", git = "https://github.com/LemmyNet/lemmy.git", default-features = false }
+# lemmy_api_common = { tag = "0.19.5", git = "https://github.com/LemmyNet/lemmy.git", default-features = false }
 
 # test against unstable main dev branch of Lemmy
 # lemmy_api_common = { branch = "main", git = "https://github.com/LemmyNet/lemmy.git", default-features = false }
 
-# the new lemmy client
-# lemmy-client = "0"
-
 # for testing potential lemmy changes
 # lemmy_api_common = { path = "../lemmy/crates/api_common", default-features = false }
 lemmy_api_common = { branch = "deploy_demo", git = "https://github.com/jim-taylor-business/lemmy.git", default-features = false }
-# lemmy_utils = { path = "../lemmy/crates/utils", default-features = false }
 
 leptos = "0"
 leptos_actix = { version = "0", optional = true }
@@ -37,7 +32,7 @@ strum_macros = "0"
 web-sys = { version = "0", features = ["AbortController", "AbortSignal"] }
 
 pulldown-cmark = "0"
-ammonia = "4"
+# ammonia = "4"
 html-escape = "0"
 pretty-duration = "0"
 

@@ -405,7 +405,7 @@ pub fn HomeActivity(
                     });
 
                     view! {
-                        <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0">
+                        <div class=move || format!("columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
                           <For each=move || csr_pages.get().into_iter() key=|h| h.0 let:h>
                             <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
                           </For>

@@ -45,10 +45,26 @@ pub fn CommentNode(
   let des_sig = RwSignal::new(comments_descendants);
 
   let content = &comment_view.get().comment.content;
+  // let parser = pulldown_cmark::Parser::new(content);
+  // let mut html = String::new();
+  // pulldown_cmark::html::push_html(&mut html, parser);
+  // let safe_html = ammonia::clean(&*html);
+
   let parser = pulldown_cmark::Parser::new(content);
-  let mut html = String::new();
-  pulldown_cmark::html::push_html(&mut html, parser);
-  let safe_html = ammonia::clean(&*html);
+  let custom = parser.map(|event| match event {
+    pulldown_cmark::Event::Html(text) => {
+      let er = format!("<p>{}</p>",  html_escape::encode_safe(&text).to_string());
+      pulldown_cmark::Event::Html(er.into())
+    }
+    pulldown_cmark::Event::InlineHtml(text) => {
+      let er = html_escape::encode_safe(&text).to_string();
+      pulldown_cmark::Event::InlineHtml(er.into())
+    }
+    _ => event
+  });
+  let mut safe_html = String::new();
+  pulldown_cmark::html::push_html(&mut safe_html, custom);
+
 
   let child_show = RwSignal::new(true);
   let back_show = RwSignal::new(false);

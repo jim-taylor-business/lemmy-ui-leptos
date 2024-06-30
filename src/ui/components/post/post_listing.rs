@@ -312,7 +312,11 @@ pub fn PostListing(
   };
 
   let title = post_view.get().post.name.clone();
-  let title_encoded = html_escape::encode_text(&title).to_string();
+  let title_encoded = html_escape::encode_safe(&title).to_string();
+  let community_title = post_view.get().community.title.clone();
+  let community_title_encoded = html_escape::encode_safe(&community_title).to_string();
+  let creator_name = post_view.get().creator.name.clone();
+  let creator_name_encoded = html_escape::encode_safe(&creator_name).to_string();
 
   let now_in_millis = {
     #[cfg(not(feature = "ssr"))]
@@ -436,11 +440,11 @@ pub fn PostListing(
             href=move || format!("/u/{}", post_view.get().creator.name)
             class="text-sm inline-block hover:text-secondary break-words"
           >
-            {post_view.get().creator.name}
+            {creator_name_encoded}
           </A>
           ", in "
           <A class="text-sm inline-block hover:text-secondary break-words" href=format!("/c/{}", post_view.get().community.name)>
-            {post_view.get().community.title}
+            {community_title_encoded}
           </A>
         </span>
       </div>
