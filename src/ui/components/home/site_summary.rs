@@ -15,7 +15,7 @@ pub fn SiteSummary(
             .map(|o| match o {
                 Ok(o) => {
                     view! {
-                      <div class="card w-full bg-base-300 text-base-content mb-3">
+                      <div class="card w-full bg-base-300 text-base-content mb-6">
                         <figure>
                           <div class="card-body bg-neutral">
                             <h2 class="card-title text-neutral-content">{o.site_view.site.name}</h2>

@@ -448,6 +448,7 @@ pub fn PostListing(
         "row-span-1 col-span-2 sm:col-span-1 sm:row-span-1 flex items-center gap-x-2{}",
         if post_view.get().post.thumbnail_url.is_none() && post_view.get().post.url.is_none() { " sm:col-span-2" } else { "" },
       )>
+        // <A href=move || format!("/post/{}", post_view.get().post.id) /* class="block hover:text-accent" */>
           <ActionForm
             action=vote_action
             on:submit=on_up_vote_submit
@@ -492,7 +493,8 @@ pub fn PostListing(
           </ActionForm>
           <span
             class="flex items-center"
-            title=move || format!("{} comments", post_view.get().unread_comments)
+            // title=move || format!("{} comments", post_view.get().unread_comments)
+            title=move || format!("{} comments{}", post_view.get().counts.comments, if post_view.get().unread_comments != post_view.get().counts.comments && post_view.get().unread_comments > 0 { format!(" ({} unread)", post_view.get().unread_comments) } else { "".to_string() })
           >
             <A
               href=move || { format!("/post/{}", post_view.get().post.id) }
@@ -573,7 +575,8 @@ pub fn PostListing(
             } 
           }
           <span class="grow text-right text-base-content/25"> { if post_number != 0 { format!("{}", post_number) } else { "".into() } } </span>
-        </div>
+        // </A>
+      </div>
     </div>
   }
 }

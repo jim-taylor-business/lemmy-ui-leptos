@@ -388,7 +388,7 @@ pub fn HomeActivity(
       </div>
     </div>
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
-      <div class="w-full lg:w-2/3 2xl:w-3/4 3xl:w-4/5 4xl:w-5/6">
+      <div class="w-full lg:w-2/3 2xl:w-3/4 3xl:w-4/5 4xl:w-5/6 sm:pr-4">
 
       <Transition fallback=|| {}>
         {move || {
@@ -405,7 +405,7 @@ pub fn HomeActivity(
                     });
 
                     view! {
-                        <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
+                        <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0">
                           <For each=move || csr_pages.get().into_iter() key=|h| h.0 let:h>
                             <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
                           </For>

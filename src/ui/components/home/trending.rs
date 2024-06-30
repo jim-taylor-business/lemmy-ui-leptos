@@ -48,7 +48,7 @@ pub fn Trending() -> impl IntoView {
                   Some(c) => {
                       let c_signal = create_rw_signal(c.communities);
                       view! {
-                        <div class="card w-full bg-base-300 text-base-content mb-3">
+                        <div class="card w-full bg-base-300 text-base-content mb-0">
                           <figure>
                             <div class="card-body bg-info">
                               <h2 class="card-title text-info-content">"Trending Communities"</h2>

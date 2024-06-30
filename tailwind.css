@@ -3,7 +3,10 @@
 @tailwind utilities;
 
 @layer base {
-    pre > code {
+    .prose pre > code {
         @apply absolute;
     }
+    .prose blockquote > p:before, .prose blockquote > p:after {
+        @apply content-none;
+    }    
 }
