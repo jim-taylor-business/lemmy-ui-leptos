@@ -132,6 +132,11 @@ pub fn PostActivity(
   //       "not this"
   //     ),
   //     (
+  //       "pupu",
+  //       "<arch joke><etc></fake>",
+  //       "not this"
+  //     ),
+  //     (
   //         "escape html special chars",
   //         "<script>alert('xss');</script> hello &\"",
   //         "<p>&lt;script&gt;alert(‘xss’);&lt;/script&gt; hello &amp;&quot;</p>\n"

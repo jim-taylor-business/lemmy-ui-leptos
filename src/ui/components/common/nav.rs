@@ -332,8 +332,12 @@ pub fn TopNav(
               .get()
               .map(|err| {
                   view! {
-                    <div class="container mx-auto alert alert-error">
+                    <div class="container mx-auto alert alert-error mb-8">
                       <span>{message_from_error(&err)} " - " {err.content}</span>
+                      <div>
+                        <button class="btn btn-sm">Retry</button>
+                        <button class="btn btn-sm btn-primary" on:click=move |_| { error.set(None); }>Close</button>
+                      </div>
                     </div>
                   }
               })
