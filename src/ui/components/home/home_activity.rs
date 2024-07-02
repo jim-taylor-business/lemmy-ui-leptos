@@ -22,7 +22,7 @@ pub fn HomeActivity(
 ) -> impl IntoView {
   let i18n = use_i18n();
 
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
   let user = expect_context::<RwSignal<Option<bool>>>();
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
@@ -93,7 +93,7 @@ pub fn HomeActivity(
           query_params.insert("sort".into(), o);
         }
         Err(e) => {
-          error.set(Some(e.into()));
+          error.set(Some((e.into(), None)));
         }
       }
 
@@ -130,6 +130,7 @@ pub fn HomeActivity(
 
   let next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
   let loading = create_rw_signal(false);
+  let refresh = create_rw_signal(false);
 
   ui_title.set(None);
 
@@ -139,6 +140,7 @@ pub fn HomeActivity(
   let posts = create_resource(
     move || {
       (
+        refresh.get(),
         user.get(),
         ssr_list(),
         ssr_sort(),
@@ -147,7 +149,7 @@ pub fn HomeActivity(
         ssr_limit(),
       )
     },
-    move |(_user, list_type, sort_type, from, csr_from, limit)| async move {
+    move |(_refresh, _user, list_type, sort_type, from, csr_from, limit)| async move {
 
       let f = if let Some(f) = csr_from { f } else { from };
 
@@ -178,7 +180,7 @@ pub fn HomeActivity(
           Some((f, o))
         },
         Err(e) => {
-          error.set(Some(e));
+          error.set(Some((e, Some(refresh))));
           None
         }
       }

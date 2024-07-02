@@ -6,6 +6,10 @@
     .prose pre > code {
         @apply absolute;
     }
+    .prose ol > li > p {
+        @apply inline;
+        @apply pl-3;
+    }
     .prose blockquote > p:before, .prose blockquote > p:after {
         @apply content-none;
     }    

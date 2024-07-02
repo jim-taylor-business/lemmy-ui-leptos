@@ -11,7 +11,7 @@ use leptos_router::*;
 pub fn Trending() -> impl IntoView {
   let _i18n = use_i18n();
 
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
 
   let trending = create_resource(
     move || (),
@@ -29,7 +29,7 @@ pub fn Trending() -> impl IntoView {
       match result {
         Ok(o) => Some(o),
         Err(e) => {
-          error.set(Some(e));
+          error.set(Some((e, None)));
           None
         }
       }

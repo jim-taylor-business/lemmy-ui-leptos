@@ -54,7 +54,7 @@ pub fn App() -> impl IntoView {
   provide_meta_context();
   provide_i18n_context();
 
-  let error = create_rw_signal::<Option<LemmyAppError>>(None);
+  let error = create_rw_signal::<Option<(LemmyAppError, Option<RwSignal<bool>>)>>(None);
   provide_context(error);
   let user = create_rw_signal::<Option<bool>>(None);
   provide_context(user);
@@ -97,7 +97,7 @@ pub fn App() -> impl IntoView {
       match result {
         Ok(o) => Ok(o),
         Err(e) => {
-          error.set(Some(e.clone()));
+          error.set(Some((e.clone(), None)));
           Err(e)
         }
       }

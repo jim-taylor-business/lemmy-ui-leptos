@@ -49,9 +49,6 @@ pub fn Layout(
   view! {
     <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css"/>
     <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
-    // debug console when there is no dev tools (mobile/desktop)
-    // <Script src="//cdn.jsdelivr.net/npm/eruda"/>
-    // <Script>eruda.init();</Script>
     <Title text=move || title() />
     <Meta name="description" content=move || title() />
     <Transition fallback=|| {}>

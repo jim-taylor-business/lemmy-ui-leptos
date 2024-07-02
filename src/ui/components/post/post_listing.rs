@@ -134,7 +134,7 @@ pub fn PostListing(
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
   post_number: usize,
 ) -> impl IntoView {
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
   let user = Signal::derive(move || {
     if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
       Some(true)
@@ -165,7 +165,7 @@ pub fn PostListing(
             post_view.set(o.post_view);
           }
           Err(e) => {
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -210,7 +210,7 @@ pub fn PostListing(
             post_view.set(o.post_view);
           }
           Err(e) => {
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -235,7 +235,7 @@ pub fn PostListing(
         match result {
           Ok(_o) => {}
           Err(e) => {
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -290,7 +290,7 @@ pub fn PostListing(
         match result {
           Ok(_o) => {}
           Err(e) => {
-            error.set(Some(e.clone()));
+            error.set(Some((e.clone(), None)));
 
             let _id = format!("{}", post_view.get().post.id);
 

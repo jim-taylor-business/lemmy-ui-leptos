@@ -9,7 +9,7 @@ use crate::{
   },
 };
 use ev::MouseEvent;
-use lemmy_api_common::site::GetSiteResponse;
+use lemmy_api_common::{lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, site::GetSiteResponse};
 use leptos::*;
 use leptos_router::*;
 use web_sys::SubmitEvent;
@@ -69,10 +69,10 @@ pub fn TopNav(
 ) -> impl IntoView {
   let i18n = use_i18n();
 
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
 
   if let Some(Err(e)) = site_signal.get() {
-    error.set(Some(e));
+    error.set(Some((e, None)));
   }
 
   let query = use_query_map();
@@ -84,7 +84,7 @@ pub fn TopNav(
 
       match r {
         Ok(e) => {
-          error.set(Some(e));
+          error.set(Some((e, None)));
         }
         Err(_) => {
           logging::error!("error decoding error - log and ignore in UI?");
@@ -111,7 +111,7 @@ pub fn TopNav(
           }
           Err(e) => {
             logging::warn!("logout error {:#?}", e);
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -150,6 +150,19 @@ pub fn TopNav(
         <ul class="menu menu-horizontal flex-nowrap items-center">
           <li>
             <A href="/" class="text-xl whitespace-nowrap">
+              {move || {
+                  if let Some(Ok(GetSiteResponse { site_view: SiteView { site: Site { icon: Some(i), .. }, .. },  .. })) = site_signal.get() {
+                      view! { <img class="h-8" src={ i.inner().to_string() } /> }
+                  } else {
+                      view! { <img class="h-8" src="/favicon.svg" /> }
+                  }
+
+                  // if let Some(Ok(m)) = site_signal.get() {
+                  //     m.site_view.site.icon
+                  // } else {
+                  //     "Lemmy".to_string()
+                  // }
+              }}
               {move || {
                   if let Some(Ok(m)) = site_signal.get() {
                       m.site_view.site.name
@@ -333,10 +346,12 @@ pub fn TopNav(
               .map(|err| {
                   view! {
                     <div class="container mx-auto alert alert-error mb-8">
-                      <span>{message_from_error(&err)} " - " {err.content}</span>
+                      <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
                       <div>
-                        <button class="btn btn-sm">Retry</button>
-                        <button class="btn btn-sm btn-primary" on:click=move |_| { error.set(None); }>Close</button>
+                        <Show when=move || { if let Some((_, Some(r))) = error.get() { true } else { false } } fallback=|| {}>
+                          <button on:click=move |_| { if let Some((_, Some(r))) = error.get() { r.set(!r.get()); } else { } } class="btn btn-sm"> "Retry" </button>
+                        </Show>
+                        <button class="btn btn-sm btn-primary" on:click=move |_| { error.set(None); }> "Close" </button>
                       </div>
                     </div>
                   }
