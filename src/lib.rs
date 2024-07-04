@@ -33,6 +33,8 @@ leptos_i18n::load_locales!();
 
 #[derive(Clone)]
 pub struct TitleSetter(String);
+#[derive(Clone)]
+pub struct OnlineSetter(bool);
 
 // #[derive(Clone)]
 // pub struct PageCursorSetter(Option<PaginationCursor>);
@@ -62,6 +64,17 @@ pub fn App() -> impl IntoView {
   provide_context(ui_theme);
   let ui_title = create_rw_signal::<Option<TitleSetter>>(None);
   provide_context(ui_title);
+  let ui_online = create_rw_signal::<OnlineSetter>(OnlineSetter(true));
+  provide_context(ui_online);
+
+  let on_online = move |b: bool| {
+    move |_| {
+      ui_online.set(OnlineSetter(b));
+    }
+  };
+
+  let _offline_handle = window_event_listener_untyped("offline", on_online(false));
+  let _online_handle = window_event_listener_untyped("online", on_online(true));
 
   // workaround to maintain index state
   // let page_cursor = create_rw_signal(PageCursorSetter(None));
@@ -97,7 +110,7 @@ pub fn App() -> impl IntoView {
       match result {
         Ok(o) => Ok(o),
         Err(e) => {
-          error.set(Some((e.clone(), None)));
+          // error.set(Some((e.clone(), None)));
           Err(e)
         }
       }

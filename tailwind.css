@@ -3,14 +3,38 @@
 @tailwind utilities;
 
 @layer base {
+    .prose p {
+        @apply break-words leading-6 my-0 mb-1; 
+    }
+    .prose ol {
+        @apply list-inside pl-0 mt-0 mb-1;
+    }
+    .prose ul {
+        @apply my-0;
+    } 
+    .prose li {
+        @apply my-0;
+    }  
+    .prose pre {
+        @apply relative h-40 overflow-auto;
+    }
+    .prose hr {
+        @apply my-2;
+    } 
+    .prose img {
+        @apply my-2 w-24;
+    } 
+    .prose blockquote {
+        @apply my-0 mb-1 pl-2 not-italic font-normal;
+    } 
     .prose pre > code {
         @apply absolute;
     }
     .prose ol > li > p {
-        @apply inline;
-        @apply pl-3;
+        @apply inline pl-3;
     }
     .prose blockquote > p:before, .prose blockquote > p:after {
         @apply content-none;
     }    
+     /* prose-ol:list-inside prose-ol:pl-0 prose-pre:relative prose-pre:h-40 prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-blockquote:pl-2 prose-blockquote:not-italic prose-blockquote:font-normal prose-li:my-0 prose-ol:mt-0 prose-ol:mb-1 */
 }

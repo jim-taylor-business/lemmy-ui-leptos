@@ -195,7 +195,7 @@ pub fn CommentNode(
         vote_show.set(!vote_show.get());
       } class="pb-2 cursor-pointer">
         <div
-          class="prose max-w-none prose-ol:list-inside prose-ol:pl-0 prose-pre:relative prose-pre:h-40 prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-blockquote:pl-2 prose-blockquote:not-italic prose-blockquote:font-normal prose-li:my-0  prose-ol:mt-0 prose-ol:mb-1" 
+          class="prose max-w-none"
           inner_html=safe_html
         />
         // <A

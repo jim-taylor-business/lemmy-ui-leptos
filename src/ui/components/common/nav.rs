@@ -6,7 +6,7 @@ use crate::{
   ui::components::common::icon::{
     Icon,
     IconType::{Donate, Notifications, Search},
-  },
+  }, OnlineSetter,
 };
 use ev::MouseEvent;
 use lemmy_api_common::{lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, site::GetSiteResponse};
@@ -70,28 +70,43 @@ pub fn TopNav(
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
+  // let ssr_error = create_rw_signal::<Option<(LemmyAppError, Option<RwSignal<bool>>)>>(None);
 
-  if let Some(Err(e)) = site_signal.get() {
-    error.set(Some((e, None)));
-  }
+  // if let Some(Err(e)) = site_signal.get() {
+  //   ssr_error.set(Some((e, None)));
+  // }
 
   let query = use_query_map();
-  let ssr_error = move || query.with(|params| params.get("error").cloned());
 
-  if let Some(e) = ssr_error() {
-    if !e.is_empty() {
-      let r = serde_json::from_str::<LemmyAppError>(&e[..]);
+  let ssr_query_error = move || {
+    serde_json::from_str::<LemmyAppError>(
+      &query
+        .get()
+        .get("error")
+        .cloned()
+        .unwrap_or("".into()),
+    )
+    .ok()
+    .map(|e| (e, None::<Option<RwSignal<bool>>>))
+    // .unwrap_or((0usize, None))
+  };
 
-      match r {
-        Ok(e) => {
-          error.set(Some((e, None)));
-        }
-        Err(_) => {
-          logging::error!("error decoding error - log and ignore in UI?");
-        }
-      }
-    }
-  }
+  // let ssr_error = move || query.with(|params| params.get("error").cloned());
+
+  // if let Some(e) = ssr_error() {
+  //   if !e.is_empty() {
+  //     let r = serde_json::from_str::<LemmyAppError>(&e[..]);
+
+  //     match r {
+  //       Ok(e) => {
+  //         error.set(Some((e, None)));
+  //       }
+  //       Err(_) => {
+  //         logging::error!("error decoding error - log and ignore in UI?");
+  //       }
+  //     }
+  //   }
+  // }
 
   let user = expect_context::<RwSignal<Option<bool>>>();
 
@@ -119,6 +134,7 @@ pub fn TopNav(
   };
 
   let ui_theme = expect_context::<RwSignal<Option<String>>>();
+  let ui_online = expect_context::<RwSignal<OnlineSetter>>();
   let theme_action = create_server_action::<ChangeThemeFn>();
 
   let on_theme_submit = move |theme_name: &'static str| {
@@ -156,12 +172,6 @@ pub fn TopNav(
                   } else {
                       view! { <img class="h-8" src="/favicon.svg" /> }
                   }
-
-                  // if let Some(Ok(m)) = site_signal.get() {
-                  //     m.site_view.site.icon
-                  // } else {
-                  //     "Lemmy".to_string()
-                  // }
               }}
               {move || {
                   if let Some(Ok(m)) = site_signal.get() {
@@ -250,6 +260,13 @@ pub fn TopNav(
               </ul>
             </details>
           </li>
+          <li>
+            <A href="/inbox">
+              <span class=move || format!("{}", if ui_online.get().0 {"accent"} else {""})>
+                <Icon icon=Notifications/>
+              </span>
+            </A>
+          </li>
           <Show
             when=move || {
                 if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
@@ -270,14 +287,6 @@ pub fn TopNav(
                 }
             }
           >
-
-            <li class="hidden lg:flex">
-              <A href="/inbox">
-                <span title=t!(i18n, unread_messages)>
-                  <Icon icon=Notifications/>
-                </span>
-              </A>
-            </li>
             <li>
               <details>
                 <summary>
@@ -333,32 +342,69 @@ pub fn TopNav(
         </ul>
       </div>
     </nav>
-    <Show
-      when=move || error.get().is_some()
-      fallback=move || {
-          view! { <div class="hidden"></div> }
-      }
-    >
+    // <Show
+    //   when=move || error.get().is_some()
+    //   fallback=move || {
+    //       view! { <div class="hidden"></div> }
+    //   }
+    // >
 
-      {move || {
-          error
-              .get()
-              .map(|err| {
-                  view! {
-                    <div class="container mx-auto alert alert-error mb-8">
-                      <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
-                      <div>
-                        <Show when=move || { if let Some((_, Some(r))) = error.get() { true } else { false } } fallback=|| {}>
-                          <button on:click=move |_| { if let Some((_, Some(r))) = error.get() { r.set(!r.get()); } else { } } class="btn btn-sm"> "Retry" </button>
-                        </Show>
-                        <button class="btn btn-sm btn-primary" on:click=move |_| { error.set(None); }> "Close" </button>
-                      </div>
+    {move || {
+      site_signal.get()
+            .map(|res| {
+                
+              if let Err(err) = res {
+                view! {
+                  <div class="container mx-auto alert alert-error mb-8">
+                    <span>"S" {message_from_error(&err)} " - " {err.content}</span>
+                    <div>
+                      <A href=use_location().pathname.get() class="btn btn-sm"> "Retry" </A>
                     </div>
-                  }
-              })
-      }}
+                  </div>
+                }
+              } else {
+                view! {
+                  <div class="hidden" />
+                }
 
-    </Show>
+              }
+            })
+    }}
+
+    {move || {
+        ssr_query_error()
+            .map(|err| {
+                let mut query_params = query.get();
+                query_params.remove("error".into());
+                view! {
+                  <div class="container mx-auto alert alert-error mb-8">
+                    <span>"Q" {message_from_error(&err.0)} " - " {err.0.content}</span>
+                    <div>
+                      <A class="btn btn-sm" href=format!("./?{}", &query_params.to_query_string())> "Clear" </A>
+                    </div>
+                  </div>
+                }
+            })
+    }}
+
+    {move || {
+        error.get()
+          .map(|err| {
+              view! {
+                <div class="container mx-auto alert alert-error mb-8">
+                  <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
+                  <div>
+                    <Show when=move || { if let Some(r) = err.1 { true } else { false } } /* let:r */ fallback=|| {}>
+                      <button on:click=move |_| { if let Some(r) = err.1 { r.set(!r.get()); } else { } } class="btn btn-sm"> "Retry" </button>
+                    </Show>
+                    <button class="btn btn-sm" on:click=move |_| { error.set(None); }> "Clear" </button>
+                  </div>
+                </div>
+              }
+          })
+    }}
+
+    // </Show>
   }
 }
 
