@@ -93,7 +93,7 @@ pub fn LoginForm() -> impl IntoView {
 
   let query = use_query_map();
 
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
   let user = expect_context::<RwSignal<Option<bool>>>();
 
   let name = create_rw_signal(String::new());
@@ -144,13 +144,13 @@ pub fn LoginForm() -> impl IntoView {
             leptos_router::use_navigate()("/", Default::default());
           }
           Ok(LoginResponse { jwt: None, .. }) => {
-            error.set(Some(LemmyAppError {
+            error.set(Some((LemmyAppError {
               error_type: LemmyAppErrorType::MissingToken,
               content: String::default(),
-            }));
+            }, None)));
           }
           Err(e) => {
-            error.set(Some(e.clone()));
+            error.set(Some((e.clone(), None)));
             password_validation.set("".to_string());
             username_validation.set("".to_string());
 

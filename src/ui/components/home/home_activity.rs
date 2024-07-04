@@ -22,7 +22,7 @@ pub fn HomeActivity(
 ) -> impl IntoView {
   let i18n = use_i18n();
 
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
   let user = expect_context::<RwSignal<Option<bool>>>();
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
@@ -93,7 +93,7 @@ pub fn HomeActivity(
           query_params.insert("sort".into(), o);
         }
         Err(e) => {
-          error.set(Some(e.into()));
+          error.set(Some((e.into(), None)));
         }
       }
 
@@ -130,6 +130,7 @@ pub fn HomeActivity(
 
   let next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
   let loading = create_rw_signal(false);
+  let refresh = create_rw_signal(false);
 
   ui_title.set(None);
 
@@ -139,6 +140,7 @@ pub fn HomeActivity(
   let posts = create_resource(
     move || {
       (
+        refresh.get(),
         user.get(),
         ssr_list(),
         ssr_sort(),
@@ -147,7 +149,7 @@ pub fn HomeActivity(
         ssr_limit(),
       )
     },
-    move |(_user, list_type, sort_type, from, csr_from, limit)| async move {
+    move |(_refresh, _user, list_type, sort_type, from, csr_from, limit)| async move {
 
       let f = if let Some(f) = csr_from { f } else { from };
 
@@ -178,7 +180,7 @@ pub fn HomeActivity(
           Some((f, o))
         },
         Err(e) => {
-          error.set(Some(e));
+          error.set(Some((e, Some(refresh))));
           None
         }
       }
@@ -388,7 +390,7 @@ pub fn HomeActivity(
       </div>
     </div>
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
-      <div class="w-full lg:w-2/3 2xl:w-3/4 3xl:w-4/5 4xl:w-5/6">
+      <div class="w-full lg:w-2/3 2xl:w-3/4 3xl:w-4/5 4xl:w-5/6 sm:pr-4">
 
       <Transition fallback=|| {}>
         {move || {
@@ -405,7 +407,7 @@ pub fn HomeActivity(
                     });
 
                     view! {
-                        <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-3">
+                        <div class=move || format!("columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
                           <For each=move || csr_pages.get().into_iter() key=|h| h.0 let:h>
                             <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
                           </For>

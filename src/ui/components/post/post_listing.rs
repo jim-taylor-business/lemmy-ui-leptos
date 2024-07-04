@@ -3,7 +3,7 @@ use crate::{
   lemmy_client::*,
   ui::components::common::icon::{
     Icon,
-    IconType::{Block, Comments, Crosspost, Downvote, Report, Save, Upvote, VerticalDots},
+    IconType::*,
   },
 };
 use ev::MouseEvent;
@@ -134,7 +134,7 @@ pub fn PostListing(
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
   post_number: usize,
 ) -> impl IntoView {
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
   let user = Signal::derive(move || {
     if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
       Some(true)
@@ -165,7 +165,7 @@ pub fn PostListing(
             post_view.set(o.post_view);
           }
           Err(e) => {
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -210,7 +210,7 @@ pub fn PostListing(
             post_view.set(o.post_view);
           }
           Err(e) => {
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -235,7 +235,7 @@ pub fn PostListing(
         match result {
           Ok(_o) => {}
           Err(e) => {
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -290,7 +290,7 @@ pub fn PostListing(
         match result {
           Ok(_o) => {}
           Err(e) => {
-            error.set(Some(e.clone()));
+            error.set(Some((e.clone(), None)));
 
             let _id = format!("{}", post_view.get().post.id);
 
@@ -312,7 +312,11 @@ pub fn PostListing(
   };
 
   let title = post_view.get().post.name.clone();
-  let title_encoded = html_escape::encode_text(&title).to_string();
+  let title_encoded = html_escape::encode_safe(&title).to_string();
+  let community_title = post_view.get().community.title.clone();
+  let community_title_encoded = html_escape::encode_safe(&community_title).to_string();
+  let creator_name = post_view.get().creator.name.clone();
+  let creator_name_encoded = html_escape::encode_safe(&creator_name).to_string();
 
   let now_in_millis = {
     #[cfg(not(feature = "ssr"))]
@@ -436,11 +440,11 @@ pub fn PostListing(
             href=move || format!("/u/{}", post_view.get().creator.name)
             class="text-sm inline-block hover:text-secondary break-words"
           >
-            {post_view.get().creator.name}
+            {creator_name_encoded}
           </A>
           ", in "
           <A class="text-sm inline-block hover:text-secondary break-words" href=format!("/c/{}", post_view.get().community.name)>
-            {post_view.get().community.title}
+            {community_title_encoded}
           </A>
         </span>
       </div>
@@ -448,6 +452,7 @@ pub fn PostListing(
         "row-span-1 col-span-2 sm:col-span-1 sm:row-span-1 flex items-center gap-x-2{}",
         if post_view.get().post.thumbnail_url.is_none() && post_view.get().post.url.is_none() { " sm:col-span-2" } else { "" },
       )>
+        // <A href=move || format!("/post/{}", post_view.get().post.id) /* class="block hover:text-accent" */>
           <ActionForm
             action=vote_action
             on:submit=on_up_vote_submit
@@ -492,7 +497,8 @@ pub fn PostListing(
           </ActionForm>
           <span
             class="flex items-center"
-            title=move || format!("{} comments", post_view.get().unread_comments)
+            // title=move || format!("{} comments", post_view.get().unread_comments)
+            title=move || format!("{} comments{}", post_view.get().counts.comments, if post_view.get().unread_comments != post_view.get().counts.comments && post_view.get().unread_comments > 0 { format!(" ({} unread)", post_view.get().unread_comments) } else { "".to_string() })
           >
             <A
               href=move || { format!("/post/{}", post_view.get().post.id) }
@@ -515,6 +521,11 @@ pub fn PostListing(
               <Icon icon=Save/>
             </button>
           </ActionForm>
+          <span class=format!("text-base-content{}", if post_view.get().post.local { " hidden" } else { "" }) title="Original post">
+            <A href={ post_view.get().post.ap_id.inner().to_string() }>
+              <Icon icon=External/>
+            </A>
+          </span>
           <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() && e.shift_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
             // <A href="/create_post">
               <Icon icon=Crosspost/>
@@ -568,7 +579,8 @@ pub fn PostListing(
             } 
           }
           <span class="grow text-right text-base-content/25"> { if post_number != 0 { format!("{}", post_number) } else { "".into() } } </span>
-        </div>
+        // </A>
+      </div>
     </div>
   }
 }

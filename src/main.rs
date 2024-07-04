@@ -14,12 +14,21 @@ cfg_if! {
         use awc::Client;
 
         #[actix_web::get("favicon.svg")]
-        async fn favicon(
+        async fn lemmy(
             leptos_options: web::Data<leptos::LeptosOptions>,
         ) -> actix_web::Result<actix_files::NamedFile> {
             let leptos_options = leptos_options.into_inner();
             let site_root = &leptos_options.site_root;
             Ok(actix_files::NamedFile::open(format!("{site_root}/favicon.svg"))?)
+        }
+
+        #[actix_web::get("favicon.ico")]
+        async fn favicon(
+            leptos_options: web::Data<leptos::LeptosOptions>,
+        ) -> actix_web::Result<actix_files::NamedFile> {
+            let leptos_options = leptos_options.into_inner();
+            let site_root = &leptos_options.site_root;
+            Ok(actix_files::NamedFile::open(format!("{site_root}/favicon.ico"))?)
         }
 
         #[actix_web::get("icons.svg")]
@@ -50,6 +59,7 @@ cfg_if! {
                     .service(Files::new("/assets", site_root))
                     .service(favicon)
                     .service(icons)
+                    .service(lemmy)
                     .leptos_routes(
                         leptos_options.to_owned(),
                         routes.to_owned(),

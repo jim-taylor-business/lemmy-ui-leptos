@@ -44,17 +44,31 @@ pub fn CommentNode(
   let com_sig = RwSignal::new(comments_children);
   let des_sig = RwSignal::new(comments_descendants);
 
-  let refer = &comment_view.get().comment.content;
-  let parser = pulldown_cmark::Parser::new(refer);
-  let mut html = String::new();
-  pulldown_cmark::html::push_html(&mut html, parser);
+  let content = &comment_view.get().comment.content;
+  // let parser = pulldown_cmark::Parser::new(content);
+  // let mut html = String::new();
+  // pulldown_cmark::html::push_html(&mut html, parser);
+  // let safe_html = ammonia::clean(&*html);
 
-  // html.push_str(&format!("<A href=/u/{} class=\"text-sm hover:text-secondary break-words\">{}</A>", comment_view.get().creator.name, comment_view.get().creator.name));
+  let parser = pulldown_cmark::Parser::new(content);
+  let custom = parser.map(|event| match event {
+    pulldown_cmark::Event::Html(text) => {
+      let er = format!("<p>{}</p>",  html_escape::encode_safe(&text).to_string());
+      pulldown_cmark::Event::Html(er.into())
+    }
+    pulldown_cmark::Event::InlineHtml(text) => {
+      let er = html_escape::encode_safe(&text).to_string();
+      pulldown_cmark::Event::InlineHtml(er.into())
+    }
+    _ => event
+  });
+  let mut safe_html = String::new();
+  pulldown_cmark::html::push_html(&mut safe_html, custom);
+
 
   let child_show = RwSignal::new(true);
   let back_show = RwSignal::new(false);
 
-  // let down = RwSignal::new(false);
   let still_down = RwSignal::new(false);
   let vote_show = RwSignal::new(false);
   let still_handle: RwSignal<Option<TimeoutHandle>> = RwSignal::new(None);
@@ -75,11 +89,10 @@ pub fn CommentNode(
     (&duration_in_text[..], "")
   }.0.to_string();
 
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
 
   let cancel = move |ev: MouseEvent| {
     ev.stop_propagation();
-    // ev.cancel_bubble();
   };
 
   let on_vote_submit = move |ev: SubmitEvent, score: i16| {
@@ -100,7 +113,7 @@ pub fn CommentNode(
             comment_view.set(o.comment_view);
           }
           Err(e) => {
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -143,7 +156,7 @@ pub fn CommentNode(
             comment_view.set(o.comment_view);
           }
           Err(e) => {
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -169,28 +182,22 @@ pub fn CommentNode(
             }
           }
         }
-        // down.set(false);
       } on:mousedown=move |e: MouseEvent| {
-        // down.set(true);
         still_handle.set(set_timeout_with_handle(move || {
-          // if down.get() {
-            // logging::log!("still down");
-            vote_show.set(!vote_show.get());
-            still_down.set(true);
-            // down.set(false);            
-          // }
+          vote_show.set(!vote_show.get());
+          still_down.set(true);
         }, std::time::Duration::from_millis(500)).ok());
       } on:mouseup=move |e: MouseEvent| {
         if let Some(h) = still_handle.get() {
           h.clear();
         }
-        // down.set(false);
       } on:dblclick=move |e: MouseEvent| {
         vote_show.set(!vote_show.get());
-        // logging::log!("still down");
-        // down.set(false);
       } class="pb-2 cursor-pointer">
-        <div class="prose max-w-none prose-pre:relative prose-pre:h-40 prose-code:absolute prose-pre:overflow-auto prose-p:break-words prose-hr:my-2 prose-img:w-24 prose-img:my-2 prose-p:leading-6 prose-p:my-0 prose-p:mb-1 prose-ul:my-0 prose-blockquote:my-0 prose-blockquote:mb-1 prose-li:my-0" inner_html=html/>
+        <div
+          class="prose max-w-none"
+          inner_html=safe_html
+        />
         // <A
         //   href=format!("/u/{}", comment_view.get().creator.name)
         //   class="text-sm inline-block hover:text-secondary break-words"
@@ -257,6 +264,9 @@ pub fn CommentNode(
           //     {if comment_view.get().unread_comments != comment_view.get().counts.comments && comment_view.get().unread_comments > 0 { format!(" ({})", comment_view.get().unread_comments) } else { "".to_string() }}
           //   </A>
           // </span>
+          <span class="text-base-content/50" title="Reply">
+            <Icon icon=Reply/>
+          </span>
           <Form 
             action="POST"
             on:submit=on_save_submit 

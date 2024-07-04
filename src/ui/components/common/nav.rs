@@ -6,10 +6,10 @@ use crate::{
   ui::components::common::icon::{
     Icon,
     IconType::{Donate, Notifications, Search},
-  },
+  }, OnlineSetter,
 };
 use ev::MouseEvent;
-use lemmy_api_common::site::GetSiteResponse;
+use lemmy_api_common::{lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, site::GetSiteResponse};
 use leptos::*;
 use leptos_router::*;
 use web_sys::SubmitEvent;
@@ -69,29 +69,44 @@ pub fn TopNav(
 ) -> impl IntoView {
   let i18n = use_i18n();
 
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
+  // let ssr_error = create_rw_signal::<Option<(LemmyAppError, Option<RwSignal<bool>>)>>(None);
 
-  if let Some(Err(e)) = site_signal.get() {
-    error.set(Some(e));
-  }
+  // if let Some(Err(e)) = site_signal.get() {
+  //   ssr_error.set(Some((e, None)));
+  // }
 
   let query = use_query_map();
-  let ssr_error = move || query.with(|params| params.get("error").cloned());
 
-  if let Some(e) = ssr_error() {
-    if !e.is_empty() {
-      let r = serde_json::from_str::<LemmyAppError>(&e[..]);
+  let ssr_query_error = move || {
+    serde_json::from_str::<LemmyAppError>(
+      &query
+        .get()
+        .get("error")
+        .cloned()
+        .unwrap_or("".into()),
+    )
+    .ok()
+    .map(|e| (e, None::<Option<RwSignal<bool>>>))
+    // .unwrap_or((0usize, None))
+  };
 
-      match r {
-        Ok(e) => {
-          error.set(Some(e));
-        }
-        Err(_) => {
-          logging::error!("error decoding error - log and ignore in UI?");
-        }
-      }
-    }
-  }
+  // let ssr_error = move || query.with(|params| params.get("error").cloned());
+
+  // if let Some(e) = ssr_error() {
+  //   if !e.is_empty() {
+  //     let r = serde_json::from_str::<LemmyAppError>(&e[..]);
+
+  //     match r {
+  //       Ok(e) => {
+  //         error.set(Some((e, None)));
+  //       }
+  //       Err(_) => {
+  //         logging::error!("error decoding error - log and ignore in UI?");
+  //       }
+  //     }
+  //   }
+  // }
 
   let user = expect_context::<RwSignal<Option<bool>>>();
 
@@ -111,7 +126,7 @@ pub fn TopNav(
           }
           Err(e) => {
             logging::warn!("logout error {:#?}", e);
-            error.set(Some(e));
+            error.set(Some((e, None)));
           }
         }
       },
@@ -119,6 +134,7 @@ pub fn TopNav(
   };
 
   let ui_theme = expect_context::<RwSignal<Option<String>>>();
+  let ui_online = expect_context::<RwSignal<OnlineSetter>>();
   let theme_action = create_server_action::<ChangeThemeFn>();
 
   let on_theme_submit = move |theme_name: &'static str| {
@@ -144,11 +160,19 @@ pub fn TopNav(
   };
 
   view! {
-    <nav class="navbar container mx-auto hidden lg:flex sticky top-0 bg-base-100 z-[1]">
+    <nav class="navbar container mx-auto flex sticky top-0 bg-base-100 z-[1]">
       <div class="navbar-start">
+        // <div class="dropdown"><div tabindex="0" role="button" class="btn btn-ghost lg:hidden"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg></div> <ul tabindex="0" class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"><li><button>Item 1</button></li> <li><button>Parent</button> <ul class="p-2 bg-base-100 w-40"><li><button>Submenu 1</button></li> <li><button>Submenu 2</button></li></ul></li> <li><button>Item 3</button></li></ul></div>
         <ul class="menu menu-horizontal flex-nowrap items-center">
           <li>
             <A href="/" class="text-xl whitespace-nowrap">
+              {move || {
+                  if let Some(Ok(GetSiteResponse { site_view: SiteView { site: Site { icon: Some(i), .. }, .. },  .. })) = site_signal.get() {
+                      view! { <img class="h-8" src={ i.inner().to_string() } /> }
+                  } else {
+                      view! { <img class="h-8" src="/favicon.svg" /> }
+                  }
+              }}
               {move || {
                   if let Some(Ok(m)) = site_signal.get() {
                       m.site_view.site.name
@@ -159,22 +183,22 @@ pub fn TopNav(
 
             </A>
           </li>
-          <li>
+          <li class="hidden lg:flex">
             <A href="/communities" class="text-md">
               {t!(i18n, communities)}
             </A>
           </li>
-          <li>
+          <li class="hidden lg:flex">
             <A href="/create_post" class="text-md pointer-events-none text-base-content/50">
               {t!(i18n, create_post)}
             </A>
           </li>
-          <li>
+          <li class="hidden lg:flex">
             <A href="/create_community" class="text-md pointer-events-none text-base-content/50">
               {t!(i18n, create_community)}
             </A>
           </li>
-          <li>
+          <li class="hidden lg:flex">
             <a href="//join-lemmy.org/donate">
               <span title="t!(i18n, donate)">
                 <Icon icon=Donate/>
@@ -185,14 +209,14 @@ pub fn TopNav(
       </div>
       <div class="navbar-end">
         <ul class="menu menu-horizontal flex-nowrap items-center">
-          <li>
+          <li class="hidden lg:flex">
             <A href="/search" class="pointer-events-none text-base-content/50">
               <span title="t!(i18n, search)">
                 <Icon icon=Search/>
               </span>
             </A>
           </li>
-          <li class="z-[1]">
+          <li class="z-[1] hidden lg:flex">
             <details>
               <summary>"Lang"</summary>
               <ul>
@@ -211,7 +235,7 @@ pub fn TopNav(
               </ul>
             </details>
           </li>
-          <li class="z-[1]">
+          <li class="z-[1] hidden lg:flex">
             <details>
               <summary>"Theme"</summary>
               <ul>
@@ -236,6 +260,13 @@ pub fn TopNav(
               </ul>
             </details>
           </li>
+          <li>
+            <A href="/inbox">
+              <span class=move || format!("{}", if ui_online.get().0 {"accent"} else {""})>
+                <Icon icon=Notifications/>
+              </span>
+            </A>
+          </li>
           <Show
             when=move || {
                 if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
@@ -256,14 +287,6 @@ pub fn TopNav(
                 }
             }
           >
-
-            <li>
-              <A href="/inbox">
-                <span title=t!(i18n, unread_messages)>
-                  <Icon icon=Notifications/>
-                </span>
-              </A>
-            </li>
             <li>
               <details>
                 <summary>
@@ -284,7 +307,7 @@ pub fn TopNav(
                   <li>
                     <A on:click=move |e: MouseEvent| {
                       if e.ctrl_key() && e.shift_key() {
-                        e.stop_propagation(); 
+                        e.stop_propagation();
                         if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = site_signal.get()
                         {
                           let _ = window().location().set_href(&format!("//lemmy.world/u/{}", m.local_user_view.person.name));
@@ -319,26 +342,69 @@ pub fn TopNav(
         </ul>
       </div>
     </nav>
-    <Show
-      when=move || error.get().is_some()
-      fallback=move || {
-          view! { <div class="hidden"></div> }
-      }
-    >
+    // <Show
+    //   when=move || error.get().is_some()
+    //   fallback=move || {
+    //       view! { <div class="hidden"></div> }
+    //   }
+    // >
 
-      {move || {
-          error
-              .get()
-              .map(|err| {
-                  view! {
-                    <div class="container mx-auto alert alert-error">
-                      <span>{message_from_error(&err)} " - " {err.content}</span>
+    {move || {
+      site_signal.get()
+            .map(|res| {
+                
+              if let Err(err) = res {
+                view! {
+                  <div class="container mx-auto alert alert-error mb-8">
+                    <span>"S" {message_from_error(&err)} " - " {err.content}</span>
+                    <div>
+                      <A href=use_location().pathname.get() class="btn btn-sm"> "Retry" </A>
                     </div>
-                  }
-              })
-      }}
+                  </div>
+                }
+              } else {
+                view! {
+                  <div class="hidden" />
+                }
 
-    </Show>
+              }
+            })
+    }}
+
+    {move || {
+        ssr_query_error()
+            .map(|err| {
+                let mut query_params = query.get();
+                query_params.remove("error".into());
+                view! {
+                  <div class="container mx-auto alert alert-error mb-8">
+                    <span>"Q" {message_from_error(&err.0)} " - " {err.0.content}</span>
+                    <div>
+                      <A class="btn btn-sm" href=format!("./?{}", &query_params.to_query_string())> "Clear" </A>
+                    </div>
+                  </div>
+                }
+            })
+    }}
+
+    {move || {
+        error.get()
+          .map(|err| {
+              view! {
+                <div class="container mx-auto alert alert-error mb-8">
+                  <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
+                  <div>
+                    <Show when=move || { if let Some(r) = err.1 { true } else { false } } /* let:r */ fallback=|| {}>
+                      <button on:click=move |_| { if let Some(r) = err.1 { r.set(!r.get()); } else { } } class="btn btn-sm"> "Retry" </button>
+                    </Show>
+                    <button class="btn btn-sm" on:click=move |_| { error.set(None); }> "Clear" </button>
+                  </div>
+                </div>
+              }
+          })
+    }}
+
+    // </Show>
   }
 }
 

@@ -15,6 +15,9 @@ pub enum IconType {
   Comments,
   Block,
   Save,
+  Reply,
+  External,
+  Link,
 }
 
 impl IconType {
@@ -33,6 +36,9 @@ impl IconType {
       IconType::Search => "search",
       IconType::Upvote => "upvote",
       IconType::VerticalDots => "vertical-dots",
+      IconType::Reply => "reply",
+      IconType::External => "external",
+      IconType::Link => "link",
     }
   }
 }

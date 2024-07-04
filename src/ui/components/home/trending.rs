@@ -11,7 +11,7 @@ use leptos_router::*;
 pub fn Trending() -> impl IntoView {
   let _i18n = use_i18n();
 
-  let error = expect_context::<RwSignal<Option<LemmyAppError>>>();
+  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
 
   let trending = create_resource(
     move || (),
@@ -29,7 +29,7 @@ pub fn Trending() -> impl IntoView {
       match result {
         Ok(o) => Some(o),
         Err(e) => {
-          error.set(Some(e));
+          error.set(Some((e, None)));
           None
         }
       }
@@ -48,7 +48,7 @@ pub fn Trending() -> impl IntoView {
                   Some(c) => {
                       let c_signal = create_rw_signal(c.communities);
                       view! {
-                        <div class="card w-full bg-base-300 text-base-content mb-3">
+                        <div class="card w-full bg-base-300 text-base-content mb-0">
                           <figure>
                             <div class="card-body bg-info">
                               <h2 class="card-title text-info-content">"Trending Communities"</h2>
