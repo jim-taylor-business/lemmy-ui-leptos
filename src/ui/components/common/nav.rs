@@ -173,6 +173,7 @@ pub fn TopNav(
                       view! { <img class="h-8" src="/favicon.svg" /> }
                   }
               }}
+              <span class="hidden lg:flex">
               {move || {
                   if let Some(Ok(m)) = site_signal.get() {
                       m.site_view.site.name
@@ -180,7 +181,7 @@ pub fn TopNav(
                       "Lemmy".to_string()
                   }
               }}
-
+              </span>
             </A>
           </li>
           <li class="hidden lg:flex">
@@ -281,7 +282,7 @@ pub fn TopNav(
                   <li>
                     <A href="/login">{t!(i18n, login)}</A>
                   </li>
-                  <li>
+                  <li class="hidden lg:flex">
                     <A href="/signup" class="pointer-events-none text-base-content/50">{t!(i18n, signup)}</A>
                   </li>
                 }

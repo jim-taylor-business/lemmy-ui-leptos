@@ -134,10 +134,11 @@ pub fn HomeActivity(
 
   ui_title.set(None);
 
+  // let csr_pages: RwSignal<BTreeMap<(usize, Option<PaginationCursor>), GetPostsResponse>> = RwSignal::new(BTreeMap::new());
   let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
   let csr_from: RwSignal<Option<(usize, Option<PaginationCursor>)>> = RwSignal::new(None);
 
-  let posts = create_resource(
+  let posts_resource = create_resource(
     move || {
       (
         refresh.get(),
@@ -151,7 +152,9 @@ pub fn HomeActivity(
     },
     move |(_refresh, _user, list_type, sort_type, from, csr_from, limit)| async move {
 
-      let f = if let Some(f) = csr_from { f } else { from };
+      // logging::log!("{:#?}", (_refresh.clone(), _user.clone(), list_type.clone(), sort_type.clone(), from.clone(), csr_from.clone(), limit.clone()));
+
+      let f = if let Some(ref f) = csr_from { f.clone() } else { from.clone() };
 
       let form = GetPosts {
         type_: Some(list_type),
@@ -163,7 +166,7 @@ pub fn HomeActivity(
         saved_only: None,
         disliked_only: None,
         liked_only: None,
-        page_cursor: f.1.clone(),
+        page_cursor: f.1, //.clone(),
         // show_hidden: None,
       };
 
@@ -171,13 +174,15 @@ pub fn HomeActivity(
       loading.set(false);
       ui_title.set(None);
 
+      // logging::log!("3");
+
       match result {
         Ok(o) => {
           // #[cfg(not(feature = "ssr"))]
           // {
           //   window().scroll_to_with_x_and_y(0.0, 0.0);
           // }
-          Some((f, o))
+          Some((from, csr_from, o))
         },
         Err(e) => {
           error.set(Some((e, Some(refresh))));
@@ -295,25 +300,6 @@ pub fn HomeActivity(
         <button class="btn join-item btn-disabled">"Comments"</button>
       </div>
       <div class="join mr-3 hidden sm:inline-block">
-        // {move || {
-        //     let mut query_params = query.get();
-        //     query_params.insert("list".into(), "\"Subscribed\"".into());
-        //     view! {
-        //       <A
-        //         href=move || query_params.to_query_string()
-        //         class=move || {
-        //             format!(
-        //                 "btn join-item{}{}",
-        //                 if ListingType::Subscribed == ssr_list() { " btn-active" } else { "" },
-        //                 { if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() { "" } else { " btn-disabled" } },
-        //             )
-        //         }
-        //       >
-
-        //         "Subscribed"
-        //       </A>
-        //     }
-        // }}
         <A
           href=move || {
               let mut query_params = query.get();
@@ -394,21 +380,64 @@ pub fn HomeActivity(
 
       <Transition fallback=|| {}>
         {move || {
-            posts
+            posts_resource
                 .get()
                 .unwrap_or_default()
-                .map(|post| {
-                    next_page_cursor.set(Some((post.0.0 + ssr_limit(), post.1.next_page.clone())));
-                    csr_pages.update(|h| {
-                      if csr_from.get().is_none() {
+                .map(|posts| {
+                  // logging::log!("1");
+
+                  // next_page_cursor.set(Some((posts.0.0 + ssr_limit(), posts.1.next_page.clone())));
+                    if posts.1.is_none() {
+                      next_page_cursor.set(Some((posts.0.0 + ssr_limit(), posts.2.next_page.clone())));
+                      csr_pages.update(|h| {
                         h.clear();
-                      }
-                      h.insert(post.0.0, post.1); 
-                    });
+                        h.insert(posts.0.0, posts.2); 
+                      });
+                    } else {
+                      let u = posts.1.unwrap().0;
+                      next_page_cursor.set(Some((u + ssr_limit(), posts.2.next_page.clone())));
+                      csr_pages.update(|h| {
+                        h.insert(u, posts.2); 
+                      });
+                    }
+                      // if csr_from.get().is_none() {
+                      //   h.clear();
+                      // }
+                      // h.insert(posts.0, posts.1); 
+
+                    // let mut pages = csr_pages.get();
+
+                    // if csr_from.get().is_none() {
+                    //   pages.clear();
+                    // }
+                    // csr_pages.set(pages);
+
+                    // let pump = move || {
+                    //   let v = csr_pages.get().iter().collect::<Vec<_>>();
+                    //   v
+                    // };
+
+                    // pages.insert(posts.0, posts.1); 
+                    // let cloooney = pages.clone();
+                    // let pumpkin = cloooney.iter().collect::<Vec<_>>();
+
+
+                    // let something = csr_pages.get().keys()
 
                     view! {
-                        <div class=move || format!("columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
-                          <For each=move || csr_pages.get().into_iter() key=|h| h.0 let:h>
+                      // {
+                      //   logging::log!("2");
+
+                      // }
+                      // <div class=move || format!("columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
+                        <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0">
+                          // <PostListings posts=posts.1.posts.into() site_signal page_number=posts.0.0.into() />
+
+                          <For each=move || csr_pages.get() key=|h| h.0.clone() let:h>
+                            // {
+                            //   logging::log!("page{}", h.0.0);
+                            // }
+                            // <PostListings posts=h.1.posts.into() site_signal page_number=h.0.0.into() />
                             <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
                           </For>
                         </div>
@@ -430,7 +459,7 @@ pub fn HomeActivity(
                               query_params.remove("from".into());
                             }
                             view! {
-                              <span>
+                              // <span>
                                 <A
                                   on:click=move |_| { loading.set(true); } 
                                   href=format!("{}", query_params.to_query_string())
@@ -438,7 +467,7 @@ pub fn HomeActivity(
                                 >
                                   "Prev"
                                 </A>
-                              </span>
+                              // </span>
                             }
                         }
                         {
@@ -448,7 +477,7 @@ pub fn HomeActivity(
                             query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
                             query_params.insert("from".into(), serde_json::to_string(&next_page_cursor.get()).unwrap_or("[0,None]".into()));
                             view! {
-                              <span>
+                              // <span>
                                 <A 
                                   on:click=move |_| { loading.set(true); } 
                                   href=format!("{}", query_params.to_query_string())
@@ -456,7 +485,7 @@ pub fn HomeActivity(
                                 >
                                   "Next"
                                 </A>
-                              </span>
+                              // </span>
                             }
                         }
 

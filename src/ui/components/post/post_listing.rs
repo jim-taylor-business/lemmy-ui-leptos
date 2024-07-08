@@ -440,11 +440,11 @@ pub fn PostListing(
             href=move || format!("/u/{}", post_view.get().creator.name)
             class="text-sm inline-block hover:text-secondary break-words"
           >
-            {creator_name_encoded}
+            <span inner_html=creator_name_encoded />
           </A>
           ", in "
           <A class="text-sm inline-block hover:text-secondary break-words" href=format!("/c/{}", post_view.get().community.name)>
-            {community_title_encoded}
+            <span inner_html=community_title_encoded />
           </A>
         </span>
       </div>
