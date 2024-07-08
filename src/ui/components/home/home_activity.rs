@@ -335,7 +335,7 @@ pub fn HomeActivity(
           "All"
         </A>
       </div>
-      <div class="dropdown hidden sm:inline-block">
+      <div class="dropdown ml-3 sm:ml-0 inline-block">
         <label tabindex="0" class="btn">
           "Sort type"
         </label>
