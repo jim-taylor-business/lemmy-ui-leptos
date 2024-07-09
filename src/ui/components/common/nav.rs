@@ -261,13 +261,6 @@ pub fn TopNav(
               </ul>
             </details>
           </li>
-          <li>
-            <A href="/inbox">
-              <span class=move || format!("{}", if ui_online.get().0 {"accent"} else {""})>
-                <Icon icon=Notifications/>
-              </span>
-            </A>
-          </li>
           <Show
             when=move || {
                 if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
@@ -288,6 +281,13 @@ pub fn TopNav(
                 }
             }
           >
+            <li>
+              <A href="/inbox">
+                <span class=move || format!("{}", if ui_online.get().0 {"accent"} else {""})>
+                  <Icon icon=Notifications/>
+                </span>
+              </A>
+            </li>
             <li>
               <details>
                 <summary>

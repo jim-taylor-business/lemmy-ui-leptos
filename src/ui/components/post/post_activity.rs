@@ -209,11 +209,6 @@ pub fn PostActivity(
                         </div>
                         {
                           if let Some(ref content) = text {
-                            // let parser = pulldown_cmark::Parser::new(refer);
-                            // let mut html = String::new();
-                            // pulldown_cmark::html::push_html(&mut html, parser);
-                            // let safe_html = ammonia::clean(&*html);
-
                             let parser = pulldown_cmark::Parser::new(content);
                             let custom = parser.map(|event| match event {
                               pulldown_cmark::Event::Html(text) => {

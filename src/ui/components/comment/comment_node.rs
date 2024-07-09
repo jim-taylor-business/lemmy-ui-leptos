@@ -1,4 +1,4 @@
-use ev::{MouseEvent, SubmitEvent};
+use ev::{MouseEvent, SubmitEvent, TouchEvent};
 use lemmy_api_common::{comment::{CreateCommentLike, SaveComment}, lemmy_db_views::structs::CommentView, post::{CreatePostLike, PostResponse}};
 use leptos::*;
 use leptos_dom::helpers::TimeoutHandle;
@@ -171,6 +171,7 @@ pub fn CommentNode(
       class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" }, if show.get() { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" }) 
     >
       <div on:click=move |e: MouseEvent| {
+        // logging::log!("ck");
         if still_down.get() {
           still_down.set(false);
         } else {
@@ -183,15 +184,29 @@ pub fn CommentNode(
           }
         }
       } on:mousedown=move |e: MouseEvent| {
+        // logging::log!("dn");
         still_handle.set(set_timeout_with_handle(move || {
           vote_show.set(!vote_show.get());
           still_down.set(true);
         }, std::time::Duration::from_millis(500)).ok());
+      } on:touchstart=move |e: TouchEvent| {
+        logging::log!("ts");
+        still_handle.set(set_timeout_with_handle(move || {
+          vote_show.set(!vote_show.get());
+          still_down.set(true);
+        }, std::time::Duration::from_millis(500)).ok());
+      } on:touchend=move |e: TouchEvent| {
+        // logging::log!("te");
+        if let Some(h) = still_handle.get() {
+          h.clear();
+        }
       } on:mouseup=move |e: MouseEvent| {
+        // logging::log!("up");
         if let Some(h) = still_handle.get() {
           h.clear();
         }
       } on:dblclick=move |e: MouseEvent| {
+        // logging::log!("dk");
         vote_show.set(!vote_show.get());
       } class="pb-2 cursor-pointer">
         <div
@@ -206,7 +221,9 @@ pub fn CommentNode(
         // </A>
         // " "
         <Show when=move || vote_show.get() fallback=|| view! {  }>
-        <div on:click=cancel class="flex items-center gap-x-2" /* move || format!("flex items-center gap-x-2{}", if vote_show.get() { "" } else { " hidden"}) */>
+          // <div class="break-words overflow-hidden">
+          // <div class="inline-block mr-3 no-wrap">
+          <div on:click=cancel class="flex items-center gap-x-2" /* move || format!("flex items-center gap-x-2{}", if vote_show.get() { "" } else { " hidden"}) */>
           <Form
             on:submit=on_up_vote_submit
             action="POST"
@@ -226,7 +243,7 @@ pub fn CommentNode(
               <Icon icon=Upvote/>
             </button>
           </Form>
-          <span class="block text-sm">{move || comment_view.get().counts.score}</span>
+          <span class="text-sm">{move || comment_view.get().counts.score}</span>
           <Form
             on:submit=on_down_vote_submit
             action="POST"
@@ -347,18 +364,22 @@ pub fn CommentNode(
           //     </li>
           //   </ul>
           // </div>
-          <span class="block mb-1">
+          // </div>
+          // </div>
+          // <div class="inline-block break-words align-top">
+          <span class="mb-1 break-words overflow-hidden">
             <span>
               { abbr_duration.clone() }
             </span> " ago, by "
             <A
               href=move || format!("/u/{}", comment_view.get().creator.name)
-              class="text-sm inline-block hover:text-secondary break-words"
+              class="text-sm hover:text-secondary break-words"
             >
               {comment_view.get().creator.name}
             </A>
           </span>
-        </div>
+          </div>
+          // </div>
         </Show>
         <span class=move || format!("badge badge-neutral inline-block whitespace-nowrap{}", if !child_show.get() && com_sig.get().len() > 0 { "" } else { " hidden" })>
           { com_sig.get().len() + des_sig.get().len() } " replies"

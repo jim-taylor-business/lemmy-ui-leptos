@@ -429,8 +429,8 @@ pub fn HomeActivity(
                       //   logging::log!("2");
 
                       // }
-                      // <div class=move || format!("columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
-                        <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0">
+                        <div class=move || format!("columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
+                        // <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0">
                           // <PostListings posts=posts.1.posts.into() site_signal page_number=posts.0.0.into() />
 
                           <For each=move || csr_pages.get() key=|h| h.0.clone() let:h>
