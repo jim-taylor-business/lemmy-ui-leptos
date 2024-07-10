@@ -14,9 +14,10 @@ pub fn PostListings(
       <For each=move || posts.get() key=|pv| pv.post.id let:pv>
         {
           post_number.set(post_number.get() + 1); 
-          // logging::log!(" post");
+          logging::log!(" post");
 
           view! {
+            // <div class="h-32 w-32"> "lalala" </div>
             <PostListing post_view=pv.into() site_signal post_number=post_number.get()/>
           }
         }

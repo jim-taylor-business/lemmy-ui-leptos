@@ -13,13 +13,13 @@ cfg_if! {
         use leptos_actix::{generate_route_list, LeptosRoutes};
         use awc::Client;
 
-        #[actix_web::get("favicon.svg")]
+        #[actix_web::get("lemmy.svg")]
         async fn lemmy(
             leptos_options: web::Data<leptos::LeptosOptions>,
         ) -> actix_web::Result<actix_files::NamedFile> {
             let leptos_options = leptos_options.into_inner();
             let site_root = &leptos_options.site_root;
-            Ok(actix_files::NamedFile::open(format!("{site_root}/favicon.svg"))?)
+            Ok(actix_files::NamedFile::open(format!("{site_root}/lemmy.svg"))?)
         }
 
         #[actix_web::get("favicon.ico")]

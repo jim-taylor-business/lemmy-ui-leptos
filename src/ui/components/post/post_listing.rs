@@ -417,7 +417,7 @@ pub fn PostListing(
               } else {
                   view! {
                     <div class="block w-24 truncate">
-                      <img class="w-24 h-16" src="/favicon.svg"/>
+                      <img class="w-24 h-16" src="/lemmy.svg"/>
                     </div>
                   }
               }

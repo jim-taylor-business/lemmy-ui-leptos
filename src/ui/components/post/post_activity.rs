@@ -184,7 +184,7 @@ pub fn PostActivity(
   }
 
   view! {
-    <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
+    <main role="main" class="w-full flex flex-col flex-grow">
       <div class="flex flex-col">
         <div>
           <Transition fallback=|| {}>

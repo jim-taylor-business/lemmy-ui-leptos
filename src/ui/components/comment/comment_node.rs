@@ -200,6 +200,11 @@ pub fn CommentNode(
         if let Some(h) = still_handle.get() {
           h.clear();
         }
+      } on:touchdrag=move |e: TouchEvent| {
+        // logging::log!("te");
+        if let Some(h) = still_handle.get() {
+          h.clear();
+        }
       } on:mouseup=move |e: MouseEvent| {
         // logging::log!("up");
         if let Some(h) = still_handle.get() {

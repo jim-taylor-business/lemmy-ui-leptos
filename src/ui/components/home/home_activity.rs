@@ -128,7 +128,7 @@ pub fn HomeActivity(
   //   }
   // };
 
-  let next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
+  // let next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
   let loading = create_rw_signal(false);
   let refresh = create_rw_signal(false);
 
@@ -137,6 +137,7 @@ pub fn HomeActivity(
   // let csr_pages: RwSignal<BTreeMap<(usize, Option<PaginationCursor>), GetPostsResponse>> = RwSignal::new(BTreeMap::new());
   let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
   let csr_from: RwSignal<Option<(usize, Option<PaginationCursor>)>> = RwSignal::new(None);
+  let csr_next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
 
   let posts_resource = create_resource(
     move || {
@@ -146,15 +147,14 @@ pub fn HomeActivity(
         ssr_list(),
         ssr_sort(),
         ssr_from(),
-        csr_from.get(),
         ssr_limit(),
       )
     },
-    move |(_refresh, _user, list_type, sort_type, from, csr_from, limit)| async move {
+    move |(_refresh, _user, list_type, sort_type, from, limit)| async move {
 
       // logging::log!("{:#?}", (_refresh.clone(), _user.clone(), list_type.clone(), sort_type.clone(), from.clone(), csr_from.clone(), limit.clone()));
 
-      let f = if let Some(ref f) = csr_from { f.clone() } else { from.clone() };
+      // let f = if let Some(ref f) = csr_from { f.clone() } else { from.clone() };
 
       let form = GetPosts {
         type_: Some(list_type),
@@ -166,7 +166,7 @@ pub fn HomeActivity(
         saved_only: None,
         disliked_only: None,
         liked_only: None,
-        page_cursor: f.1, //.clone(),
+        page_cursor: from.1.clone() //,s
         // show_hidden: None,
       };
 
@@ -178,17 +178,85 @@ pub fn HomeActivity(
 
       match result {
         Ok(o) => {
-          // #[cfg(not(feature = "ssr"))]
-          // {
-          //   window().scroll_to_with_x_and_y(0.0, 0.0);
-          // }
-          Some((from, csr_from, o))
+          // next_page_cursor.set(Some((from.0 + ssr_limit(), o.next_page.clone())));
+          // csr_pages.update(|h| {
+          //   h.clear();
+          //   h.insert(posts.0.0, posts.2); 
+          // });
+          Some((from, o))
         },
         Err(e) => {
           error.set(Some((e, Some(refresh))));
           None
         }
       }
+    
+    },
+  );
+
+  let csr_resource = create_local_resource(
+    move || {
+      (
+        // user.get(),
+        // ssr_list(),
+        ssr_sort(),
+        csr_from.get(),
+        // ssr_limit(),
+      )
+    },
+    move |(/* _user, list_type,  */sort_type, csr_from/* , limit */)| async move {
+
+      // logging::log!("{:#?}", (_refresh.clone(), _user.clone(), list_type.clone(), sort_type.clone(), from.clone(), csr_from.clone(), limit.clone()));
+
+      if let Some(from) = csr_from {
+
+
+      // let f = if let Some(ref f) = csr_from { f.clone() } else { from.clone() };
+
+      let form = GetPosts {
+        // type_: Some(list_type),
+        type_: Some(ListingType::All),
+        sort: Some(sort_type),
+        community_name: None,
+        community_id: None,
+        page: None,
+        // limit: Some(i64::try_from(limit).unwrap_or(10)),
+        limit: Some(10),
+        saved_only: None,
+        disliked_only: None,
+        liked_only: None,
+        page_cursor: from.1, //.clone(),
+        // show_hidden: None,
+      };
+
+      let result = LemmyClient.list_posts(form).await;
+      // loading.set(false);
+      // ui_title.set(None);
+
+      // logging::log!("3");
+
+      match result {
+        Ok(o) => {
+
+          // let u = posts.1.unwrap().0;
+          csr_next_page_cursor.set(Some((from.0 + ssr_limit(), o.next_page.clone())));
+          csr_pages.update(|h| {
+            h.insert(from.0, o); 
+          });
+
+          Some(())
+        },
+        Err(e) => {
+          error.set(Some((e, Some(refresh))));
+          None
+        }
+      }
+
+
+      } else {
+        None
+      }
+
     
     },
   );
@@ -229,8 +297,10 @@ pub fn HomeActivity(
         };
 
         if iw >= 640f64 {
-          // csr_pages.set(BTreeMap::new());
+          csr_pages.set(BTreeMap::new());
           csr_from.set(None);
+        } else {
+          csr_from.set(Some((0, None)))
         }
 
         if prev_limit.ne(&new_limit) {
@@ -282,7 +352,7 @@ pub fn HomeActivity(
             // csr_from.set(next_page_cursor.get()); 
             csr_from.update(|cf| {
               // logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
-              *cf = next_page_cursor.get();
+              *cf = csr_next_page_cursor.get();
               // logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
             }); 
           }
@@ -378,68 +448,46 @@ pub fn HomeActivity(
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
       <div class="w-full lg:w-2/3 2xl:w-3/4 3xl:w-4/5 4xl:w-5/6 sm:pr-4">
 
+                          // <div class=move || format!("columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
       <Transition fallback=|| {}>
         {move || {
             posts_resource
                 .get()
                 .unwrap_or_default()
                 .map(|posts| {
-                  // logging::log!("1");
 
+                    // if posts.1.is_none() {
+                      let next_page = Some((posts.0.0 + ssr_limit(), posts.1.next_page.clone()));
                   // next_page_cursor.set(Some((posts.0.0 + ssr_limit(), posts.1.next_page.clone())));
-                    if posts.1.is_none() {
-                      next_page_cursor.set(Some((posts.0.0 + ssr_limit(), posts.2.next_page.clone())));
-                      csr_pages.update(|h| {
-                        h.clear();
-                        h.insert(posts.0.0, posts.2); 
-                      });
-                    } else {
-                      let u = posts.1.unwrap().0;
-                      next_page_cursor.set(Some((u + ssr_limit(), posts.2.next_page.clone())));
-                      csr_pages.update(|h| {
-                        h.insert(u, posts.2); 
-                      });
-                    }
-                      // if csr_from.get().is_none() {
-                      //   h.clear();
-                      // }
-                      // h.insert(posts.0, posts.1); 
-
-                    // let mut pages = csr_pages.get();
-
-                    // if csr_from.get().is_none() {
-                    //   pages.clear();
+                    //   csr_pages.update(|h| {
+                    //     h.clear();
+                    //     h.insert(posts.0.0, posts.2); 
+                    //   });
+                    // } else {
+                    //   let u = posts.1.unwrap().0;
+                    //   next_page_cursor.set(Some((u + ssr_limit(), posts.2.next_page.clone())));
+                    //   csr_pages.update(|h| {
+                    //     h.insert(u, posts.2); 
+                    //   });
                     // }
-                    // csr_pages.set(pages);
-
-                    // let pump = move || {
-                    //   let v = csr_pages.get().iter().collect::<Vec<_>>();
-                    //   v
-                    // };
-
-                    // pages.insert(posts.0, posts.1); 
-                    // let cloooney = pages.clone();
-                    // let pumpkin = cloooney.iter().collect::<Vec<_>>();
-
-
-                    // let something = csr_pages.get().keys()
 
                     view! {
-                      // {
-                      //   logging::log!("2");
 
-                      // }
-                        <div class=move || format!("columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
-                        // <div class="columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0">
+                        <div class=move || format!("hidden sm:block columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
                           // <PostListings posts=posts.1.posts.into() site_signal page_number=posts.0.0.into() />
 
-                          <For each=move || csr_pages.get() key=|h| h.0.clone() let:h>
-                            // {
-                            //   logging::log!("page{}", h.0.0);
-                            // }
-                            // <PostListings posts=h.1.posts.into() site_signal page_number=h.0.0.into() />
-                            <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
-                          </For>
+                          <PostListings posts=posts.1.posts.into() site_signal page_number=posts.0.0.into() />
+
+                          // <For each=move || csr_pages.get() key=|h| h.0.clone() let:h>
+                            {
+                              logging::log!("page ssr");
+                            }
+                          //   <div class="h-lvh w-32 bg-red"> "lalala" </div>
+                          //   // <PostListings posts=h.1.posts.into() site_signal page_number=h.0.0.into() />
+                          //   // <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
+                          // </For>
+                        // </div>
+
                         </div>
   
                         <div class="join hidden sm:block">
@@ -459,7 +507,6 @@ pub fn HomeActivity(
                               query_params.remove("from".into());
                             }
                             view! {
-                              // <span>
                                 <A
                                   on:click=move |_| { loading.set(true); } 
                                   href=format!("{}", query_params.to_query_string())
@@ -467,34 +514,60 @@ pub fn HomeActivity(
                                 >
                                   "Prev"
                                 </A>
-                              // </span>
                             }
                         }
+                        // {
+                        //     let mut st = ssr_prev();
+                        //     st.push(ssr_from());
+                        //     let mut query_params = query.get();
+                        //     query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
+                        //     query_params.insert("from".into(), serde_json::to_string(&next_page_cursor.get()).unwrap_or("[0,None]".into()));
+                        //     view! {
+                        //         <A 
+                        //           on:click=move |_| { loading.set(true); } 
+                        //           href=format!("{}", query_params.to_query_string())
+                        //           class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
+                        //         >
+                        //           "Next"
+                        //         </A>
+                        //     }
+                        // }
                         {
                             let mut st = ssr_prev();
                             st.push(ssr_from());
                             let mut query_params = query.get();
                             query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
-                            query_params.insert("from".into(), serde_json::to_string(&next_page_cursor.get()).unwrap_or("[0,None]".into()));
+                            query_params.insert("from".into(), serde_json::to_string(&next_page).unwrap_or("[0,None]".into()));
                             view! {
-                              // <span>
                                 <A 
                                   on:click=move |_| { loading.set(true); } 
                                   href=format!("{}", query_params.to_query_string())
-                                  class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
+                                  class=move || format!("btn join-item{}", if next_page.is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
                                 >
                                   "Next"
                                 </A>
-                              // </span>
                             }
                         }
 
                         </div>
+
+
+
+
                 }
               })
         }}
 
         </Transition>
+
+                          <For each=move || csr_pages.get() key=|h| h.0.clone() let:h>
+                            {
+                              logging::log!("page csr {}", h.0);
+                            }
+                            // <div class="h-lvh w-32 bg-red"> "lalala" </div>
+                            // <PostListings posts=h.1.posts.into() site_signal page_number=h.0.0.into() />
+                            <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
+                          </For>
 
       </div>
       <div class="lg:w-1/3 hidden lg:block 2xl:w-1/4 3xl:w-1/5 4xl:w-1/6">

@@ -170,7 +170,7 @@ pub fn TopNav(
                   if let Some(Ok(GetSiteResponse { site_view: SiteView { site: Site { icon: Some(i), .. }, .. },  .. })) = site_signal.get() {
                       view! { <img class="h-8" src={ i.inner().to_string() } /> }
                   } else {
-                      view! { <img class="h-8" src="/favicon.svg" /> }
+                      view! { <img class="h-8" src="/lemmy.svg" /> }
                   }
               }}
               <span class="hidden lg:flex">
