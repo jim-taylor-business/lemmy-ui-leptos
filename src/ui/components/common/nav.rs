@@ -170,9 +170,10 @@ pub fn TopNav(
                   if let Some(Ok(GetSiteResponse { site_view: SiteView { site: Site { icon: Some(i), .. }, .. },  .. })) = site_signal.get() {
                       view! { <img class="h-8" src={ i.inner().to_string() } /> }
                   } else {
-                      view! { <img class="h-8" src="/favicon.svg" /> }
+                      view! { <img class="h-8" src="/lemmy.svg" /> }
                   }
               }}
+              <span class="hidden lg:flex">
               {move || {
                   if let Some(Ok(m)) = site_signal.get() {
                       m.site_view.site.name
@@ -180,7 +181,7 @@ pub fn TopNav(
                       "Lemmy".to_string()
                   }
               }}
-
+              </span>
             </A>
           </li>
           <li class="hidden lg:flex">
@@ -260,13 +261,6 @@ pub fn TopNav(
               </ul>
             </details>
           </li>
-          <li>
-            <A href="/inbox">
-              <span class=move || format!("{}", if ui_online.get().0 {"accent"} else {""})>
-                <Icon icon=Notifications/>
-              </span>
-            </A>
-          </li>
           <Show
             when=move || {
                 if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
@@ -281,12 +275,19 @@ pub fn TopNav(
                   <li>
                     <A href="/login">{t!(i18n, login)}</A>
                   </li>
-                  <li>
+                  <li class="hidden lg:flex">
                     <A href="/signup" class="pointer-events-none text-base-content/50">{t!(i18n, signup)}</A>
                   </li>
                 }
             }
           >
+            <li>
+              <A href="/inbox">
+                <span class=move || format!("{}", if ui_online.get().0 {"accent"} else {""})>
+                  <Icon icon=Notifications/>
+                </span>
+              </A>
+            </li>
             <li>
               <details>
                 <summary>

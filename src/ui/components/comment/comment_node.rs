@@ -1,9 +1,9 @@
-use ev::{MouseEvent, SubmitEvent};
+use ev::{MouseEvent, SubmitEvent, TouchEvent};
 use lemmy_api_common::{comment::{CreateCommentLike, SaveComment}, lemmy_db_views::structs::CommentView, post::{CreatePostLike, PostResponse}};
 use leptos::*;
 use leptos_dom::helpers::TimeoutHandle;
 use leptos_router::{Form, A};
-use web_sys::HtmlImageElement;
+use web_sys::{HtmlAnchorElement, HtmlImageElement, HtmlLinkElement};
 use web_sys::wasm_bindgen::JsCast;
 use crate::{
   errors::{LemmyAppError, LemmyAppErrorType},
@@ -45,10 +45,6 @@ pub fn CommentNode(
   let des_sig = RwSignal::new(comments_descendants);
 
   let content = &comment_view.get().comment.content;
-  // let parser = pulldown_cmark::Parser::new(content);
-  // let mut html = String::new();
-  // pulldown_cmark::html::push_html(&mut html, parser);
-  // let safe_html = ammonia::clean(&*html);
 
   let parser = pulldown_cmark::Parser::new(content);
   let custom = parser.map(|event| match event {
@@ -176,9 +172,11 @@ pub fn CommentNode(
         } else {
           if let Some(t) = e.target() {
             if let Some(i) = t.dyn_ref::<HtmlImageElement>() {
-                let _ = window().location().set_href(&i.src());
+              let _ = window().location().set_href(&i.src());
+            } else if let Some(l) = t.dyn_ref::<HtmlAnchorElement>() {
+              
             } else {
-                child_show.set(!child_show.get());
+              child_show.set(!child_show.get());
             }
           }
         }
@@ -187,6 +185,19 @@ pub fn CommentNode(
           vote_show.set(!vote_show.get());
           still_down.set(true);
         }, std::time::Duration::from_millis(500)).ok());
+      } on:touchstart=move |e: TouchEvent| {
+        still_handle.set(set_timeout_with_handle(move || {
+          vote_show.set(!vote_show.get());
+          still_down.set(true);
+        }, std::time::Duration::from_millis(500)).ok());
+      } on:touchend=move |e: TouchEvent| {
+        if let Some(h) = still_handle.get() {
+          h.clear();
+        }
+      } on:touchdrag=move |e: TouchEvent| {
+        if let Some(h) = still_handle.get() {
+          h.clear();
+        }
       } on:mouseup=move |e: MouseEvent| {
         if let Some(h) = still_handle.get() {
           h.clear();
@@ -198,15 +209,8 @@ pub fn CommentNode(
           class="prose max-w-none"
           inner_html=safe_html
         />
-        // <A
-        //   href=format!("/u/{}", comment_view.get().creator.name)
-        //   class="text-sm inline-block hover:text-secondary break-words"
-        // >
-        //   {comment_view.get().creator.name}
-        // </A>
-        // " "
         <Show when=move || vote_show.get() fallback=|| view! {  }>
-        <div on:click=cancel class="flex items-center gap-x-2" /* move || format!("flex items-center gap-x-2{}", if vote_show.get() { "" } else { " hidden"}) */>
+          <div on:click=cancel class="flex items-center gap-x-2">
           <Form
             on:submit=on_up_vote_submit
             action="POST"
@@ -226,7 +230,7 @@ pub fn CommentNode(
               <Icon icon=Upvote/>
             </button>
           </Form>
-          <span class="block text-sm">{move || comment_view.get().counts.score}</span>
+          <span class="text-sm">{move || comment_view.get().counts.score}</span>
           <Form
             on:submit=on_down_vote_submit
             action="POST"
@@ -250,20 +254,6 @@ pub fn CommentNode(
               <Icon icon=Downvote/>
             </button>
           </Form>
-          // <span
-          //   class="flex items-center"
-          //   title=move || format!("{} comments", comment_view.get().unread_comments)
-          // >
-          //   <A
-          //     href=move || { format!("/post/{}", comment_view.get().post.id) }
-          //     class="text-sm whitespace-nowrap hover:text-accent "
-          //   >
-          //     <Icon icon=Comments class="inline".into()/>
-          //     " "
-          //     {comment_view.get().counts.comments}
-          //     {if comment_view.get().unread_comments != comment_view.get().counts.comments && comment_view.get().unread_comments > 0 { format!(" ({})", comment_view.get().unread_comments) } else { "".to_string() }}
-          //   </A>
-          // </span>
           <span class="text-base-content/50" title="Reply">
             <Icon icon=Reply/>
           </span>
@@ -282,83 +272,18 @@ pub fn CommentNode(
               <Icon icon=Save/>
             </button>
           </Form>
-          // <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() && e.shift_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", comment_view.get().post.id)); } }>
-          //   // <A href="/create_post">
-          //     <Icon icon=Crosspost/>
-          //   // </A>
-          // </span>
-          // <div class="dropdown max-sm:dropdown-end">
-          //   <label tabindex="0">
-          //     <Icon icon=VerticalDots/>
-          //   </label>
-          //   <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
-          //     <li>
-          //       <Form
-          //         action="POST"
-          //         on:submit=|_| {}
-          //         // on:submit=on_report_submit 
-          //         class="flex flex-col items-start"
-          //       >
-          //         <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
-          //         <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Report post" type="submit">
-          //           <Icon icon=Notifications class="inline-block".into()/>
-          //           "Direct message"
-          //         </button>
-          //       </Form>
-          //     </li>
-          //     <li>
-          //       <Form
-          //         action="POST"
-          //         on:submit=|_| {}
-          //         // on:submit=on_report_submit 
-          //         class="flex flex-col items-start"
-          //       >
-          //         <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>
-          //         <input
-          //           class="input input-bordered input-disabled"
-          //           type="text"
-          //           // on:input=move |e| update!(| reason | * reason = event_target_value(& e))
-          //           name="reason"
-          //           placeholder="reason"
-          //         />
-          //         <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Report post" type="submit">
-          //           <Icon icon=Report class="inline-block".into()/>
-          //           "Report comment"
-          //         </button>
-          //       </Form>
-          //     </li>
-          //     <li>
-          //       <Form 
-          //         action="POST"
-          //         on:submit=|_| {}
-          //         // on:submit=on_block_submit
-          //       >
-          //         <input
-          //           type="hidden"
-          //           name="person_id"
-          //           value=format!("{}", comment_view.get().creator.id.0)
-          //         />
-          //         <input type="hidden" name="block" value="true"/>
-          //         <button class="text-xs whitespace-nowrap pointer-events-none text-base-content/50" title="Block user" type="submit">
-          //           <Icon icon=Block class="inline-block".into()/>
-          //           "Block user"
-          //         </button>
-          //       </Form>
-          //     </li>
-          //   </ul>
-          // </div>
-          <span class="block mb-1">
+          <span class="mb-1 break-words overflow-hidden">
             <span>
               { abbr_duration.clone() }
             </span> " ago, by "
             <A
               href=move || format!("/u/{}", comment_view.get().creator.name)
-              class="text-sm inline-block hover:text-secondary break-words"
+              class="text-sm hover:text-secondary break-words"
             >
               {comment_view.get().creator.name}
             </A>
           </span>
-        </div>
+          </div>
         </Show>
         <span class=move || format!("badge badge-neutral inline-block whitespace-nowrap{}", if !child_show.get() && com_sig.get().len() > 0 { "" } else { " hidden" })>
           { com_sig.get().len() + des_sig.get().len() } " replies"

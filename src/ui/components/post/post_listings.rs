@@ -10,16 +10,13 @@ pub fn PostListings(
 ) -> impl IntoView {
   let post_number = RwSignal::new(page_number.get());
   view! {
-    // <div>
-      <For each=move || posts.get() key=|pv| pv.post.id let:pv>
-        {
-          post_number.set(post_number.get() + 1); 
-
-          view! {
-            <PostListing post_view=pv.into() site_signal post_number=post_number.get()/>
-          }
+    <For each=move || posts.get() key=|pv| pv.post.id let:pv>
+      {
+        post_number.set(post_number.get() + 1); 
+        view! {
+          <PostListing post_view=pv.into() site_signal post_number=post_number.get()/>
         }
-      </For>
-    // </div>
+      }
+    </For>
   }
 }

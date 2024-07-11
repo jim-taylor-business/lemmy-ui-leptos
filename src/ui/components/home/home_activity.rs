@@ -105,39 +105,12 @@ pub fn HomeActivity(
       navigate(&query_params.to_query_string(), Default::default());}
   };
 
-  // let list_href = move |lt: SortType| {
-  //   move |_me: MouseEvent| {
-  //     let r = serde_json::to_string::<SortType>(&lt);
-
-  //     match r {
-  //       Ok(o) => {
-  //         let mut query_params = query.get();
-  //         query_params.insert("sort".into(), o);
-
-  //         if Some(SortType::Active) == o {
-  //           query_params.remove("sort".into());
-  //         }
-
-  //         let navigate = leptos_router::use_navigate();
-  //         navigate(&query_params.to_query_string(), Default::default());
-  //       }
-  //       Err(e) => {
-  //         error.set(Some(e.into()));
-  //       }
-  //     }
-  //   }
-  // };
-
-  let next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
   let loading = create_rw_signal(false);
   let refresh = create_rw_signal(false);
 
   ui_title.set(None);
 
-  let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
-  let csr_from: RwSignal<Option<(usize, Option<PaginationCursor>)>> = RwSignal::new(None);
-
-  let posts = create_resource(
+  let posts_resource = create_resource(
     move || {
       (
         refresh.get(),
@@ -145,14 +118,10 @@ pub fn HomeActivity(
         ssr_list(),
         ssr_sort(),
         ssr_from(),
-        csr_from.get(),
         ssr_limit(),
       )
     },
-    move |(_refresh, _user, list_type, sort_type, from, csr_from, limit)| async move {
-
-      let f = if let Some(f) = csr_from { f } else { from };
-
+    move |(_refresh, _user, list_type, sort_type, from, limit)| async move {
       let form = GetPosts {
         type_: Some(list_type),
         sort: Some(sort_type),
@@ -163,7 +132,7 @@ pub fn HomeActivity(
         saved_only: None,
         disliked_only: None,
         liked_only: None,
-        page_cursor: f.1.clone(),
+        page_cursor: from.1.clone()
         // show_hidden: None,
       };
 
@@ -173,24 +142,80 @@ pub fn HomeActivity(
 
       match result {
         Ok(o) => {
-          // #[cfg(not(feature = "ssr"))]
-          // {
-          //   window().scroll_to_with_x_and_y(0.0, 0.0);
-          // }
-          Some((f, o))
+          Some((from, o))
         },
         Err(e) => {
           error.set(Some((e, Some(refresh))));
           None
         }
+      }    
+    },
+  );
+
+  let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
+  let csr_from: RwSignal<Option<(usize, Option<PaginationCursor>)>> = RwSignal::new(None);
+  let csr_sort: RwSignal<SortType> = RwSignal::new(SortType::Active);
+  let csr_next_page_cursor = create_rw_signal::<Option<(usize, Option<PaginationCursor>)>>(None);
+
+  let on_csr_sort_click = move |s: SortType| {
+    move |_e: MouseEvent| {
+      csr_from.set(Some((0, None)));
+      csr_pages.set(BTreeMap::new());
+      csr_sort.set(s);
+    }
+  };
+
+  let csr_resource = create_local_resource(
+    move || {
+      (
+        // user.get(),
+        // ssr_list(),
+        csr_sort.get(),
+        csr_from.get(),
+        // ssr_limit(),
+      )
+    },
+    move |(/* _user, list_type,  */sort_type, csr_from/* , limit */)| async move {
+      if let Some(from) = csr_from {
+        let form = GetPosts {
+          // type_: Some(list_type),
+          type_: Some(ListingType::All),
+          sort: Some(sort_type),
+          community_name: None,
+          community_id: None,
+          page: None,
+          // limit: Some(i64::try_from(limit).unwrap_or(10)),
+          limit: Some(10),
+          saved_only: None,
+          disliked_only: None,
+          liked_only: None,
+          page_cursor: from.1,
+          // show_hidden: None,
+        };
+
+        let result = LemmyClient.list_posts(form).await;
+
+        match result {
+          Ok(o) => {
+            csr_next_page_cursor.set(Some((from.0 + ssr_limit(), o.next_page.clone())));
+            csr_pages.update(|h| {
+              h.insert(from.0, o); 
+            });
+            Some(())
+          },
+          Err(e) => {
+            error.set(Some((e, Some(refresh))));
+            None
+          }
+        }
+      } else {
+        None
       }
-    
     },
   );
 
   #[cfg(not(feature = "ssr"))]
   {
-
     let on_resize = move |_| {
       if use_location().pathname.get().eq("/") {
         let iw = window()
@@ -217,28 +242,26 @@ pub fn HomeActivity(
           query_params.insert("limit".into(), "20".to_string());
           Some("20".to_string())
         } else {
-          // query_params.insert("limit".into(), "10".to_string());
-          // Some("10".to_string())
           query_params.remove("limit");
           None
         };
 
         if iw >= 640f64 {
-          // csr_pages.set(BTreeMap::new());
+          csr_pages.set(BTreeMap::new());
           csr_from.set(None);
+        } else {
+          csr_from.set(Some((0, None)))
         }
 
         if prev_limit.ne(&new_limit) {
           let navigate = leptos_router::use_navigate();
           if iw >= 640f64 {
-            // let navigate = leptos_router::use_navigate();
             navigate(
               &format!("{}", query_params.to_query_string()),
               Default::default(),
             );
           } else {
             navigate("/",
-              // &format!("{}", query_params.to_query_string()),
               Default::default(),
             );
           }
@@ -271,14 +294,9 @@ pub fn HomeActivity(
 
           let endOfPage = (h + o) >= (b - h);
 
-          // logging::log!("{} {} {} {} ", endOfPage, h, o, b); 
-
           if endOfPage {
-            // csr_from.set(next_page_cursor.get()); 
             csr_from.update(|cf| {
-              // logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
-              *cf = next_page_cursor.get();
-              // logging::log!("{:#?} {:#?}", *cf, next_page_cursor.get());
+              *cf = csr_next_page_cursor.get();
             }); 
           }
         }
@@ -295,25 +313,6 @@ pub fn HomeActivity(
         <button class="btn join-item btn-disabled">"Comments"</button>
       </div>
       <div class="join mr-3 hidden sm:inline-block">
-        // {move || {
-        //     let mut query_params = query.get();
-        //     query_params.insert("list".into(), "\"Subscribed\"".into());
-        //     view! {
-        //       <A
-        //         href=move || query_params.to_query_string()
-        //         class=move || {
-        //             format!(
-        //                 "btn join-item{}{}",
-        //                 if ListingType::Subscribed == ssr_list() { " btn-active" } else { "" },
-        //                 { if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() { "" } else { " btn-disabled" } },
-        //             )
-        //         }
-        //       >
-
-        //         "Subscribed"
-        //       </A>
-        //     }
-        // }}
         <A
           href=move || {
               let mut query_params = query.get();
@@ -349,7 +348,7 @@ pub fn HomeActivity(
           "All"
         </A>
       </div>
-      <div class="dropdown hidden sm:inline-block">
+      <div class="dropdown ml-3 sm:ml-0 hidden sm:inline-block">
         <label tabindex="0" class="btn">
           "Sort type"
         </label>
@@ -388,33 +387,62 @@ pub fn HomeActivity(
           </li>
         </ul>
       </div>
+      <div class="dropdown ml-3 sm:ml-0 inline-block sm:hidden">
+        <label tabindex="0" class="btn">
+          "Sort type"
+        </label>
+        <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
+          <li
+            class=move || {
+                (if SortType::Active == csr_sort.get() { "btn-active" } else { "" }).to_string()
+            }
+            on:click=on_csr_sort_click(SortType::Active)
+          >
+            <span>{t!(i18n, active)}</span>
+          </li>
+          <li
+            class=move || {
+                (if SortType::Hot == csr_sort.get() { "btn-active" } else { "" }).to_string()
+            }
+            on:click=on_csr_sort_click(SortType::Hot)
+          >
+            <span>{t!(i18n, hot)}</span>
+          </li>
+          <li
+            class=move || {
+                (if SortType::Scaled == csr_sort.get() { "btn-active" } else { "" }).to_string()
+            }
+            on:click=on_csr_sort_click(SortType::Scaled)
+          >
+            <span>{ "Scaled" }</span>
+          </li>
+          <li
+            class=move || {
+                (if SortType::New == csr_sort.get() { "btn-active" } else { "" }).to_string()
+            }
+            on:click=on_csr_sort_click(SortType::New)
+          >
+            <span>{t!(i18n, new)}</span>
+          </li>
+        </ul>
+      </div>
     </div>
     <main role="main" class="w-full flex flex-col sm:flex-row flex-grow">
       <div class="w-full lg:w-2/3 2xl:w-3/4 3xl:w-4/5 4xl:w-5/6 sm:pr-4">
-
-      <Transition fallback=|| {}>
-        {move || {
-            posts
+        <Transition fallback=|| {}>
+          {move || {
+            posts_resource
                 .get()
                 .unwrap_or_default()
-                .map(|post| {
-                    next_page_cursor.set(Some((post.0.0 + ssr_limit(), post.1.next_page.clone())));
-                    csr_pages.update(|h| {
-                      if csr_from.get().is_none() {
-                        h.clear();
-                      }
-                      h.insert(post.0.0, post.1); 
-                    });
+                .map(|posts| {
+
+                    let next_page = Some((posts.0.0 + ssr_limit(), posts.1.next_page.clone()));
 
                     view! {
-                        <div class=move || format!("columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
-                          <For each=move || csr_pages.get().into_iter() key=|h| h.0 let:h>
-                            <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
-                          </For>
+                        <div class=move || format!("hidden sm:block columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
+                          <PostListings posts=posts.1.posts.into() site_signal page_number=posts.0.0.into() />
                         </div>
-  
                         <div class="join hidden sm:block">
-
                         {
                             let mut st = ssr_prev();
                             let p = st.pop();
@@ -430,7 +458,6 @@ pub fn HomeActivity(
                               query_params.remove("from".into());
                             }
                             view! {
-                              <span>
                                 <A
                                   on:click=move |_| { loading.set(true); } 
                                   href=format!("{}", query_params.to_query_string())
@@ -438,7 +465,6 @@ pub fn HomeActivity(
                                 >
                                   "Prev"
                                 </A>
-                              </span>
                             }
                         }
                         {
@@ -446,27 +472,25 @@ pub fn HomeActivity(
                             st.push(ssr_from());
                             let mut query_params = query.get();
                             query_params.insert("prev".into(), serde_json::to_string(&st).unwrap_or("[]".into()));
-                            query_params.insert("from".into(), serde_json::to_string(&next_page_cursor.get()).unwrap_or("[0,None]".into()));
+                            query_params.insert("from".into(), serde_json::to_string(&next_page).unwrap_or("[0,None]".into()));
                             view! {
-                              <span>
                                 <A 
                                   on:click=move |_| { loading.set(true); } 
                                   href=format!("{}", query_params.to_query_string())
-                                  class=move || format!("btn join-item{}", if next_page_cursor.get().is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
+                                  class=move || format!("btn join-item{}", if next_page.is_some() && !loading.get() { "" } else { " btn-disabled" } ) 
                                 >
                                   "Next"
                                 </A>
-                              </span>
                             }
                         }
-
                         </div>
-                }
+                    }
               })
-        }}
-
+          }}
         </Transition>
-
+        <For each=move || csr_pages.get() key=|h| h.0.clone() let:h>
+          <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
+        </For>
       </div>
       <div class="lg:w-1/3 hidden lg:block 2xl:w-1/4 3xl:w-1/5 4xl:w-1/6">
         <About/>
