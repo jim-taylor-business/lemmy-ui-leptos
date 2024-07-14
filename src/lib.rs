@@ -141,7 +141,7 @@ pub fn App() -> impl IntoView {
           <Route path="search" view=CommunitiesActivity/>
           <Route path="communities" view=CommunitiesActivity/>
           <Route path="create_community" view=CommunitiesActivity/>
-          <Route path="c/:id" view=CommunitiesActivity/>
+          <Route path="c/:name" view=move || view! { <HomeActivity site_signal/> }/>/>
 
           <Route path="login" view=LoginActivity/>
           <Route path="logout" view=CommunitiesActivity/>

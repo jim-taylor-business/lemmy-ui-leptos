@@ -73,13 +73,13 @@ pub fn PostActivity(
     }
   });
 
-  #[cfg(not(feature = "ssr"))]
-  {
-    let on_resize = move |_| { };
-    window_event_listener_untyped("resize", on_resize);
-    let on_scroll = move |_| { };
-    window_event_listener_untyped("scroll", on_scroll);
-  }
+  // #[cfg(not(feature = "ssr"))]
+  // {
+  //   let on_resize = move |_| { };
+  //   window_event_listener_untyped("resize", on_resize);
+  //   let on_scroll = move |_| { };
+  //   window_event_listener_untyped("scroll", on_scroll);
+  // }
 
   view! {
     <main role="main" class="w-full flex flex-col flex-grow">
