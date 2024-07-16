@@ -221,7 +221,7 @@ pub fn HomeActivity(
 
     use_resize_observer(el, move |entries, _| {
       let rect = entries[0].content_rect();
-      logging::log!("width: {:.0} height: {:.0}", rect.width(), rect.height());
+      // logging::log!("width: {:.0} height: {:.0}", rect.width(), rect.height());
       let iw = window()
         .inner_width()
         .ok()
@@ -260,7 +260,7 @@ pub fn HomeActivity(
       if prev_limit.ne(&new_limit) {
         let navigate = leptos_router::use_navigate();
         if iw >= 640f64 {
-          logging::log!("body {}", use_location().pathname.get());
+          // logging::log!("body {}", use_location().pathname.get());
           navigate(
             &format!("{}{}", use_location().pathname.get(), query_params.to_query_string()),
             // &format!("{}", query_params.to_query_string()),
@@ -278,7 +278,7 @@ pub fn HomeActivity(
       // resume,
       ..
     } = use_intersection_observer_with_options(scroll_trigger, move |entries, _| {
-        logging::log!("SCROLL");
+        // logging::log!("SCROLL");
 
         let iw = window()
           .inner_width()
@@ -286,7 +286,7 @@ pub fn HomeActivity(
           .map(|b| b.as_f64().unwrap_or(0.0))
           .unwrap_or(0.0);
 
-          logging::log!("{}", iw);
+          // logging::log!("{}", iw);
         if iw < 640f64 {
           // let h = window()
           //   .inner_height()
@@ -327,7 +327,7 @@ pub fn HomeActivity(
                     // show_hidden: None,
                   };
           
-                  logging::log!("GET {}", from.0);
+                  // logging::log!("GET {}", from.0);
                   let result = LemmyClient.list_posts(form).await;
           
                   match result {

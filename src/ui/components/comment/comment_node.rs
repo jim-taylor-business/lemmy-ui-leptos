@@ -194,7 +194,8 @@ pub fn CommentNode(
         if let Some(h) = still_handle.get() {
           h.clear();
         }
-      } on:touchdrag=move |e: TouchEvent| {
+      } on:touchmove=move |e: TouchEvent| {
+        // logging::log!("dg");
         if let Some(h) = still_handle.get() {
           h.clear();
         }
