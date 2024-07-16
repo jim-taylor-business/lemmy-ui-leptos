@@ -208,8 +208,8 @@ pub fn HomeActivity(
   //   },
   // );
 
-  let (text, set_text) = create_signal("".to_string());
-  let (is_visible, set_visible) = create_signal(false);
+  // let (text, set_text) = create_signal("".to_string());
+  // let (is_visible, set_visible) = create_signal(false);
   let el = create_node_ref::<Main>();
 
   let scroll_trigger = create_node_ref::<Div>();
