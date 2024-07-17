@@ -60,15 +60,22 @@ pub fn PostActivity(
 
     let result = LemmyClient.get_comments(form).await;
 
+    // logging::log!("10 {:#?}", result);
+
+
     match result {
       Ok(o) => Some(o),
       Err(e) => {
         error.set(Some((e, None)));
+        // logging::log!("10");
+
         None
       }
     }
 
     } else {
+      // logging::log!("11");
+
       None
     }
   });
@@ -85,7 +92,7 @@ pub fn PostActivity(
     <main role="main" class="w-full flex flex-col flex-grow">
       <div class="flex flex-col">
         <div>
-          <Transition fallback=|| {}>
+          <Transition fallback=|| { }>
             {move || {
                 post.get()
                     .unwrap_or(None)
@@ -139,7 +146,7 @@ pub fn PostActivity(
                     })
             }}
           </Transition>
-          <Transition fallback=|| {}>
+          <Transition fallback=|| { }>
             {move || {
                 comments
                     .get()

@@ -61,6 +61,7 @@ pub fn CommentNode(
   let mut safe_html = String::new();
   pulldown_cmark::html::push_html(&mut safe_html, custom);
 
+  // logging::log!("30");
 
   let child_show = RwSignal::new(true);
   let back_show = RwSignal::new(false);
@@ -68,6 +69,8 @@ pub fn CommentNode(
   let still_down = RwSignal::new(false);
   let vote_show = RwSignal::new(false);
   let still_handle: RwSignal<Option<TimeoutHandle>> = RwSignal::new(None);
+
+  // logging::log!("31");
 
   let comment_view = create_rw_signal(comment_view.get());
 
