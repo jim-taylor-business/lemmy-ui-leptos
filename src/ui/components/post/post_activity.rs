@@ -60,32 +60,39 @@ pub fn PostActivity(
 
     let result = LemmyClient.get_comments(form).await;
 
+    // logging::log!("10 {:#?}", result);
+
+
     match result {
       Ok(o) => Some(o),
       Err(e) => {
         error.set(Some((e, None)));
+        // logging::log!("10");
+
         None
       }
     }
 
     } else {
+      // logging::log!("11");
+
       None
     }
   });
 
-  #[cfg(not(feature = "ssr"))]
-  {
-    let on_resize = move |_| { };
-    window_event_listener_untyped("resize", on_resize);
-    let on_scroll = move |_| { };
-    window_event_listener_untyped("scroll", on_scroll);
-  }
+  // #[cfg(not(feature = "ssr"))]
+  // {
+  //   let on_resize = move |_| { };
+  //   window_event_listener_untyped("resize", on_resize);
+  //   let on_scroll = move |_| { };
+  //   window_event_listener_untyped("scroll", on_scroll);
+  // }
 
   view! {
     <main role="main" class="w-full flex flex-col flex-grow">
       <div class="flex flex-col">
         <div>
-          <Transition fallback=|| {}>
+          <Transition fallback=|| { }>
             {move || {
                 post.get()
                     .unwrap_or(None)
@@ -139,7 +146,7 @@ pub fn PostActivity(
                     })
             }}
           </Transition>
-          <Transition fallback=|| {}>
+          <Transition fallback=|| { }>
             {move || {
                 comments
                     .get()

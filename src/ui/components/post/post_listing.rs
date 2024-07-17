@@ -443,7 +443,11 @@ pub fn PostListing(
             <span inner_html=creator_name_encoded />
           </A>
           ", in "
-          <A class="text-sm inline-block hover:text-secondary break-words" href=format!("/c/{}", post_view.get().community.name)>
+          <A class="text-sm inline-block hover:text-secondary break-words" href=if post_view.get().community.local {
+              format!("/c/{}", post_view.get().community.name)
+            } else {
+              format!("/c/{}@{}", post_view.get().community.name, post_view.get().community.actor_id.inner().host().unwrap().to_string())
+            }>
             <span inner_html=community_title_encoded />
           </A>
         </span>

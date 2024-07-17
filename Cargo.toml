@@ -24,7 +24,9 @@ leptos = "0"
 leptos_actix = { version = "0", optional = true }
 leptos_meta = "0"
 leptos_router = "0"
+
 leptos_i18n = "0"
+leptos-use = "0"
 
 serde = { version = "1", features = ["derive"] }
 serde_urlencoded = "0"
