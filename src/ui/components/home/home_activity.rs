@@ -146,15 +146,16 @@ pub fn HomeActivity(
   );
 
   let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
-  let csr_from: RwSignal<Option<(usize, Option<PaginationCursor>)>> = RwSignal::new(None);
+  // let csr_from: RwSignal<Option<(usize, Option<PaginationCursor>)>> = RwSignal::new(None);
   let csr_sort: RwSignal<SortType> = RwSignal::new(SortType::Active);
   let csr_next_page_cursor = create_rw_signal::<(usize, Option<PaginationCursor>)>((0, None));
 
   let on_csr_sort_click = move |s: SortType| {
     move |_e: MouseEvent| {
-      csr_from.set(Some((0, None)));
-      csr_pages.set(BTreeMap::new());
+      csr_next_page_cursor.set((0, None));
+//      csr_from.set(Some((0, None)));
       csr_sort.set(s);
+      csr_pages.set(BTreeMap::new());
     }
   };
 
@@ -252,9 +253,10 @@ pub fn HomeActivity(
 
       if iw >= 640f64 {
         csr_pages.set(BTreeMap::new());
-        csr_from.set(None);
+        // csr_from.set(None);
       } else {
-        csr_from.set(Some((0, None)))
+        csr_next_page_cursor.set((0, None));
+        // csr_from.set(Some((0, None)))
       }
 
       if prev_limit.ne(&new_limit) {
@@ -327,7 +329,7 @@ pub fn HomeActivity(
                     // show_hidden: None,
                   };
           
-                  // logging::log!("GET {}", from.0);
+                  logging::log!("GET {}", from.0);
                   let result = LemmyClient.list_posts(form).await;
           
                   match result {
