@@ -253,9 +253,10 @@ pub fn HomeActivity(
 
       if iw >= 640f64 {
         csr_pages.set(BTreeMap::new());
+        csr_next_page_cursor.set((0, None));
         // csr_from.set(None);
       } else {
-        csr_next_page_cursor.set((0, None));
+        // csr_next_page_cursor.set((0, None));
         // csr_from.set(Some((0, None)))
       }
 
@@ -329,7 +330,7 @@ pub fn HomeActivity(
                     // show_hidden: None,
                   };
           
-                  logging::log!("GET {}", from.0);
+                  // logging::log!("GET {}", from.0);
                   let result = LemmyClient.list_posts(form).await;
           
                   match result {
@@ -634,6 +635,9 @@ pub fn HomeActivity(
           }}
         </Transition>
         <For each=move || csr_pages.get() key=|h| h.0.clone() let:h>
+          // {
+          //   logging::log!("page");
+          // }
           <PostListings posts=h.1.posts.into() site_signal page_number=h.0.into() />
         </For>
         <div node_ref=scroll_trigger class="sm:hidden block"></div>
