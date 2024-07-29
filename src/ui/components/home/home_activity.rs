@@ -145,10 +145,18 @@ pub fn HomeActivity(
     },
   );
 
-  let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
+  let csr_pages = expect_context::<RwSignal<BTreeMap<usize, GetPostsResponse>>>();
+  let csr_sort = expect_context::<RwSignal<SortType>>();
+  let csr_next_page_cursor = expect_context::<RwSignal<(usize, Option<PaginationCursor>)>>();
+
+
+  // let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
+  // let csr_sort: RwSignal<SortType> = RwSignal::new(SortType::Active);
+  // let csr_next_page_cursor = create_rw_signal::<(usize, Option<PaginationCursor>)>((0, None));
+
+
+
   // let csr_from: RwSignal<Option<(usize, Option<PaginationCursor>)>> = RwSignal::new(None);
-  let csr_sort: RwSignal<SortType> = RwSignal::new(SortType::Active);
-  let csr_next_page_cursor = create_rw_signal::<(usize, Option<PaginationCursor>)>((0, None));
 
   let on_csr_sort_click = move |s: SortType| {
     move |_e: MouseEvent| {

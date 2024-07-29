@@ -13,7 +13,7 @@
         @apply my-0;
     } 
     .prose li {
-        @apply my-0;
+        @apply my-0 break-words;
     }  
     .prose pre {
         @apply relative h-40 overflow-auto;

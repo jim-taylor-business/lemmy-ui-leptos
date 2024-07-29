@@ -435,14 +435,13 @@ pub fn PostListing(
         <span class="block mb-1">
           <span>
             { abbr_duration }
-          </span> " ago, by "
+          </span> " ago by "
           <A
             href=move || format!("/u/{}", post_view.get().creator.name)
             class="text-sm inline-block hover:text-secondary break-words"
           >
             <span inner_html=creator_name_encoded />
-          </A>
-          ", in "
+          </A>" in "
           <A class="text-sm inline-block hover:text-secondary break-words" href=if post_view.get().community.local {
               format!("/c/{}", post_view.get().community.name)
             } else {

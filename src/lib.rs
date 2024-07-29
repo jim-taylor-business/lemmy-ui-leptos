@@ -12,6 +12,8 @@ mod ui;
 
 // use std::collections::BTreeMap;
 
+use std::collections::BTreeMap;
+
 use crate::{
   errors::LemmyAppError,
   i18n::*,
@@ -24,7 +26,7 @@ use crate::{
     post::post_activity::PostActivity,
   },
 };
-use lemmy_api_common::{/* lemmy_db_views::structs::{PaginationCursor, PostView}, */ site::GetSiteResponse};
+use lemmy_api_common::{/* lemmy_db_views::structs::{PaginationCursor, PostView}, */ lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse, site::GetSiteResponse};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -89,6 +91,14 @@ pub fn App() -> impl IntoView {
   // provide_context(csr_paginator);
   // let csr_infinite_scroll_hashmap = RwSignal::new(CsrHashMapSetter(BTreeMap::new()));
   // provide_context(csr_infinite_scroll_hashmap);
+
+  let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
+  provide_context(csr_pages);
+  let csr_sort: RwSignal<SortType> = RwSignal::new(SortType::Active);
+  provide_context(csr_sort);
+  let csr_next_page_cursor = create_rw_signal::<(usize, Option<PaginationCursor>)>((0, None));
+  provide_context(csr_next_page_cursor);
+
 
 
   let site_signal = create_rw_signal::<Option<Result<GetSiteResponse, LemmyAppError>>>(None);
