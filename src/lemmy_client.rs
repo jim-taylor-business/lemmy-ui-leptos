@@ -144,8 +144,6 @@ cfg_if! {
 
                 let client = extract::<web::Data<Client>>().await?;
 
-                // leptos::logging::log!("50");
-
                 let mut r = match method {
                     HttpType::Get => client
                         .get(&route)
@@ -161,8 +159,6 @@ cfg_if! {
                         .maybe_bearer_auth(jwt.clone())
                         .send_json(&form)
                 }.await?;
-
-                // leptos::logging::log!("51");
 
                 match r.status().as_u16() {
                     400..=599 => {
@@ -181,8 +177,6 @@ cfg_if! {
                     },
                 };
 
-                // leptos::logging::log!("52");
-                // r.json().limit(10485760);
                 r.json::<Response>().limit(10485760).await.map_err(Into::into)
             }
         }

@@ -1,4 +1,3 @@
-// use core::hash;
 use std::{collections::BTreeMap, usize, vec};
 
 use crate::{
@@ -24,7 +23,6 @@ use leptos_router::*;
 use web_sys::MouseEvent;
 
 use leptos::html::*;
-// use leptos_use::docs::*;
 use leptos_use::*;
 
 #[component]
@@ -149,81 +147,17 @@ pub fn HomeActivity(
   let csr_sort = expect_context::<RwSignal<SortType>>();
   let csr_next_page_cursor = expect_context::<RwSignal<(usize, Option<PaginationCursor>)>>();
 
-
-  // let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
-  // let csr_sort: RwSignal<SortType> = RwSignal::new(SortType::Active);
-  // let csr_next_page_cursor = create_rw_signal::<(usize, Option<PaginationCursor>)>((0, None));
-
-
-
-  // let csr_from: RwSignal<Option<(usize, Option<PaginationCursor>)>> = RwSignal::new(None);
-
   let on_csr_sort_click = move |s: SortType| {
     move |_e: MouseEvent| {
       csr_next_page_cursor.set((0, None));
-//      csr_from.set(Some((0, None)));
       csr_sort.set(s);
       csr_pages.set(BTreeMap::new());
     }
   };
 
-  // let csr_resource = create_local_resource(
-  //   move || {
-  //     (
-  //       // user.get(),
-  //       // ssr_list(),
-  //       csr_sort.get(),
-  //       csr_from.get(),
-  //       // ssr_limit(),
-  //     )
-  //   },
-  //   move |(/* _user, list_type,  */ sort_type, csr_from /* , limit */)| async move {
-  //     if let Some(from) = csr_from {
-  //       let form = GetPosts {
-  //         // type_: Some(list_type),
-  //         type_: Some(ListingType::All),
-  //         sort: Some(sort_type),
-  //         community_name: None,
-  //         community_id: None,
-  //         page: None,
-  //         // limit: Some(i64::try_from(limit).unwrap_or(10)),
-  //         limit: Some(10),
-  //         saved_only: None,
-  //         disliked_only: None,
-  //         liked_only: None,
-  //         page_cursor: from.1,
-  //         // show_hidden: None,
-  //       };
-
-  //       logging::log!("GET {}", from.0);
-  //       let result = LemmyClient.list_posts(form).await;
-
-  //       match result {
-  //         Ok(o) => {
-  //           csr_next_page_cursor.set(Some((from.0 + ssr_limit(), o.next_page.clone())));
-  //           csr_pages.update(|h| {
-  //             h.insert(from.0, o);
-  //           });
-  //           Some(())
-  //         }
-  //         Err(e) => {
-  //           error.set(Some((e, Some(refresh))));
-  //           None
-  //         }
-  //       }
-  //     } else {
-  //       None
-  //     }
-  //   },
-  // );
-
-  // let (text, set_text) = create_signal("".to_string());
-  // let (is_visible, set_visible) = create_signal(false);
   let el = create_node_ref::<Main>();
 
   let scroll_trigger = create_node_ref::<Div>();
- // let (data, set_data) = create_signal(vec![1, 2, 3, 4, 5, 6]);
-  // set_text.set(use_location().pathname.get());
 
   #[cfg(not(feature = "ssr"))]
   {
@@ -262,19 +196,13 @@ pub fn HomeActivity(
       if iw >= 640f64 {
         csr_pages.set(BTreeMap::new());
         csr_next_page_cursor.set((0, None));
-        // csr_from.set(None);
-      } else {
-        // csr_next_page_cursor.set((0, None));
-        // csr_from.set(Some((0, None)))
       }
 
       if prev_limit.ne(&new_limit) {
         let navigate = leptos_router::use_navigate();
         if iw >= 640f64 {
-          // logging::log!("body {}", use_location().pathname.get());
           navigate(
             &format!("{}{}", use_location().pathname.get(), query_params.to_query_string()),
-            // &format!("{}", query_params.to_query_string()),
             Default::default(),
           );
         } else {
@@ -299,165 +227,50 @@ pub fn HomeActivity(
 
           // logging::log!("{}", iw);
         if iw < 640f64 {
-          // let h = window()
-          //   .inner_height()
-          //   .ok()
-          //   .map(|b| b.as_f64().unwrap_or(0.0))
-          //   .unwrap_or(0.0);
-          // let o = window().page_y_offset().ok().unwrap_or(0.0);
-          // let b = f64::from(document().body().map(|b| b.offset_height()).unwrap_or(1));
 
-          // let endOfPage = (h + o) >= (b - h);
+          create_local_resource(
+            move || { () },
+            move |()| async move {
+              let from = csr_next_page_cursor.get();
 
-          // if endOfPage {
-
-            create_local_resource(
-              move || { (
-                  // user.get(),
-                  // ssr_list(),
-                  // csr_sort.get(),
-                  // csr_from.get(),
-                  // ssr_limit(),
-              ) },
-              move |(/* _user, list_type,  */ /* sort_type, csr_from */ /* , limit */)| async move {
-                // if let Some(from) = csr_next_page_cursor.get() {
-                let from = csr_next_page_cursor.get();
-                  let form = GetPosts {
-                    // type_: Some(list_type),
-                    type_: Some(ListingType::All),
-                    sort: Some(csr_sort.get()),
-                    community_name: None,
-                    community_id: None,
-                    page: None,
-                    // limit: Some(i64::try_from(limit).unwrap_or(10)),
-                    limit: Some(10),
-                    saved_only: None,
-                    disliked_only: None,
-                    liked_only: None,
-                    page_cursor: from.1,
-                    // show_hidden: None,
-                  };
-          
-                  // logging::log!("GET {}", from.0);
-                  let result = LemmyClient.list_posts(form).await;
-          
-                  match result {
-                    Ok(o) => {
-                      csr_next_page_cursor.set((from.0 + ssr_limit(), o.next_page.clone()));
-                      csr_pages.update(|h| {
-                        h.insert(from.0, o);
-                      });
-                      Some(())
-                    }
-                    Err(e) => {
-                      error.set(Some((e, Some(refresh))));
-                      None
-                    }
-                  }
-                // } else {
-                //   None
-                // }
-              },
-            );
-          
-
-            // csr_from.update(|cf| {
-            //   *cf = csr_next_page_cursor.get();
-            // });
-          // }
+              let form = GetPosts {
+                // type_: Some(list_type),
+                type_: Some(ListingType::All),
+                sort: Some(csr_sort.get()),
+                community_name: None,
+                community_id: None,
+                page: None,
+                // limit: Some(i64::try_from(limit).unwrap_or(10)),
+                limit: Some(10),
+                saved_only: None,
+                disliked_only: None,
+                liked_only: None,
+                page_cursor: from.1,
+                // show_hidden: None,
+              };
+      
+              // logging::log!("GET {}", from.0);
+              let result = LemmyClient.list_posts(form).await;
+      
+              match result {
+                Ok(o) => {
+                  csr_next_page_cursor.set((from.0 + ssr_limit(), o.next_page.clone()));
+                  csr_pages.update(|h| {
+                    h.insert(from.0, o);
+                  });
+                  Some(())
+                }
+                Err(e) => {
+                  error.set(Some((e, Some(refresh))));
+                  None
+                }
+              }
+            },
+          );
         }
       },
       UseIntersectionObserverOptions::default(), //.root(Some(root)),
-    );
-
-
-    // let on_resize = move |_| {
-    //   if use_location().pathname.get().eq("/") {
-    //     let iw = window()
-    //       .inner_width()
-    //       .ok()
-    //       .map(|b| b.as_f64().unwrap_or(0.0))
-    //       .unwrap_or(0.0);
-
-    //     let mut query_params = query.get();
-
-    //     let prev_limit = if let Some(l) = query_params.get("limit".into()) {
-    //       Some(l.clone())
-    //     } else {
-    //       None
-    //     };
-
-    //     let new_limit = if iw >= 2560f64 {
-    //       query_params.insert("limit".into(), "40".to_string());
-    //       Some("40".to_string())
-    //     } else if iw >= 1920f64 {
-    //       query_params.insert("limit".into(), "30".to_string());
-    //       Some("30".to_string())
-    //     } else if iw >= 1536f64 {
-    //       query_params.insert("limit".into(), "20".to_string());
-    //       Some("20".to_string())
-    //     } else {
-    //       query_params.remove("limit");
-    //       None
-    //     };
-
-    //     if iw >= 640f64 {
-    //       csr_pages.set(BTreeMap::new());
-    //       csr_from.set(None);
-    //     } else {
-    //       csr_from.set(Some((0, None)))
-    //     }
-
-    //     if prev_limit.ne(&new_limit) {
-    //       let navigate = leptos_router::use_navigate();
-    //       if iw >= 640f64 {
-    //         navigate(
-    //           &format!("{}", query_params.to_query_string()),
-    //           Default::default(),
-    //         );
-    //       } else {
-    //         navigate("/", Default::default());
-    //       }
-    //     }
-    //   }
-    // };
-
-    // if let Ok(e) = web_sys::Event::new("resize") {
-    //   on_resize(e);
-    // }
-
-    // let _resize_handle = window_event_listener_untyped("resize", on_resize);
-
-    // let on_scroll = move |_| {
-    //   if use_location().pathname.get().eq("/") {
-    //     let iw = window()
-    //       .inner_width()
-    //       .ok()
-    //       .map(|b| b.as_f64().unwrap_or(0.0))
-    //       .unwrap_or(0.0);
-
-    //     if iw < 640f64 {
-    //       let h = window()
-    //         .inner_height()
-    //         .ok()
-    //         .map(|b| b.as_f64().unwrap_or(0.0))
-    //         .unwrap_or(0.0);
-    //       let o = window().page_y_offset().ok().unwrap_or(0.0);
-    //       let b = f64::from(document().body().map(|b| b.offset_height()).unwrap_or(1));
-
-    //       let endOfPage = (h + o) >= (b - h);
-
-    //       if endOfPage {
-    //         csr_from.update(|cf| {
-    //           *cf = csr_next_page_cursor.get();
-    //         });
-    //       }
-    //     }
-    //   }
-    // };
-
-    // let _scroll_handle = window_event_listener_untyped("scroll", on_scroll);
-    
+    );    
   }
 
   view! {
@@ -485,7 +298,7 @@ pub fn HomeActivity(
           href=move || {
               let mut query_params = query.get();
               query_params.insert("list".into(), serde_json::to_string(&ListingType::Local).ok().unwrap());
-              format!("{}{}", use_location().pathname.get(), query_params.to_query_string()) //query_params.to_query_string()
+              format!("{}{}", use_location().pathname.get(), query_params.to_query_string())
           }
           class=move || format!("btn join-item{}", if ListingType::Local == ssr_list() { " btn-active" } else { "" })
         >
@@ -495,7 +308,7 @@ pub fn HomeActivity(
           href=move || {
               let mut query_params = query.get();
               query_params.remove("list".into());
-              format!("{}{}", use_location().pathname.get(), query_params.to_query_string()) //query_params.to_query_string()
+              format!("{}{}", use_location().pathname.get(), query_params.to_query_string())
           }
           class=move || format!("btn join-item{}", if ListingType::All == ssr_list() { " btn-active" } else { "" })
         >
@@ -614,7 +427,7 @@ pub fn HomeActivity(
                             view! {
                                 <A
                                   on:click=move |_| { loading.set(true); }
-                                  href=format!("{}{}", use_location().pathname.get(), query_params.to_query_string()) //format!("{}", query_params.to_query_string())
+                                  href=format!("{}{}", use_location().pathname.get(), query_params.to_query_string())
                                   class=move || format!("btn join-item{}", if !ssr_prev().is_empty() { "" } else { " btn-disabled" } )
                                 >
                                   "Prev"
@@ -630,7 +443,7 @@ pub fn HomeActivity(
                             view! {
                                 <A
                                   on:click=move |_| { loading.set(true); }
-                                  href=format!("{}{}", use_location().pathname.get(), query_params.to_query_string()) //format!("{}", query_params.to_query_string())
+                                  href=format!("{}{}", use_location().pathname.get(), query_params.to_query_string())
                                   class=move || format!("btn join-item{}", if next_page.is_some() && !loading.get() { "" } else { " btn-disabled" } )
                                 >
                                   "Next"

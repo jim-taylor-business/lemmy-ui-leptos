@@ -10,8 +10,6 @@ mod lemmy_client;
 mod lemmy_error;
 mod ui;
 
-// use std::collections::BTreeMap;
-
 use std::collections::BTreeMap;
 
 use crate::{
@@ -26,7 +24,7 @@ use crate::{
     post::post_activity::PostActivity,
   },
 };
-use lemmy_api_common::{/* lemmy_db_views::structs::{PaginationCursor, PostView}, */ lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse, site::GetSiteResponse};
+use lemmy_api_common::{lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse, site::GetSiteResponse};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
@@ -37,20 +35,6 @@ leptos_i18n::load_locales!();
 pub struct TitleSetter(String);
 #[derive(Clone)]
 pub struct OnlineSetter(bool);
-
-// #[derive(Clone)]
-// pub struct PageCursorSetter(Option<PaginationCursor>);
-// #[derive(Clone)]
-// pub struct PrevCursorStackSetter(Vec<Option<PaginationCursor>>);
-// #[derive(Clone)]
-// pub struct NextCursorSetter(Option<PaginationCursor>);
-// #[derive(Clone)]
-// pub struct PageNumberSetter(usize);
-
-// #[derive(Clone)]
-// pub struct CsrPageCursorSetter(Option<PaginationCursor>);
-// #[derive(Clone)]
-// pub struct CsrHashMapSetter(BTreeMap<usize, Vec<PostView>>);
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -77,20 +61,6 @@ pub fn App() -> impl IntoView {
 
   let _offline_handle = window_event_listener_untyped("offline", on_online(false));
   let _online_handle = window_event_listener_untyped("online", on_online(true));
-
-  // workaround to maintain index state
-  // let page_cursor = create_rw_signal(PageCursorSetter(None));
-  // provide_context(page_cursor);
-  // let prev_cursor_stack = create_rw_signal(PrevCursorStackSetter(vec![]));
-  // provide_context(prev_cursor_stack);
-  // let next_page_cursor = create_rw_signal(NextCursorSetter(None));
-  // provide_context(next_page_cursor);
-  // let page_number = create_rw_signal(PageNumberSetter(0usize));
-  // provide_context(page_number);
-  // let csr_paginator = RwSignal::new(CsrPageCursorSetter(None));
-  // provide_context(csr_paginator);
-  // let csr_infinite_scroll_hashmap = RwSignal::new(CsrHashMapSetter(BTreeMap::new()));
-  // provide_context(csr_infinite_scroll_hashmap);
 
   let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
   provide_context(csr_pages);
