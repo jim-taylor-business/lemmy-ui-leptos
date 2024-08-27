@@ -15,10 +15,10 @@
   "docs": "Docs",
   "code": "Code",
 
-  "unknown": "Sorry, an unknown error occurred. The error has been logged and an administrator has been notified. Please try again in a short while if you wish.",
-  "internal": "Sorry, an internal server error occurred. The error has been logged and an administrator has been notified. Please try again in a short while if you wish.",
+  "unknown": "An unknown error occurred",
+  "internal": "An internal server error occurred",
 
-  "invalid_login": "Either the username or password for your login did not match an account in this instance.",
+  "invalid_login": "Either the username or password for your login did not match an account in this instance",
   "empty_username": "A username is required to login",
   "empty_password": "A password must be given to login",
 

@@ -1,15 +1,15 @@
 use crate::{
   cookie::{remove_cookie, set_cookie},
-  errors::{message_from_error, LemmyAppError},
+  errors::{message_from_error, LemmyAppError, LemmyAppErrorType},
   i18n::*,
   lemmy_client::*,
-  ui::components::common::icon::{
-    Icon,
-    IconType::{Donate, Notifications, Search},
-  }, OnlineSetter,
+  ui::components::common::icon::{Icon, IconType::*},
+  OnlineSetter,
 };
 use ev::MouseEvent;
-use lemmy_api_common::{lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, site::GetSiteResponse};
+use lemmy_api_common::{
+  lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, site::GetSiteResponse,
+};
 use leptos::*;
 use leptos_router::*;
 use web_sys::SubmitEvent;
@@ -69,8 +69,8 @@ pub fn TopNav(
 ) -> impl IntoView {
   let i18n = use_i18n();
 
-  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
-  // let ssr_error = create_rw_signal::<Option<(LemmyAppError, Option<RwSignal<bool>>)>>(None);
+  let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
+  // let ssr_error = RwSignal::new::<Option<(LemmyAppError, Option<RwSignal<bool>>)>>(None);
 
   // if let Some(Err(e)) = site_signal.get() {
   //   ssr_error.set(Some((e, None)));
@@ -79,15 +79,9 @@ pub fn TopNav(
   let query = use_query_map();
 
   let ssr_query_error = move || {
-    serde_json::from_str::<LemmyAppError>(
-      &query
-        .get()
-        .get("error")
-        .cloned()
-        .unwrap_or("".into()),
-    )
-    .ok()
-    .map(|e| (e, None::<Option<RwSignal<bool>>>))
+    serde_json::from_str::<LemmyAppError>(&query.get().get("error").cloned().unwrap_or("".into()))
+      .ok()
+      .map(|e| (e, None::<Option<RwSignal<bool>>>))
     // .unwrap_or((0usize, None))
   };
 
@@ -126,12 +120,42 @@ pub fn TopNav(
           }
           Err(e) => {
             logging::warn!("logout error {:#?}", e);
-            error.set(Some((e, None)));
+            error.update(|es| es.push(Some((e, None))));
+            // error.set(Some((e, None)));
           }
         }
       },
     );
   };
+
+  // let site_signal = RwSignal::new::<Option<Result<GetSiteResponse, LemmyAppError>>>(None);
+
+  let ssr_unread = Resource::new(
+    move || (user.get()),
+    move |user| async move {
+      let result =
+      //  if user == Some(true) {
+        LemmyClient.unread_count().await
+      // } else {
+        // LemmyClient.unread_count().await;
+      //   Err(LemmyAppError {
+      //     error_type: LemmyAppErrorType::MissingToken,
+      //     content: "".into(),
+      //   })
+      // }
+      ;
+
+      // logging::log!("{:#?}", result);
+
+      match result {
+        Ok(o) => Ok(o),
+        Err(e) => {
+          // error.set(Some((e.clone(), None)));
+          Err(e)
+        }
+      }
+    },
+  );
 
   let ui_theme = expect_context::<RwSignal<Option<String>>>();
   let ui_online = expect_context::<RwSignal<OnlineSetter>>();
@@ -210,16 +234,16 @@ pub fn TopNav(
       </div>
       <div class="navbar-end">
         <ul class="menu menu-horizontal flex-nowrap items-center">
-          <li class="hidden lg:flex">
-            <A href="/search" class="pointer-events-none text-base-content/50">
-              <span title="t!(i18n, search)">
-                <Icon icon=Search/>
-              </span>
-            </A>
-          </li>
+          // <li class="hidden lg:flex">
+          //   <A href="/search" class="pointer-events-none text-base-content/50">
+          //     <span title="t!(i18n, search)">
+          //       <Icon icon=Search/>
+          //     </span>
+          //   </A>
+          // </li>
           <li class="z-[1] hidden lg:flex">
             <details>
-              <summary>"Lang"</summary>
+              <summary><Icon icon=Translate /></summary>
               <ul>
                 <li>
                   <ActionForm action=lang_action on:submit=on_lang_submit(Locale::fr)>
@@ -238,7 +262,7 @@ pub fn TopNav(
           </li>
           <li class="z-[1] hidden lg:flex">
             <details>
-              <summary>"Theme"</summary>
+              <summary><Icon icon=Palette /></summary>
               <ul>
                 <li>
                   <ActionForm action=theme_action on:submit=on_theme_submit("dark")>
@@ -261,6 +285,63 @@ pub fn TopNav(
               </ul>
             </details>
           </li>
+          <li>
+            <A href="/notifications">
+              <span class="flex flex-row items-center">
+                {move || {
+                  let v = error.get();
+                  if v.len() > 0 {
+                    view! {
+                      <div class="badge badge-error badge-xs"> { v.len() } </div>
+                    }
+                  } else {
+                    view! {
+                      <div class="hidden"></div>
+                    }
+                  }
+                }}
+
+
+                <span>
+                {move || {
+                  if ui_online.get().0 {
+                    view! {
+                      <div class="absolute top-0 badge badge-success badge-xs"></div>
+                    }
+                  } else {
+                    view! {
+                      <div class="absolute top-0 badge badge-warning badge-xs"></div>
+                    }
+                  }
+                }}
+
+
+                <Icon icon=Notifications/>
+                </span>
+
+                <Transition fallback=|| {}>
+                  {move || {
+                      ssr_unread
+                          .get()
+                          .map(|u| {
+                              if let Ok(c) = u {
+                                view! {
+                                  <div class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
+                                }
+                              } else {
+                                view! {
+                                  <div class="hidden"></div>
+                                }
+                              }
+                          })
+                  }}
+
+                </Transition>
+
+
+              </span>
+            </A>
+          </li>
           <Show
             when=move || {
                 if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
@@ -281,13 +362,6 @@ pub fn TopNav(
                 }
             }
           >
-            <li>
-              <A href="/inbox">
-                <span class=move || format!("{}", if ui_online.get().0 {"accent"} else {""})>
-                  <Icon icon=Notifications/>
-                </span>
-              </A>
-            </li>
             <li>
               <details>
                 <summary>
@@ -350,27 +424,27 @@ pub fn TopNav(
     //   }
     // >
 
-    {move || {
-      site_signal.get()
-            .map(|res| {
-                
-              if let Err(err) = res {
-                view! {
-                  <div class="container mx-auto alert alert-error mb-8">
-                    <span>"S" {message_from_error(&err)} " - " {err.content}</span>
-                    <div>
-                      <A href=use_location().pathname.get() class="btn btn-sm"> "Retry" </A>
-                    </div>
-                  </div>
-                }
-              } else {
-                view! {
-                  <div class="hidden" />
-                }
+    // {move || {
+    //   site_signal.get()
+    //         .map(|res| {
 
-              }
-            })
-    }}
+    //           if let Err(err) = res {
+    //             view! {
+    //               <div class="container mx-auto alert alert-error mb-8">
+    //                 <span>"S" {message_from_error(&err)} " - " {err.content}</span>
+    //                 <div>
+    //                   <A href=use_location().pathname.get() class="btn btn-sm"> "Retry" </A>
+    //                 </div>
+    //               </div>
+    //             }
+    //           } else {
+    //             view! {
+    //               <div class="hidden" />
+    //             }
+
+    //           }
+    //         })
+    // }}
 
     {move || {
         ssr_query_error()
@@ -379,7 +453,7 @@ pub fn TopNav(
                 query_params.remove("error".into());
                 view! {
                   <div class="container mx-auto alert alert-error mb-8">
-                    <span>"Q" {message_from_error(&err.0)} " - " {err.0.content}</span>
+                    <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
                     <div>
                       <A class="btn btn-sm" href=format!("./?{}", &query_params.to_query_string())> "Clear" </A>
                     </div>
@@ -388,22 +462,22 @@ pub fn TopNav(
             })
     }}
 
-    {move || {
-        error.get()
-          .map(|err| {
-              view! {
-                <div class="container mx-auto alert alert-error mb-8">
-                  <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
-                  <div>
-                    <Show when=move || { if let Some(r) = err.1 { true } else { false } } /* let:r */ fallback=|| {}>
-                      <button on:click=move |_| { if let Some(r) = err.1 { r.set(!r.get()); } else { } } class="btn btn-sm"> "Retry" </button>
-                    </Show>
-                    <button class="btn btn-sm" on:click=move |_| { error.set(None); }> "Clear" </button>
-                  </div>
-                </div>
-              }
-          })
-    }}
+    // {move || {
+    //     error.get()
+    //       .map(|err| {
+    //           view! {
+    //             <div class="container mx-auto alert alert-error mb-8">
+    //               <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
+    //               <div>
+    //                 <Show when=move || { if let Some(r) = err.1 { true } else { false } } /* let:r */ fallback=|| {}>
+    //                   <button on:click=move |_| { if let Some(r) = err.1 { r.set(!r.get()); } else { } } class="btn btn-sm"> "Retry" </button>
+    //                 </Show>
+    //                 <button class="btn btn-sm" on:click=move |_| { error.set(None); }> "Clear" </button>
+    //               </div>
+    //             </div>
+    //           }
+    //       })
+    // }}
 
     // </Show>
   }

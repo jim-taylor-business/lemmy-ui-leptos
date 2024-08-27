@@ -1,10 +1,7 @@
 use crate::{
   errors::{LemmyAppError, LemmyAppErrorType},
   lemmy_client::*,
-  ui::components::common::icon::{
-    Icon,
-    IconType::*,
-  },
+  ui::components::common::icon::{Icon, IconType::*},
 };
 use ev::MouseEvent;
 use lemmy_api_common::{lemmy_db_views::structs::*, person::*, post::*, site::GetSiteResponse};
@@ -134,16 +131,19 @@ pub fn PostListing(
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
   post_number: usize,
 ) -> impl IntoView {
-  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
+  let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let user = Signal::derive(move || {
-    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
+    if let Some(Ok(GetSiteResponse {
+      my_user: Some(_), ..
+    })) = site_signal.get()
+    {
       Some(true)
     } else {
       Some(false)
     }
   });
 
-  let post_view = create_rw_signal(post_view.get());
+  let post_view = RwSignal::new(post_view.get());
 
   let vote_action = create_server_action::<VotePostFn>();
 
@@ -165,7 +165,8 @@ pub fn PostListing(
             post_view.set(o.post_view);
           }
           Err(e) => {
-            error.set(Some((e, None)));
+            error.update(|es| es.push(Some((e, None))));
+            // error.set(Some((e, None)));
           }
         }
       },
@@ -210,7 +211,8 @@ pub fn PostListing(
             post_view.set(o.post_view);
           }
           Err(e) => {
-            error.set(Some((e, None)));
+            error.update(|es| es.push(Some((e, None))));
+            // error.set(Some((e, None)));
           }
         }
       },
@@ -235,7 +237,8 @@ pub fn PostListing(
         match result {
           Ok(_o) => {}
           Err(e) => {
-            error.set(Some((e, None)));
+            error.update(|es| es.push(Some((e, None))));
+            // error.set(Some((e, None)));
           }
         }
       },
@@ -243,7 +246,7 @@ pub fn PostListing(
   };
 
   let report_post_action = create_server_action::<ReportPostFn>();
-  let report_validation = create_rw_signal::<String>("".into());
+  let report_validation = RwSignal::new(String::from(""));
 
   let query = use_query_map();
   let ssr_error = move || query.with(|params| params.get("error").cloned());
@@ -290,7 +293,8 @@ pub fn PostListing(
         match result {
           Ok(_o) => {}
           Err(e) => {
-            error.set(Some((e.clone(), None)));
+            error.update(|es| es.push(Some((e.clone(), None))));
+            // error.set(Some((e.clone(), None)));
 
             let _id = format!("{}", post_view.get().post.id);
 
@@ -325,22 +329,29 @@ pub fn PostListing(
     }
     #[cfg(feature = "ssr")]
     {
-      std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64 
+      std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_millis() as u64
     }
   };
   let duration_in_text = pretty_duration::pretty_duration(
-    &std::time::Duration::from_millis(now_in_millis - post_view.get().post.published.timestamp_millis() as u64),
+    &std::time::Duration::from_millis(
+      now_in_millis - post_view.get().post.published.timestamp_millis() as u64,
+    ),
     Some(pretty_duration::PrettyDurationOptions {
-        output_format: Some(pretty_duration::PrettyDurationOutputFormat::Compact),
-        singular_labels: None,
-        plural_labels: None,
+      output_format: Some(pretty_duration::PrettyDurationOutputFormat::Compact),
+      singular_labels: None,
+      plural_labels: None,
     }),
-  ); 
+  );
   let abbr_duration = if let Some((index, _)) = duration_in_text.match_indices(' ').nth(1) {
     duration_in_text.split_at(index)
   } else {
     (&duration_in_text[..], "")
-  }.0.to_string();
+  }
+  .0
+  .to_string();
 
   view! {
     <div class="grid grid-cols-[6rem_1fr] grid-rows-[1fr_2rem] sm:grid-cols-[2rem_6rem_1fr] sm:grid-rows-[1fr_2rem] gap-y-3 gap-x-4 py-3 px-4 flex-row break-inside-avoid">
@@ -366,6 +377,7 @@ pub fn PostListing(
               title="Up vote"
             >
               <Icon icon=Upvote />
+              // <Icon icon=Upvote class="absolute animate-ping".into() />
             </button>
           </ActionForm>
           <span class="block text-sm">{move || post_view.get().counts.score}</span>
@@ -532,7 +544,7 @@ pub fn PostListing(
               <Icon icon=Crosspost/>
             // </A>
           </span>
-          { 
+          {
             if post_number == 0 {
               view! {
                 <div class="dropdown max-sm:dropdown-end">
@@ -577,7 +589,7 @@ pub fn PostListing(
               view! {
                 <div class="hidden"></div>
               }
-            } 
+            }
           }
           <span class="grow text-right text-base-content/25"> { if post_number != 0 { format!("{}", post_number) } else { "".into() } } </span>
       </div>

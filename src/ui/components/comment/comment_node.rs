@@ -1,18 +1,21 @@
-use ev::{MouseEvent, SubmitEvent, TouchEvent};
-use lemmy_api_common::{comment::{CreateCommentLike, SaveComment}, lemmy_db_views::structs::CommentView, post::{CreatePostLike, PostResponse}};
-use leptos::*;
-use leptos_dom::helpers::TimeoutHandle;
-use leptos_router::{Form, A};
-use web_sys::{HtmlAnchorElement, HtmlImageElement, HtmlLinkElement};
-use web_sys::wasm_bindgen::JsCast;
+use std::any::Any;
+
 use crate::{
   errors::{LemmyAppError, LemmyAppErrorType},
   lemmy_client::*,
-  ui::components::common::icon::{
-    Icon,
-    IconType::*,
-  },
+  ui::components::common::icon::{Icon, IconType::*},
 };
+use ev::{MouseEvent, SubmitEvent, TouchEvent};
+use lemmy_api_common::{
+  comment::{CreateCommentLike, SaveComment},
+  lemmy_db_views::structs::CommentView,
+  post::{CreatePostLike, PostResponse},
+};
+use leptos::*;
+use leptos_dom::helpers::TimeoutHandle;
+use leptos_router::{Form, A};
+use web_sys::wasm_bindgen::JsCast;
+use web_sys::{HtmlAnchorElement, HtmlImageElement, HtmlLinkElement};
 
 #[component]
 pub fn CommentNode(
@@ -40,23 +43,33 @@ pub fn CommentNode(
       false
     }
   });
-  
+
   let com_sig = RwSignal::new(comments_children);
   let des_sig = RwSignal::new(comments_descendants);
 
   let content = &comment_view.get().comment.content;
 
-  let parser = pulldown_cmark::Parser::new(content);
+  let mut options = pulldown_cmark::Options::empty();
+  options.insert(pulldown_cmark::Options::ENABLE_STRIKETHROUGH);
+  options.insert(pulldown_cmark::Options::ENABLE_TABLES);
+  let parser = pulldown_cmark::Parser::new_ext(content, options);
+
+  // let parser = pulldown_cmark::Parser::new(content);
   let custom = parser.map(|event| match event {
     pulldown_cmark::Event::Html(text) => {
-      let er = format!("<p>{}</p>",  html_escape::encode_safe(&text).to_string());
+      let er = format!("<p>{}</p>", html_escape::encode_safe(&text).to_string());
+      // logging::log!("pc h {}", text);
       pulldown_cmark::Event::Html(er.into())
     }
     pulldown_cmark::Event::InlineHtml(text) => {
       let er = html_escape::encode_safe(&text).to_string();
+      // logging::log!("pc i {}", text);
       pulldown_cmark::Event::InlineHtml(er.into())
     }
-    _ => event
+    _ => {
+      // logging::log!("pc o {:?}", event);
+      event
+    }
   });
   let mut safe_html = String::new();
   pulldown_cmark::html::push_html(&mut safe_html, custom);
@@ -68,23 +81,27 @@ pub fn CommentNode(
   let vote_show = RwSignal::new(false);
   let still_handle: RwSignal<Option<TimeoutHandle>> = RwSignal::new(None);
 
-  let comment_view = create_rw_signal(comment_view.get());
+  let comment_view = RwSignal::new(comment_view.get());
 
   let duration_in_text = pretty_duration::pretty_duration(
-    &std::time::Duration::from_millis(now_in_millis - comment_view.get().post.published.timestamp_millis() as u64),
+    &std::time::Duration::from_millis(
+      now_in_millis - comment_view.get().post.published.timestamp_millis() as u64,
+    ),
     Some(pretty_duration::PrettyDurationOptions {
-        output_format: Some(pretty_duration::PrettyDurationOutputFormat::Compact),
-        singular_labels: None,
-        plural_labels: None,
+      output_format: Some(pretty_duration::PrettyDurationOutputFormat::Compact),
+      singular_labels: None,
+      plural_labels: None,
     }),
-  ); 
+  );
   let abbr_duration = if let Some((index, _)) = duration_in_text.match_indices(' ').nth(1) {
     duration_in_text.split_at(index)
   } else {
     (&duration_in_text[..], "")
-  }.0.to_string();
+  }
+  .0
+  .to_string();
 
-  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
+  let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
 
   let cancel = move |ev: MouseEvent| {
     ev.stop_propagation();
@@ -108,7 +125,8 @@ pub fn CommentNode(
             comment_view.set(o.comment_view);
           }
           Err(e) => {
-            error.set(Some((e, None)));
+            error.update(|es| es.push(Some((e, None))));
+            // error.set(Some((e, None)));
           }
         }
       },
@@ -151,19 +169,19 @@ pub fn CommentNode(
             comment_view.set(o.comment_view);
           }
           Err(e) => {
-            error.set(Some((e, None)));
+            error.update(|es| es.push(Some((e, None))));
+            // error.set(Some((e, None)));
           }
         }
       },
     );
   };
 
-
   view! {
-    <div 
-      // on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); } 
-      // on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); } 
-      class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" }, if show.get() { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" }) 
+    <div
+      // on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
+      // on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
+      class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" }, if show.get() { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" })
     >
       <div on:click=move |e: MouseEvent| {
         if still_down.get() {
@@ -173,7 +191,7 @@ pub fn CommentNode(
             if let Some(i) = t.dyn_ref::<HtmlImageElement>() {
               let _ = window().location().set_href(&i.src());
             } else if let Some(l) = t.dyn_ref::<HtmlAnchorElement>() {
-              
+
             } else {
               child_show.set(!child_show.get());
             }
@@ -256,9 +274,9 @@ pub fn CommentNode(
           <span class="text-base-content/50" title="Reply">
             <Icon icon=Reply/>
           </span>
-          <Form 
+          <Form
             action="POST"
-            on:submit=on_save_submit 
+            on:submit=on_save_submit
             class="flex items-center"
           >
             <input type="hidden" name="post_id" value=format!("{}", comment_view.get().post.id)/>

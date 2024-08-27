@@ -1,6 +1,6 @@
 use crate::i18n::*;
-use core::num::ParseIntError;
 use crate::lemmy_error::LemmyErrorType;
+use core::num::ParseIntError;
 use leptos::*;
 use serde::{Deserialize, Serialize};
 use serde_urlencoded::ser;
@@ -13,10 +13,12 @@ pub type LemmyAppResult<T> = Result<T, LemmyAppError>;
 pub enum LemmyAppErrorType {
   #[default]
   Unknown,
+
   NotFound,
   InternalServerError,
   InternalClientError,
   ParamsError,
+  OfflineError,
 
   ApiError(LemmyErrorType),
 
@@ -39,6 +41,7 @@ pub fn message_from_error(error: &LemmyAppError) -> String {
     LemmyAppErrorType::MissingReason => t!(i18n, empty_reason)().to_string(),
     LemmyAppErrorType::InternalServerError => t!(i18n, internal)().to_string(),
     LemmyAppErrorType::Unknown => t!(i18n, unknown)().to_string(),
+    LemmyAppErrorType::OfflineError => "App is offline at the moment".to_string(),
     _ => "An error without description".to_string(),
   };
 

@@ -1,12 +1,20 @@
 use crate::{
-  errors::LemmyAppError, lemmy_client::*, ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing}, TitleSetter
+  errors::LemmyAppError,
+  lemmy_client::*,
+  ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing},
+  TitleSetter,
 };
 use ev::MouseEvent;
-use lemmy_api_common::{comment::GetComments, lemmy_db_schema::{newtypes::PostId, CommentSortType}, post::GetPost, site::GetSiteResponse};
+use lemmy_api_common::{
+  comment::GetComments,
+  lemmy_db_schema::{newtypes::PostId, CommentSortType},
+  post::GetPost,
+  site::GetSiteResponse,
+};
 use leptos::*;
 use leptos_router::use_params_map;
-use web_sys::{HtmlAnchorElement, HtmlImageElement};
 use web_sys::wasm_bindgen::JsCast;
+use web_sys::{HtmlAnchorElement, HtmlImageElement};
 
 #[component]
 pub fn PostActivity(
@@ -15,35 +23,32 @@ pub fn PostActivity(
   let params = use_params_map();
 
   let post_id = move || params.get().get("id").cloned().unwrap_or_default();
-  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
+  let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
-  let post = create_resource(post_id, move |id_string| async move {
+  let post = Resource::new(post_id, move |id_string| async move {
     if let Ok(id) = id_string.parse::<i32>() {
+      let form = GetPost {
+        id: Some(PostId(id)),
+        comment_id: None,
+      };
 
-    let form = GetPost {
-      id: Some(PostId(id)),
-      comment_id: None,
-    };
+      let result = LemmyClient.get_post(form).await;
 
-    let result = LemmyClient.get_post(form).await;
-
-    match result {
-      Ok(o) => {
-        Some(o)
-      },
-      Err(e) => {
-        error.set(Some((e, None)));
-        None
+      match result {
+        Ok(o) => Some(o),
+        Err(e) => {
+          error.update(|es| es.push(Some((e, None))));
+          // error.set(Some((e, None)));
+          None
+        }
       }
-    }
-
     } else {
       None
     }
   });
 
-  let comments = create_resource(post_id, move |id_string| async move {
+  let comments = Resource::new(post_id, move |id_string| async move {
     if let Ok(id) = id_string.parse::<i32>() {
       let form = GetComments {
         post_id: Some(PostId(id)),
@@ -65,7 +70,8 @@ pub fn PostActivity(
       match result {
         Ok(o) => Some(o),
         Err(e) => {
-          error.set(Some((e, None)));
+          error.update(|es| es.push(Some((e, None))));
+          // error.set(Some((e, None)));
           None
         }
       }
@@ -100,7 +106,11 @@ pub fn PostActivity(
                         </div>
                         {
                           if let Some(ref content) = text {
-                            let parser = pulldown_cmark::Parser::new(content);
+                            let mut options = pulldown_cmark::Options::empty();
+                            options.insert(pulldown_cmark::Options::ENABLE_STRIKETHROUGH);
+                            options.insert(pulldown_cmark::Options::ENABLE_TABLES);
+                            let parser = pulldown_cmark::Parser::new_ext(content, options);
+                            // let parser = pulldown_cmark::Parser::new(content);
                             let custom = parser.map(|event| match event {
                               pulldown_cmark::Event::Html(text) => {
                                 let er = format!("<p>{}</p>",  html_escape::encode_safe(&text).to_string());
@@ -113,7 +123,7 @@ pub fn PostActivity(
                               _ => event
                             });
                             let mut safe_html = String::new();
-                            pulldown_cmark::html::push_html(&mut safe_html, custom);                          
+                            pulldown_cmark::html::push_html(&mut safe_html, custom);
 
                             view! {
                               <div class="pl-4 pr-4">
@@ -144,7 +154,7 @@ pub fn PostActivity(
                 comments
                     .get()
                     .unwrap_or(None)
-                    .map(|res| 
+                    .map(|res|
                       view! {
                         <div class="w-full">
                           <CommentNodes comments=res.comments.into()/>

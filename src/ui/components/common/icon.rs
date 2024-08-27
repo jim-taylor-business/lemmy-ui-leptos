@@ -18,6 +18,8 @@ pub enum IconType {
   Reply,
   External,
   Link,
+  Translate,
+  Palette,
 }
 
 impl IconType {
@@ -39,6 +41,8 @@ impl IconType {
       IconType::Reply => "reply",
       IconType::External => "external",
       IconType::Link => "link",
+      IconType::Translate => "translate",
+      IconType::Palette => "palette",
     }
   }
 }

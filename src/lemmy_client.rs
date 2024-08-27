@@ -99,6 +99,10 @@ pub trait PublicFetch: private_trait::PrivateFetch {
   async fn save_comment(&self, form: SaveComment) -> LemmyAppResult<CommentResponse> {
     self.make_request(HttpType::Put, "comment/save", form).await
   }
+
+  async fn unread_count(&self) -> LemmyAppResult<GetUnreadCountResponse> {
+    self.make_request(HttpType::Get, "user/unread_count", ()).await
+  }
 }
 
 cfg_if! {

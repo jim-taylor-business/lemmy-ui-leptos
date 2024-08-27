@@ -18,16 +18,18 @@ use crate::{
   layout::Layout,
   lemmy_client::*,
   ui::components::{
-    communities::communities_activity::CommunitiesActivity,
-    home::home_activity::HomeActivity,
-    login::login_activity::LoginActivity,
-    post::post_activity::PostActivity,
+    communities::communities_activity::CommunitiesActivity, home::home_activity::HomeActivity,
+    login::login_activity::LoginActivity, post::post_activity::PostActivity,
   },
 };
-use lemmy_api_common::{lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse, site::GetSiteResponse};
+use lemmy_api_common::{
+  lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse,
+  site::GetSiteResponse,
+};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
+use ui::components::notifications::notifications_activity::NotificationsActivity;
 
 leptos_i18n::load_locales!();
 
@@ -38,23 +40,24 @@ pub struct OnlineSetter(bool);
 
 #[component]
 pub fn App() -> impl IntoView {
-    
   provide_meta_context();
   provide_i18n_context();
 
-  let error = create_rw_signal::<Option<(LemmyAppError, Option<RwSignal<bool>>)>>(None);
+  let error: RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>> =
+    RwSignal::new(Vec::new());
   provide_context(error);
-  let user = create_rw_signal::<Option<bool>>(None);
+  let user: RwSignal<Option<bool>> = RwSignal::new(None);
   provide_context(user);
-  let ui_theme = create_rw_signal::<Option<String>>(None);
+  let ui_theme: RwSignal<Option<String>> = RwSignal::new(None);
   provide_context(ui_theme);
-  let ui_title = create_rw_signal::<Option<TitleSetter>>(None);
+  let ui_title: RwSignal<Option<TitleSetter>> = RwSignal::new(None);
   provide_context(ui_title);
-  let ui_online = create_rw_signal::<OnlineSetter>(OnlineSetter(true));
+  let ui_online = RwSignal::new(OnlineSetter(true));
   provide_context(ui_online);
 
   let on_online = move |b: bool| {
     move |_| {
+      // logging::log!(" online {} ", b);
       ui_online.set(OnlineSetter(b));
     }
   };
@@ -66,14 +69,12 @@ pub fn App() -> impl IntoView {
   provide_context(csr_pages);
   let csr_sort: RwSignal<SortType> = RwSignal::new(SortType::Active);
   provide_context(csr_sort);
-  let csr_next_page_cursor = create_rw_signal::<(usize, Option<PaginationCursor>)>((0, None));
+  let csr_next_page_cursor: RwSignal<(usize, Option<PaginationCursor>)> = RwSignal::new((0, None));
   provide_context(csr_next_page_cursor);
 
+  let site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>> = RwSignal::new(None);
 
-
-  let site_signal = create_rw_signal::<Option<Result<GetSiteResponse, LemmyAppError>>>(None);
-
-  let ssr_site = create_resource(
+  let ssr_site = Resource::new(
     move || (user.get()),
     move |user| async move {
       let result = if user == Some(false) {
@@ -90,6 +91,7 @@ pub fn App() -> impl IntoView {
       match result {
         Ok(o) => Ok(o),
         Err(e) => {
+          error.update(|es| es.push(Some((e.clone(), None))));
           // error.set(Some((e.clone(), None)));
           Err(e)
         }
@@ -129,6 +131,7 @@ pub fn App() -> impl IntoView {
 
           <Route path="inbox" view=CommunitiesActivity/>
           <Route path="settings" view=CommunitiesActivity/>
+          <Route path="notifications" view=NotificationsActivity/>
           <Route path="u/:id" view=CommunitiesActivity/>
 
           <Route path="modlog" view=CommunitiesActivity/>

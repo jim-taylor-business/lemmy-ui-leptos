@@ -1,7 +1,8 @@
 use crate::{
   cookie::get_cookie,
   errors::LemmyAppError,
-  ui::components::common::nav::{BottomNav, TopNav}, TitleSetter,
+  ui::components::common::nav::{BottomNav, TopNav},
+  TitleSetter,
 };
 use lemmy_api_common::site::GetSiteResponse;
 use leptos::*;
@@ -15,27 +16,28 @@ pub fn Layout(
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
   let title = move || match site_signal.get() {
     Some(Ok(site)) => {
-      if let Some(TitleSetter(t)) = ui_title.get() { 
+      if let Some(TitleSetter(t)) = ui_title.get() {
         if let Some(d) = site.site_view.site.description {
-          format!("{} - Tech Demo UI for {} - {}", t, site.site_view.site.name, d)
+          format!(
+            "{} - Tech Demo UI for {} - {}",
+            t, site.site_view.site.name, d
+          )
         } else {
           format!("{} - Tech Demo UI for {}", t, site.site_view.site.name)
         }
-      } else { 
+      } else {
         if let Some(d) = site.site_view.site.description {
           format!("Tech Demo UI for {} - {}", site.site_view.site.name, d)
         } else {
           format!("Tech Demo UI for {}", site.site_view.site.name)
         }
       }
-    },
-    _ => {
-      "Lemmy".to_string()
-    },
+    }
+    _ => "Lemmy".to_string(),
   };
 
   let ui_theme = expect_context::<RwSignal<Option<String>>>();
-  let theme = create_resource(
+  let theme = Resource::new(
     move || (),
     move |()| async move {
       let r = get_cookie("theme").await;

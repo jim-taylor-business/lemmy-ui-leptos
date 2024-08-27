@@ -93,16 +93,16 @@ pub fn LoginForm() -> impl IntoView {
 
   let query = use_query_map();
 
-  let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
+  let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let user = expect_context::<RwSignal<Option<bool>>>();
 
-  let name = create_rw_signal(String::new());
-  let password = create_rw_signal(String::new());
+  let name = RwSignal::new(String::new());
+  let password = RwSignal::new(String::new());
 
   let login = create_server_action::<LoginFn>();
 
-  let username_validation = create_rw_signal::<String>("".into());
-  let password_validation = create_rw_signal::<String>("".into());
+  let username_validation = RwSignal::new("".to_string());
+  let password_validation = RwSignal::new("".to_string());
 
   let ssr_error = move || query.with(|params| params.get("error").cloned());
 
@@ -121,7 +121,7 @@ pub fn LoginForm() -> impl IntoView {
 
   let on_submit = move |ev: SubmitEvent| {
     ev.prevent_default();
-    error.set(None);
+    // error.set(None);
 
     create_local_resource(
       move || (name.get(), password.get()),
@@ -144,13 +144,26 @@ pub fn LoginForm() -> impl IntoView {
             leptos_router::use_navigate()("/", Default::default());
           }
           Ok(LoginResponse { jwt: None, .. }) => {
-            error.set(Some((LemmyAppError {
-              error_type: LemmyAppErrorType::MissingToken,
-              content: String::default(),
-            }, None)));
+            error.update(|es| {
+              es.push(Some((
+                LemmyAppError {
+                  error_type: LemmyAppErrorType::MissingToken,
+                  content: String::default(),
+                },
+                None,
+              )))
+            });
+            // error.set(Some((
+            //   LemmyAppError {
+            //     error_type: LemmyAppErrorType::MissingToken,
+            //     content: String::default(),
+            //   },
+            //   None,
+            // )));
           }
           Err(e) => {
-            error.set(Some((e.clone(), None)));
+            error.update(|es| es.push(Some((e.clone(), None))));
+            // error.set(Some((e.clone(), None)));
             password_validation.set("".to_string());
             username_validation.set("".to_string());
 
