@@ -224,10 +224,8 @@ pub fn TopNav(
             </A>
           </li>
           <li class="hidden lg:flex">
-            <a href="//join-lemmy.org/donate">
-              <span title="t!(i18n, donate)">
-                <Icon icon=Donate/>
-              </span>
+            <a title=t!(i18n, donate) href="//join-lemmy.org/donate">
+              <Icon icon=Donate/>
             </a>
           </li>
         </ul>
@@ -285,63 +283,136 @@ pub fn TopNav(
               </ul>
             </details>
           </li>
-          <li>
-            <A href="/notifications">
-              <span class="flex flex-row items-center">
-                {move || {
-                  let v = error.get();
-                  if v.len() > 0 {
-                    view! {
-                      <div class="badge badge-error badge-xs"> { v.len() } </div>
-                    }
-                  } else {
-                    view! {
-                      <div class="hidden"></div>
-                    }
-                  }
-                }}
+          <Transition fallback=|| {}>
+            {move || {
+                ssr_unread
+                    .get()
+                    .map(|u| {
+                        let unread = if let Ok(c) = u.clone() {
+                          format!(", {} unread", c.replies + c.mentions + c.private_messages)
+                        } else {
+                          "".into()
+                        };
 
-
-                <span>
-                {move || {
-                  if ui_online.get().0 {
-                    view! {
-                      <div class="absolute top-0 badge badge-success badge-xs"></div>
-                    }
-                  } else {
-                    view! {
-                      <div class="absolute top-0 badge badge-warning badge-xs"></div>
-                    }
-                  }
-                }}
-
-
-                <Icon icon=Notifications/>
-                </span>
-
-                <Transition fallback=|| {}>
-                  {move || {
-                      ssr_unread
-                          .get()
-                          .map(|u| {
-                              if let Ok(c) = u {
-                                view! {
-                                  <div class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
+                        view! {
+                          <li title=move || {
+                            format!("{}{}{}",
+                              if error.get().len() > 0 { format!("{} errors, ", error.get().len()) } else { "".into() },
+                              if ui_online.get().0 { "app online" } else { "app offline" },
+                              unread,
+                            )
+                          }>
+                            <A href="/notifications">
+                              <span class="flex flex-row items-center">
+                                {move || {
+                                  let v = error.get();
+                                  if v.len() > 0 {
+                                    let l = v.len();
+                                    view! {
+                                      <div class="badge badge-error badge-xs"> { l } </div>
+                                    }
+                                  } else {
+                                    view! {
+                                      <div class="hidden"></div>
+                                    }
+                                  }
+                                }}
+                                <span>
+                                  {move || {
+                                    if ui_online.get().0 {
+                                      view! {
+                                        <div class="absolute top-0 badge badge-success badge-xs"></div>
+                                      }
+                                    } else {
+                                      view! {
+                                        <div class="absolute top-0 badge badge-warning badge-xs"></div>
+                                      }
+                                    }
+                                  }}
+                                  <Icon icon=Notifications/>
+                                </span>
+                                // <Transition fallback=|| {}>
+                                //   {move || {
+                                //       ssr_unread
+                                //           .get()
+                                //           .map(|u| {
+                                {
+                                              if let Ok(c) = u {
+                                                view! {
+                                                  <div class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
+                                                }
+                                              } else {
+                                                view! {
+                                                  <div class="hidden"></div>
+                                                }
+                                              }
                                 }
-                              } else {
-                                view! {
-                                  <div class="hidden"></div>
-                                }
-                              }
-                          })
-                  }}
-
-                </Transition>
-
-
-              </span>
-            </A>
-          </li>
+                                //           })
+                                //   }}
+                                // </Transition>
+                              </span>
+                            </A>
+                          </li>
+                        }
+                    })
+            }}
+          </Transition>
+          // <li title=move || {
+          //   format!("{}{}{}",
+          //     if error.get().len() > 0 { format!("{} errors", error.get().len()) } else { "".into() },
+          //     if ui_online.get().0 { "app online" } else { "app offline" },
+          //     if ui_online.get().0 { "" } else { "" },
+          //   )
+          // }>
+          //   <A href="/notifications">
+          //     <span class="flex flex-row items-center">
+          //       {move || {
+          //         let v = error.get();
+          //         if v.len() > 0 {
+          //           let l = v.len();
+          //           view! {
+          //             <div title=move || format!("{} errors", l) class="badge badge-error badge-xs"> { l } </div>
+          //           }
+          //         } else {
+          //           view! {
+          //             <div class="hidden"></div>
+          //           }
+          //         }
+          //       }}
+          //       <span>
+          //         {move || {
+          //           if ui_online.get().0 {
+          //             view! {
+          //               <div title="online" class="absolute top-0 badge badge-success badge-xs"></div>
+          //             }
+          //           } else {
+          //             view! {
+          //               <div title="offline" class="absolute top-0 badge badge-warning badge-xs"></div>
+          //             }
+          //           }
+          //         }}
+          //         <Icon icon=Notifications/>
+          //       </span>
+          //       <Transition fallback=|| {}>
+          //         {move || {
+          //             ssr_unread
+          //                 .get()
+          //                 .map(|u| {
+          //                     if let Ok(c) = u {
+          //                       view! {
+          //                         <div title=move || format!("{} unread", c.replies + c.mentions + c.private_messages) class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
+          //                       }
+          //                     } else {
+          //                       view! {
+          //                         <div class="hidden"></div>
+          //                       }
+          //                     }
+          //                 })
+          //         }}
+          //       </Transition>
+          //     </span>
+          //   </A>
+          // </li>
           <Show
             when=move || {
                 if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
@@ -402,7 +473,7 @@ pub fn TopNav(
                     }>{t!(i18n, profile)}</A>
                   </li>
                   <li>
-                    <A href="/settings">{t!(i18n, settings)}</A>
+                    <A class="pointer-events-none text-base-content/50" href="/settings">{t!(i18n, settings)}</A>
                   </li>
                   <div class="divider my-0"></div>
                   <li>

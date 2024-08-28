@@ -37,6 +37,12 @@ leptos_i18n::load_locales!();
 pub struct TitleSetter(String);
 #[derive(Clone)]
 pub struct OnlineSetter(bool);
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
+enum ResourceStatus {
+  Loading,
+  Ok,
+  Err,
+}
 
 #[component]
 pub fn App() -> impl IntoView {
@@ -57,7 +63,6 @@ pub fn App() -> impl IntoView {
 
   let on_online = move |b: bool| {
     move |_| {
-      // logging::log!(" online {} ", b);
       ui_online.set(OnlineSetter(b));
     }
   };
@@ -65,8 +70,12 @@ pub fn App() -> impl IntoView {
   let _offline_handle = window_event_listener_untyped("offline", on_online(false));
   let _online_handle = window_event_listener_untyped("online", on_online(true));
 
-  let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
-  provide_context(csr_pages);
+  // let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
+  // provide_context(csr_pages);
+  let csr_resources: RwSignal<
+    BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>,
+  > = RwSignal::new(BTreeMap::new());
+  provide_context(csr_resources);
   let csr_sort: RwSignal<SortType> = RwSignal::new(SortType::Active);
   provide_context(csr_sort);
   let csr_next_page_cursor: RwSignal<(usize, Option<PaginationCursor>)> = RwSignal::new((0, None));

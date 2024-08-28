@@ -9,7 +9,7 @@ use crate::{
     home::{site_summary::SiteSummary, trending::Trending},
     post::post_listings::PostListings,
   },
-  OnlineSetter, TitleSetter,
+  OnlineSetter, ResourceStatus, TitleSetter,
 };
 use html::Div;
 use lemmy_api_common::{
@@ -20,7 +20,7 @@ use lemmy_api_common::{
 };
 use leptos::*;
 use leptos_router::*;
-use strum_macros::Display;
+// use strum_macros::Display;
 use web_sys::MouseEvent;
 
 use leptos::html::*;
@@ -162,18 +162,16 @@ pub fn HomeActivity(
     },
   );
 
-  #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug, Display)]
-  enum ResourceStatus {
-    Loading,
-    Ok,
-    Err,
-  }
-
-  let csr_resources: RwSignal<
-    BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>,
-  > = RwSignal::new(BTreeMap::new());
+  // let csr_resources: RwSignal<
+  //   BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>,
+  // > = RwSignal::new(BTreeMap::new());
 
   // let csr_pages = expect_context::<RwSignal<BTreeMap<usize, GetPostsResponse>>>();
+  let csr_resources = expect_context::<
+    RwSignal<
+      BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>,
+    >,
+  >();
   let csr_sort = expect_context::<RwSignal<SortType>>();
   let csr_next_page_cursor = expect_context::<RwSignal<(usize, Option<PaginationCursor>)>>();
 
@@ -470,7 +468,7 @@ pub fn HomeActivity(
         </div>
         <div class="dropdown ml-3 sm:ml-0 hidden sm:inline-block">
           <label tabindex="0" class="btn">
-            "Sort type"
+            "Sort"
           </label>
           <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
             <li
@@ -509,7 +507,7 @@ pub fn HomeActivity(
         </div>
         <div class="dropdown ml-3 sm:ml-0 inline-block sm:hidden">
           <label tabindex="0" class="btn">
-            "Sort type"
+            "Sort"
           </label>
           <ul tabindex="0" class="menu dropdown-content z-[1] bg-base-100 rounded-box shadow">
             <li
