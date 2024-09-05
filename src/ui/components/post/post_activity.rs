@@ -1,5 +1,6 @@
 use crate::{
   errors::LemmyAppError,
+  indexed_db::*,
   lemmy_client::*,
   ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing},
   TitleSetter,
@@ -21,13 +22,41 @@ pub fn PostActivity(
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
 ) -> impl IntoView {
   let params = use_params_map();
-
-  let post_id = move || params.get().get("id").cloned().unwrap_or_default();
+  let post_id = move || {
+    params
+      .get()
+      .get("id")
+      .cloned()
+      .unwrap_or_default()
+      .parse::<i32>()
+      .ok()
+  };
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
+  // #[cfg(not(feature = "ssr"))]
+  // spawn_local(async {
+  //   if let Ok(d) = build_comment_database().await {
+  //     // if let Ok(i) = add_comment(&d, 1, 1, true).await {
+  //     //   logging::log!("poo {:#?}", get_employee(&r, i).await);
+  //     // }
+
+  //     logging::log!("{:#?}", add_array(&d, 1, vec![1, 2, 3]).await);
+  //     logging::log!("{:#?}", add_array(&d, 1000, vec![1, 2, 3]).await);
+  //     logging::log!("{:#?}", add_array(&d, 2000, vec![1, 2, 3]).await);
+  //     // logging::log!("{:#?}", add_comment(&d, 1, 11, true).await);
+  //     // logging::log!("{:#?}", add_comment(&d, 2, 12, true).await);
+  //     // logging::log!("{:#?}", add_comment(&d, 2, 13, true).await);
+  //     // logging::log!("{:#?}", add_comment(&d, 3, 14, true).await);
+
+  //     logging::log!("v {:#?}", get_array(&d, 1).await);
+  //   }
+  // });
+
+  // #[cfg(not(feature = "ssr"))]
   let post = Resource::new(post_id, move |id_string| async move {
-    if let Ok(id) = id_string.parse::<i32>() {
+    if let Some(id) = id_string {
+      // if let Ok(id) = id_string.parse::<i32>() {
       let form = GetPost {
         id: Some(PostId(id)),
         comment_id: None,
@@ -49,7 +78,8 @@ pub fn PostActivity(
   });
 
   let comments = Resource::new(post_id, move |id_string| async move {
-    if let Ok(id) = id_string.parse::<i32>() {
+    if let Some(id) = id_string {
+      // if let Ok(id) = id_string.parse::<i32>() {
       let form = GetComments {
         post_id: Some(PostId(id)),
         community_id: None,
@@ -157,7 +187,7 @@ pub fn PostActivity(
                     .map(|res|
                       view! {
                         <div class="w-full">
-                          <CommentNodes comments=res.comments.into()/>
+                          <CommentNodes comments=res.comments.into() post_id=post_id().into() />
                         </div>
                       }
                     )

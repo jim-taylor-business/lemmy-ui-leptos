@@ -126,32 +126,61 @@ pub fn HomeActivity(
       )
     },
     move |(_refresh, _user, list_type, sort_type, from, limit, name)| async move {
-      if online.get().0 {
-        let form = GetPosts {
-          type_: Some(list_type),
-          sort: Some(sort_type),
-          community_name: name,
-          community_id: None,
-          page: None,
-          limit: Some(i64::try_from(limit).unwrap_or(10)),
-          saved_only: None,
-          disliked_only: None,
-          liked_only: None,
-          page_cursor: from.1.clone(), // show_hidden: None,
-        };
+      let form = GetPosts {
+        type_: Some(list_type),
+        sort: Some(sort_type),
+        community_name: name,
+        community_id: None,
+        page: None,
+        limit: Some(i64::try_from(limit).unwrap_or(10)),
+        saved_only: None,
+        disliked_only: None,
+        liked_only: None,
+        page_cursor: from.1.clone(), // show_hidden: None,
+      };
 
-        let result = LemmyClient.list_posts(form).await;
+      if online.get().0 {
+        logging::log!("load!");
+        let result = LemmyClient.list_posts(form.clone()).await;
         loading.set(false);
         ui_title.set(None);
 
         match result {
-          Ok(o) => Ok((from, o)),
+          Ok(o) => {
+            #[cfg(not(feature = "ssr"))]
+            if let Ok(Some(s)) = window().local_storage() {
+              if let Ok(Some(_)) = s.get_item(&serde_json::to_string(&form).ok().unwrap()) {
+                logging::log!("cached!");
+              }
+              s.set_item(
+                &serde_json::to_string(&form).ok().unwrap(),
+                &serde_json::to_string(&o).ok().unwrap(),
+              );
+            }
+            Ok((from, o))
+          }
           Err(e) => {
             error.update(|es| es.push(Some((e.clone(), None))));
             Err((e, Some(refresh)))
           }
         }
       } else {
+        #[cfg(not(feature = "ssr"))]
+        logging::log!("test!");
+        if let Ok(Some(s)) = window().local_storage() {
+          if let Ok(Some(c)) = s.get_item(&serde_json::to_string(&form).ok().unwrap()) {
+            logging::log!("cached offline!");
+            if let Ok(o) = serde_json::from_str::<GetPostsResponse>(&c) {
+              loading.set(false);
+              return Ok((from, o));
+            }
+          }
+        }
+
+        logging::log!("here!");
+
+        loading.set(false);
+
         let e = LemmyAppError {
           error_type: LemmyAppErrorType::OfflineError,
           content: String::from(""),

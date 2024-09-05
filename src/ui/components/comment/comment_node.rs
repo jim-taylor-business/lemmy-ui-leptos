@@ -19,12 +19,20 @@ use web_sys::{HtmlAnchorElement, HtmlImageElement, HtmlLinkElement};
 
 #[component]
 pub fn CommentNode(
+  //<F>(
   comment_view: MaybeSignal<CommentView>,
   comments: MaybeSignal<Vec<CommentView>>,
   level: usize,
-  show: RwSignal<bool>,
+  // show: MaybeSignal<bool>,
+  parent_comment_id: i32,
   now_in_millis: u64,
-) -> impl IntoView {
+  hidden_comments: RwSignal<Vec<i32>>,
+  // on_toggle: F,
+  #[prop(into)] on_toggle: Callback<i32>,
+) -> impl IntoView
+// where
+//   F: Fn(i32) + 'static,
+{
   let mut comments_descendants = comments.get().clone();
   let id = comment_view.get().comment.id.to_string();
 
@@ -74,7 +82,8 @@ pub fn CommentNode(
   let mut safe_html = String::new();
   pulldown_cmark::html::push_html(&mut safe_html, custom);
 
-  let child_show = RwSignal::new(true);
+  // let child_show = RwSignal::new(true);
+
   let back_show = RwSignal::new(false);
 
   let still_down = RwSignal::new(false);
@@ -82,6 +91,25 @@ pub fn CommentNode(
   let still_handle: RwSignal<Option<TimeoutHandle>> = RwSignal::new(None);
 
   let comment_view = RwSignal::new(comment_view.get());
+
+  // let show = move || {
+  //   if hidden_comments.get().contains(&parent_comment_id) {
+  //     false
+  //   } else {
+  //     true
+  //   }
+  // };
+
+  // let child_show = move || {
+  //   if hidden_comments
+  //     .get()
+  //     .contains(&comment_view.get().comment.id.0)
+  //   {
+  //     false
+  //   } else {
+  //     true
+  //   }
+  // };
 
   let duration_in_text = pretty_duration::pretty_duration(
     &std::time::Duration::from_millis(
@@ -177,11 +205,15 @@ pub fn CommentNode(
     );
   };
 
+  // let on_this_toggle = move |i: i32| {
+  //   child_show.set(!child_show.get());
+  // };
+
   view! {
     <div
       // on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
       // on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
-      class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" }, if show.get() { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" })
+      class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" }, if !hidden_comments.get().contains(&parent_comment_id) { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" })
     >
       <div on:click=move |e: MouseEvent| {
         if still_down.get() {
@@ -193,7 +225,9 @@ pub fn CommentNode(
             } else if let Some(l) = t.dyn_ref::<HtmlAnchorElement>() {
 
             } else {
-              child_show.set(!child_show.get());
+              // child_show.set(!child_show.get());
+              on_toggle.call(comment_view.get().comment.id.0);
+              // on_hide(1);
             }
           }
         }
@@ -222,6 +256,8 @@ pub fn CommentNode(
       } on:dblclick=move |e: MouseEvent| {
         vote_show.set(!vote_show.get());
       } class="pb-2 cursor-pointer">
+        // DEBUG
+        // <div>{ move || format!("{:?}", hidden_comments.get())}</div>
         <div
           class="prose max-w-none"
           inner_html=safe_html
@@ -302,12 +338,19 @@ pub fn CommentNode(
           </span>
           </div>
         </Show>
-        <span class=move || format!("badge badge-neutral inline-block whitespace-nowrap{}", if !child_show.get() && com_sig.get().len() > 0 { "" } else { " hidden" })>
+        <span class=move || format!("badge badge-neutral inline-block whitespace-nowrap{}", if hidden_comments
+          .get()
+          .contains(&comment_view.get().comment.id.0) && com_sig.get().len() > 0 { "" } else { " hidden" })>
           { com_sig.get().len() + des_sig.get().len() } " replies"
         </span>
       </div>
+      // {move || {
+      //   if hidden_comments.get().contains(&comment_view.get().comment.id.0) {
+      //     child_show.set(false);
+      //   }
+      // }}
       <For each=move || com_sig.get() key=|cv| cv.comment.id let:cv>
-        <CommentNode show=child_show comment_view=cv.into() comments=des_sig.get().into() level=level + 1 now_in_millis/>
+        <CommentNode parent_comment_id=comment_view.get().comment.id.0 hidden_comments=hidden_comments on_toggle comment_view=cv.into() comments=des_sig.get().into() level=level + 1 now_in_millis/>
       </For>
     </div>
   }

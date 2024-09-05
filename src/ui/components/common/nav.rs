@@ -208,23 +208,23 @@ pub fn TopNav(
               </span>
             </A>
           </li>
+          // <li class="hidden lg:flex">
+          //   <A href="/communities" class="text-md">
+          //     {t!(i18n, communities)}
+          //   </A>
+          // </li>
+          // <li class="hidden lg:flex">
+          //   <A href="/create_post" class="text-md pointer-events-none text-base-content/50">
+          //     {t!(i18n, create_post)}
+          //   </A>
+          // </li>
           <li class="hidden lg:flex">
             <A href="/communities" class="text-md">
-              {t!(i18n, communities)}
-            </A>
-          </li>
-          <li class="hidden lg:flex">
-            <A href="/create_post" class="text-md pointer-events-none text-base-content/50">
-              {t!(i18n, create_post)}
-            </A>
-          </li>
-          <li class="hidden lg:flex">
-            <A href="/create_community" class="text-md pointer-events-none text-base-content/50">
               {t!(i18n, create_community)}
             </A>
           </li>
           <li class="hidden lg:flex">
-            <a title=t!(i18n, donate) href="//join-lemmy.org/donate">
+            <a title=t!(i18n, donate) href="//ko-fi.com/fhfworld">
               <Icon icon=Donate/>
             </a>
           </li>
@@ -232,13 +232,13 @@ pub fn TopNav(
       </div>
       <div class="navbar-end">
         <ul class="menu menu-horizontal flex-nowrap items-center">
-          // <li class="hidden lg:flex">
-          //   <A href="/search" class="pointer-events-none text-base-content/50">
-          //     <span title="t!(i18n, search)">
-          //       <Icon icon=Search/>
-          //     </span>
-          //   </A>
-          // </li>
+          <li class="hidden lg:flex">
+            <A href="/search" class="pointer-events-none text-base-content/50">
+              <span title="t!(i18n, search)">
+                <Icon icon=Search/>
+              </span>
+            </A>
+          </li>
           <li class="z-[1] hidden lg:flex">
             <details>
               <summary><Icon icon=Translate /></summary>
@@ -321,7 +321,8 @@ pub fn TopNav(
                                   {move || {
                                     if ui_online.get().0 {
                                       view! {
-                                        <div class="absolute top-0 badge badge-success badge-xs"></div>
+                                        <div class="hidden"></div>
+                                        // <div class="absolute top-0 badge badge-success badge-xs"></div>
                                       }
                                     } else {
                                       view! {
@@ -338,8 +339,14 @@ pub fn TopNav(
                                 //           .map(|u| {
                                 {
                                               if let Ok(c) = u {
-                                                view! {
-                                                  <div class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
+                                                if c.replies + c.mentions + c.private_messages > 0 {
+                                                  view! {
+                                                    <div class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
+                                                  }
+                                                } else {
+                                                  view! {
+                                                    <div class="hidden"></div>
+                                                  }
                                                 }
                                               } else {
                                                 view! {

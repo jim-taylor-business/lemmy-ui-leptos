@@ -5,6 +5,7 @@ mod config;
 mod cookie;
 mod errors;
 pub mod host;
+mod indexed_db;
 mod layout;
 mod lemmy_client;
 mod lemmy_error;
@@ -22,6 +23,7 @@ use crate::{
     login::login_activity::LoginActivity, post::post_activity::PostActivity,
   },
 };
+use indexed_db::{build_comment_database, build_database};
 use lemmy_api_common::{
   lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse,
   site::GetSiteResponse,
@@ -29,6 +31,7 @@ use lemmy_api_common::{
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
+
 use ui::components::notifications::notifications_activity::NotificationsActivity;
 
 leptos_i18n::load_locales!();
@@ -46,6 +49,12 @@ enum ResourceStatus {
 
 #[component]
 pub fn App() -> impl IntoView {
+  #[cfg(not(feature = "ssr"))]
+  spawn_local(async {
+    // build_database().await;
+    build_comment_database().await;
+  });
+
   provide_meta_context();
   provide_i18n_context();
 
