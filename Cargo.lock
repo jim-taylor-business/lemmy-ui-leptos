@@ -1436,7 +1436,6 @@ dependencies = [
  "leptos_i18n",
  "leptos_meta",
  "leptos_router",
- "num-traits",
  "pretty-duration",
  "pulldown-cmark",
  "rexie",

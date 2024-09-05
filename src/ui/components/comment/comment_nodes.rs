@@ -1,7 +1,6 @@
-use crate::{
-  indexed_db::{add_array, build_comment_database, get_array, CommentRquest},
-  ui::components::comment::comment_node::CommentNode,
-};
+#[cfg(not(feature = "ssr"))]
+use crate::indexed_db::*;
+use crate::ui::components::comment::comment_node::CommentNode;
 use lemmy_api_common::lemmy_db_views::structs::CommentView;
 use leptos::*;
 
@@ -34,6 +33,7 @@ pub fn CommentNodes(
 
   let hidden_comments: RwSignal<Vec<i32>> = RwSignal::new(vec![]);
 
+  #[cfg(not(feature = "ssr"))]
   let hidden_comments_resource = create_local_resource(
     move || (),
     move |()| async move {
@@ -69,6 +69,7 @@ pub fn CommentNodes(
       move || (),
       move |()| async move {
         if let Some(p) = post_id.get() {
+          #[cfg(not(feature = "ssr"))]
           if let Ok(d) = build_comment_database().await {
             if let Ok(_) = add_array(&d, p, hidden_comments.get()).await {
               logging::log!("yay");

@@ -5,11 +5,13 @@ mod config;
 mod cookie;
 mod errors;
 pub mod host;
-mod indexed_db;
 mod layout;
 mod lemmy_client;
 mod lemmy_error;
 mod ui;
+
+#[cfg(not(feature = "ssr"))]
+mod indexed_db;
 
 use std::collections::BTreeMap;
 
@@ -23,7 +25,7 @@ use crate::{
     login::login_activity::LoginActivity, post::post_activity::PostActivity,
   },
 };
-use indexed_db::{build_comment_database, build_database};
+
 use lemmy_api_common::{
   lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse,
   site::GetSiteResponse,
@@ -49,12 +51,6 @@ enum ResourceStatus {
 
 #[component]
 pub fn App() -> impl IntoView {
-  #[cfg(not(feature = "ssr"))]
-  spawn_local(async {
-    // build_database().await;
-    build_comment_database().await;
-  });
-
   provide_meta_context();
   provide_i18n_context();
 

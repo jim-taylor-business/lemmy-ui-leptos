@@ -1,10 +1,12 @@
+#[cfg(not(feature = "ssr"))]
+use crate::indexed_db::*;
 use crate::{
   errors::LemmyAppError,
-  indexed_db::*,
   lemmy_client::*,
   ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing},
   TitleSetter,
 };
+
 use ev::MouseEvent;
 use lemmy_api_common::{
   comment::GetComments,
