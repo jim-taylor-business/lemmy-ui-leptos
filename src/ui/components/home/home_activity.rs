@@ -205,10 +205,12 @@ pub fn HomeActivity(
   let csr_next_page_cursor = expect_context::<RwSignal<(usize, Option<PaginationCursor>)>>();
 
   let on_csr_sort_click = move |s: SortType| {
+    // logging::log!("buuu");
     move |_e: MouseEvent| {
       csr_next_page_cursor.set((0, None));
       csr_sort.set(s);
       // csr_pages.set(BTreeMap::new());
+      csr_resources.set(BTreeMap::new());
     }
   };
 
