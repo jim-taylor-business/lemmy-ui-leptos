@@ -60,10 +60,10 @@ pub fn CommentNodes(
     //         {move || {
     if hidden_comments.get().contains(&i) {
       hidden_comments.update(|hc| hc.retain(|c| i != *c));
-      logging::log!("unthing {} {:?}", i, hidden_comments.get());
+      // logging::log!("unthing {} {:?}", i, hidden_comments.get());
     } else {
       hidden_comments.update(|hc| hc.push(i));
-      logging::log!("thing {} {:?}", i, hidden_comments.get());
+      // logging::log!("thing {} {:?}", i, hidden_comments.get());
     }
     let hidden_comments_resource = create_local_resource(
       move || (),
@@ -72,9 +72,9 @@ pub fn CommentNodes(
           #[cfg(not(feature = "ssr"))]
           if let Ok(d) = build_comment_database().await {
             if let Ok(_) = add_array(&d, p, hidden_comments.get()).await {
-              logging::log!("yay");
+              // logging::log!("yay");
             } else {
-              logging::log!("boo");
+              // logging::log!("boo");
             }
           } else {
           }

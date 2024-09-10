@@ -1,11 +1,14 @@
+use crate::lemmy_error::LemmyErrorType;
 use crate::{
   cookie::get_cookie,
   errors::{LemmyAppError, LemmyAppErrorType, LemmyAppResult},
   host::{get_host, get_https},
 };
 use cfg_if::cfg_if;
-use lemmy_api_common::{comment::*, community::*, person::*, post::*, site::*/* , LemmyErrorType */};
-use crate::lemmy_error::LemmyErrorType;
+use lemmy_api_common::lemmy_db_schema::source::private_message::PrivateMessage;
+use lemmy_api_common::lemmy_db_views_actor::structs::CommentReplyView;
+use lemmy_api_common::private_message::PrivateMessagesResponse;
+use lemmy_api_common::{comment::*, community::*, person::*, post::*, private_message::GetPrivateMessages, site::* /* , LemmyErrorType */};
 use leptos::Serializable;
 use serde::{Deserialize, Serialize};
 
@@ -19,24 +22,9 @@ pub enum HttpType {
   Put,
 }
 
-mod private_trait {
-  use super::HttpType;
-  use crate::errors::LemmyAppResult;
-  use leptos::Serializable;
-  use serde::{Deserialize, Serialize};
+pub struct LemmyClient;
 
-  pub trait PrivateFetch {
-    async fn make_request<Response, Form>(
-      &self,
-      method: HttpType,
-      path: &str,
-      form: Form,
-    ) -> LemmyAppResult<Response>
-    where
-      Response: Serializable + for<'de> Deserialize<'de> + 'static,
-      Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug;
-  }
-}
+impl PublicFetch for LemmyClient {}
 
 pub trait PublicFetch: private_trait::PrivateFetch {
   async fn login(&self, form: Login) -> LemmyAppResult<LoginResponse> {
@@ -44,20 +32,13 @@ pub trait PublicFetch: private_trait::PrivateFetch {
   }
 
   async fn logout(&self) -> LemmyAppResult<()> {
-    let _ = self
-      .make_request::<(), ()>(HttpType::Post, "user/logout", ())
-      .await;
+    let _ = self.make_request::<(), ()>(HttpType::Post, "user/logout", ()).await;
     // TODO: do not ignore error due to not being able to decode empty http response cleanly
     Ok(())
   }
 
-  async fn list_communities(
-    &self,
-    form: ListCommunities,
-  ) -> LemmyAppResult<ListCommunitiesResponse> {
-    self
-      .make_request(HttpType::Get, "community/list", form)
-      .await
+  async fn list_communities(&self, form: ListCommunities) -> LemmyAppResult<ListCommunitiesResponse> {
+    self.make_request(HttpType::Get, "community/list", form).await
   }
 
   async fn get_comments(&self, form: GetComments) -> LemmyAppResult<GetCommentsResponse> {
@@ -103,6 +84,40 @@ pub trait PublicFetch: private_trait::PrivateFetch {
   async fn unread_count(&self) -> LemmyAppResult<GetUnreadCountResponse> {
     self.make_request(HttpType::Get, "user/unread_count", ()).await
   }
+
+  async fn replies_user(&self, form: GetReplies) -> LemmyAppResult<GetRepliesResponse> {
+    self.make_request(HttpType::Get, "user/replies", form).await
+  }
+
+  async fn mention_user(&self, form: GetPersonMentions) -> LemmyAppResult<GetPersonMentionsResponse> {
+    self.make_request(HttpType::Get, "user/mention", form).await
+  }
+
+  async fn messages_user(&self, form: GetPrivateMessages) -> LemmyAppResult<PrivateMessagesResponse> {
+    self.make_request(HttpType::Get, "private_message/list", form).await
+  }
+
+  async fn mark_comment(&self, form: MarkCommentReplyAsRead) -> LemmyAppResult<CommentReplyView> {
+    self.make_request(HttpType::Post, "comment/mark_as_read", form).await
+  }
+}
+
+mod private_trait {
+  use super::HttpType;
+  use crate::errors::LemmyAppResult;
+  use leptos::Serializable;
+  use serde::{Deserialize, Serialize};
+
+  pub trait PrivateFetch {
+    async fn make_request<Response, Form>(&self, method: HttpType, path: &str, form: Form) -> LemmyAppResult<Response>
+    where
+      Response: Serializable + for<'de> Deserialize<'de> + 'static,
+      Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug;
+  }
+}
+
+fn build_route(route: &str) -> String {
+  format!("http{}://{}/api/v3/{}", if get_https() == "true" { "s" } else { "" }, get_host(), route)
 }
 
 cfg_if! {
@@ -111,8 +126,6 @@ cfg_if! {
         use actix_web::web;
         use awc::{Client, ClientRequest};
         use leptos_actix::{extract};
-
-        pub struct LemmyClient;
 
         trait MaybeBearerAuth {
             fn maybe_bearer_auth(self, token: Option<impl core::fmt::Display>) -> Self;
@@ -139,13 +152,9 @@ cfg_if! {
                 Response: Serializable + for<'de> Deserialize<'de> + 'static,
                 Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug,
             {
-
                 let jwt = get_cookie("jwt").await?;
-
                 let route = build_route(path);
-
                 leptos::logging::log!("{}", format!("{}?{}", route, serde_urlencoded::to_string(&form).unwrap_or("".to_string())));
-
                 let client = extract::<web::Data<Client>>().await?;
 
                 let mut r = match method {
@@ -185,15 +194,13 @@ cfg_if! {
             }
         }
 
-        impl PublicFetch for LemmyClient {}
-
     } else {
 
         use leptos::wasm_bindgen::UnwrapThrowExt;
         use web_sys::AbortController;
         use gloo_net::{http, http::RequestBuilder};
 
-        pub struct LemmyClient;
+        // pub struct LemmyClient;
 
         trait MaybeBearerAuth {
             fn maybe_bearer_auth(self, token: Option<&str>) -> Self;
@@ -220,9 +227,7 @@ cfg_if! {
                 Response: Serializable + for<'de> Deserialize<'de> + 'static,
                 Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug,
             {
-
                 let route = &build_route(path);
-
                 let jwt = get_cookie("jwt").await?;
 
                 let abort_controller = AbortController::new().ok();
@@ -272,21 +277,10 @@ cfg_if! {
             }
         }
 
-        impl PublicFetch for LemmyClient {}
-
         fn build_fetch_query<T: Serialize>(path: &str, form: T) -> String {
             let form_str = serde_urlencoded::to_string(&form).unwrap_or("".to_string());
             format!("{}?{}", build_route(path), form_str)
         }
 
     }
-}
-
-fn build_route(route: &str) -> String {
-  format!(
-    "http{}://{}/api/v3/{}",
-    if get_https() == "true" { "s" } else { "" },
-    get_host(),
-    route
-  )
 }

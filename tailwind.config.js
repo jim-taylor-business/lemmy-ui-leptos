@@ -20,12 +20,20 @@ module.exports = {
         },
         popout: {
           from: {
-            // transform: "rotate(-3deg)",
             display: "none",
           },
           to: {
-            // transform: "rotate(3deg)",
             display: "block",
+          },
+        },
+        popdown: {
+          from: {
+            // opacity: 0,
+            height: "0rem",
+          },
+          to: {
+            // opacity: 1,
+            height: "3rem",
           },
         },
       },

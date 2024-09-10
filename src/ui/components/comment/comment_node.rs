@@ -100,21 +100,16 @@ pub fn CommentNode(
   //   }
   // };
 
-  // let child_show = move || {
-  //   if hidden_comments
-  //     .get()
-  //     .contains(&comment_view.get().comment.id.0)
-  //   {
-  //     false
-  //   } else {
-  //     true
-  //   }
-  // };
+  let child_show = move || {
+    if hidden_comments.get().contains(&comment_view.get().comment.id.0) {
+      false
+    } else {
+      true
+    }
+  };
 
   let duration_in_text = pretty_duration::pretty_duration(
-    &std::time::Duration::from_millis(
-      now_in_millis - comment_view.get().post.published.timestamp_millis() as u64,
-    ),
+    &std::time::Duration::from_millis(now_in_millis - comment_view.get().post.published.timestamp_millis() as u64),
     Some(pretty_duration::PrettyDurationOptions {
       output_format: Some(pretty_duration::PrettyDurationOutputFormat::Compact),
       singular_labels: None,
@@ -162,20 +157,12 @@ pub fn CommentNode(
   };
 
   let on_up_vote_submit = move |ev: SubmitEvent| {
-    let score = if Some(1) == comment_view.get().my_vote {
-      0
-    } else {
-      1
-    };
+    let score = if Some(1) == comment_view.get().my_vote { 0 } else { 1 };
     on_vote_submit(ev, score);
   };
 
   let on_down_vote_submit = move |ev: SubmitEvent| {
-    let score = if Some(-1) == comment_view.get().my_vote {
-      0
-    } else {
-      -1
-    };
+    let score = if Some(-1) == comment_view.get().my_vote { 0 } else { -1 };
     on_vote_submit(ev, score);
   };
 

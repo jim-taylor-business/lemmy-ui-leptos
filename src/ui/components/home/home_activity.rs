@@ -27,9 +27,7 @@ use leptos::html::*;
 use leptos_use::*;
 
 #[component]
-pub fn HomeActivity(
-  site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
-) -> impl IntoView {
+pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>) -> impl IntoView {
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
@@ -42,39 +40,18 @@ pub fn HomeActivity(
 
   let query = use_query_map();
 
-  let ssr_list = move || {
-    serde_json::from_str::<ListingType>(&query.get().get("list").cloned().unwrap_or("".into()))
-      .unwrap_or(ListingType::All)
-  };
+  let ssr_list = move || serde_json::from_str::<ListingType>(&query.get().get("list").cloned().unwrap_or("".into())).unwrap_or(ListingType::All);
 
-  let ssr_sort = move || {
-    serde_json::from_str::<SortType>(&query.get().get("sort").cloned().unwrap_or("".into()))
-      .unwrap_or(SortType::Active)
-  };
+  let ssr_sort = move || serde_json::from_str::<SortType>(&query.get().get("sort").cloned().unwrap_or("".into())).unwrap_or(SortType::Active);
 
   let ssr_from = move || {
-    serde_json::from_str::<(usize, Option<PaginationCursor>)>(
-      &query.get().get("from").cloned().unwrap_or("".into()),
-    )
-    .unwrap_or((0usize, None))
+    serde_json::from_str::<(usize, Option<PaginationCursor>)>(&query.get().get("from").cloned().unwrap_or("".into())).unwrap_or((0usize, None))
   };
 
-  let ssr_prev = move || {
-    serde_json::from_str::<Vec<(usize, Option<PaginationCursor>)>>(
-      &query.get().get("prev").cloned().unwrap_or("".into()),
-    )
-    .unwrap_or(vec![])
-  };
+  let ssr_prev =
+    move || serde_json::from_str::<Vec<(usize, Option<PaginationCursor>)>>(&query.get().get("prev").cloned().unwrap_or("".into())).unwrap_or(vec![]);
 
-  let ssr_limit = move || {
-    query
-      .get()
-      .get("limit")
-      .cloned()
-      .unwrap_or("".into())
-      .parse::<usize>()
-      .unwrap_or(10usize)
-  };
+  let ssr_limit = move || query.get().get("limit").cloned().unwrap_or("".into()).parse::<usize>().unwrap_or(10usize);
 
   let on_sort_click = move |s: SortType| {
     move |_e: MouseEvent| {
@@ -98,11 +75,7 @@ pub fn HomeActivity(
 
       let navigate = leptos_router::use_navigate();
       navigate(
-        &format!(
-          "{}{}",
-          use_location().pathname.get(),
-          query_params.to_query_string()
-        ),
+        &format!("{}{}", use_location().pathname.get(), query_params.to_query_string()),
         Default::default(),
       );
     }
@@ -140,7 +113,7 @@ pub fn HomeActivity(
       };
 
       if online.get().0 {
-        logging::log!("load!");
+        // logging::log!("load!");
         let result = LemmyClient.list_posts(form.clone()).await;
         loading.set(false);
         ui_title.set(None);
@@ -150,12 +123,9 @@ pub fn HomeActivity(
             #[cfg(not(feature = "ssr"))]
             if let Ok(Some(s)) = window().local_storage() {
               if let Ok(Some(_)) = s.get_item(&serde_json::to_string(&form).ok().unwrap()) {
-                logging::log!("cached!");
+                // logging::log!("cached!");
               }
-              s.set_item(
-                &serde_json::to_string(&form).ok().unwrap(),
-                &serde_json::to_string(&o).ok().unwrap(),
-              );
+              s.set_item(&serde_json::to_string(&form).ok().unwrap(), &serde_json::to_string(&o).ok().unwrap());
             }
             Ok((from, o))
           }
@@ -166,10 +136,10 @@ pub fn HomeActivity(
         }
       } else {
         #[cfg(not(feature = "ssr"))]
-        logging::log!("test!");
+        // logging::log!("test!");
         if let Ok(Some(s)) = window().local_storage() {
           if let Ok(Some(c)) = s.get_item(&serde_json::to_string(&form).ok().unwrap()) {
-            logging::log!("cached offline!");
+            // logging::log!("cached offline!");
             if let Ok(o) = serde_json::from_str::<GetPostsResponse>(&c) {
               loading.set(false);
               return Ok((from, o));
@@ -177,7 +147,7 @@ pub fn HomeActivity(
           }
         }
 
-        logging::log!("here!");
+        // logging::log!("here!");
 
         loading.set(false);
 
@@ -196,11 +166,7 @@ pub fn HomeActivity(
   // > = RwSignal::new(BTreeMap::new());
 
   // let csr_pages = expect_context::<RwSignal<BTreeMap<usize, GetPostsResponse>>>();
-  let csr_resources = expect_context::<
-    RwSignal<
-      BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>,
-    >,
-  >();
+  let csr_resources = expect_context::<RwSignal<BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>>>();
   let csr_sort = expect_context::<RwSignal<SortType>>();
   let csr_next_page_cursor = expect_context::<RwSignal<(usize, Option<PaginationCursor>)>>();
 
@@ -222,11 +188,7 @@ pub fn HomeActivity(
     use_resize_observer(resize_element, move |entries, _| {
       let rect = entries[0].content_rect();
       // logging::log!("width: {:.0} height: {:.0}", rect.width(), rect.height());
-      let iw = window()
-        .inner_width()
-        .ok()
-        .map(|b| b.as_f64().unwrap_or(0.0))
-        .unwrap_or(0.0);
+      let iw = window().inner_width().ok().map(|b| b.as_f64().unwrap_or(0.0)).unwrap_or(0.0);
 
       let mut query_params = query.get();
 
@@ -260,11 +222,7 @@ pub fn HomeActivity(
         let navigate = leptos_router::use_navigate();
         if iw >= 640f64 {
           navigate(
-            &format!(
-              "{}{}",
-              use_location().pathname.get(),
-              query_params.to_query_string()
-            ),
+            &format!("{}{}", use_location().pathname.get(), query_params.to_query_string()),
             Default::default(),
           );
         } else {
@@ -283,11 +241,7 @@ pub fn HomeActivity(
       move |entries, _| {
         // logging::log!("SCROLL");
 
-        let iw = window()
-          .inner_width()
-          .ok()
-          .map(|b| b.as_f64().unwrap_or(0.0))
-          .unwrap_or(0.0);
+        let iw = window().inner_width().ok().map(|b| b.as_f64().unwrap_or(0.0)).unwrap_or(0.0);
 
         // logging::log!("{}", iw);
         if iw < 640f64 {
@@ -295,14 +249,8 @@ pub fn HomeActivity(
             .get()
             .get(&(csr_next_page_cursor.get().0, ResourceStatus::Loading))
             .is_none()
-            && csr_resources
-              .get()
-              .get(&(csr_next_page_cursor.get().0, ResourceStatus::Ok))
-              .is_none()
-            && csr_resources
-              .get()
-              .get(&(csr_next_page_cursor.get().0, ResourceStatus::Err))
-              .is_none()
+            && csr_resources.get().get(&(csr_next_page_cursor.get().0, ResourceStatus::Ok)).is_none()
+            && csr_resources.get().get(&(csr_next_page_cursor.get().0, ResourceStatus::Err)).is_none()
           {
             csr_resources.update(|h| {
               h.insert(
@@ -342,10 +290,7 @@ pub fn HomeActivity(
                     csr_resources.update(move |h| {
                       // let f = from.clone();
                       h.remove(&(from.0, ResourceStatus::Loading));
-                      h.insert(
-                        (from.0, ResourceStatus::Ok),
-                        (from.1.clone(), Some(o.clone())),
-                      );
+                      h.insert((from.0, ResourceStatus::Ok), (from.1.clone(), Some(o.clone())));
                     });
 
                     // csr_pages.update(|h| {
@@ -721,17 +666,32 @@ pub fn HomeActivity(
 
                       view! {
                         {
-                          if loading.get() {
+                          loading.get().then(move || {
                             view! {
-                              <div class="px-8 py-4 animate-[popout_0.5s_step-end_2]">
-                                  <div class="alert">
-                                    <span> "Loading" </span>
+                              // <div class="px-8 py-4 animate-[popout_0.5s_step-end_2]">
+                              <div class="overflow-hidden animate-[popdown_0.5s_step-end_1]">
+                                <div class="px-8 py-4">
+                                    <div class="alert">
+                                      <span> "Loading" </span>
+                                    </div>
                                   </div>
                               </div>
                             }
-                          } else {
-                            view! { <div class="hidden"></div> }
-                          }
+                          })
+                          // if loading.get() {
+                          //   view! {
+                          //     // <div class="px-8 py-4 animate-[popout_0.5s_step-end_2]">
+                          //     <div class="overflow-hidden animate-[popdown_0.5s_step-end_1]">
+                          //       <div class="px-8 py-4">
+                          //           <div class="alert">
+                          //             <span> "Loading" </span>
+                          //           </div>
+                          //         </div>
+                          //     </div>
+                          //   }
+                          // } else {
+                          //   view! { <div class="hidden"></div> }
+                          // }
                         }
                         // <div class="hidden"></div>
                           <div class=move || format!("hidden sm:block columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}", if loading.get() { " opacity-25" } else { "" })>
@@ -785,10 +745,12 @@ pub fn HomeActivity(
                 }
                 None => {
                   view! {
-                    <div class="px-8 py-4 animate-[popout_0.5s_step-end_2]">
+                    <div class="overflow-hidden animate-[popdown_0.5s_step-end_1]">
+                      <div class="px-8 py-4">
                         <div class="alert">
                           <span> "Loading" </span>
                         </div>
+                      </div>
                     </div>
                     <div class="hidden"></div>
                   }
@@ -812,7 +774,7 @@ pub fn HomeActivity(
             // </div>
 
             {
-              logging::log!("res {:#?}", r.0);
+              // logging::log!("res {:#?}", r.0);
               let r_copy = r.clone();
             // {move || {
             //     r.1
