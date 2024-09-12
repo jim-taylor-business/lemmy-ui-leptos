@@ -63,12 +63,7 @@ pub async fn login(username_or_email: String, password: String) -> Result<(), Se
 
   match result {
     Ok(LoginResponse { jwt, .. }) => {
-      let r = set_cookie(
-        "jwt",
-        &jwt.unwrap_or_default().into_inner(),
-        &core::time::Duration::from_secs(604800),
-      )
-      .await;
+      let r = set_cookie("jwt", &jwt.unwrap_or_default().into_inner(), &core::time::Duration::from_secs(604800)).await;
       match r {
         Ok(_o) => {
           redirect("/");
@@ -121,7 +116,6 @@ pub fn LoginForm() -> impl IntoView {
 
   let on_submit = move |ev: SubmitEvent| {
     ev.prevent_default();
-    // error.set(None);
 
     create_local_resource(
       move || (name.get(), password.get()),
@@ -134,12 +128,7 @@ pub fn LoginForm() -> impl IntoView {
         let result = try_login(req.clone()).await;
         match result {
           Ok(LoginResponse { jwt: Some(jwt), .. }) => {
-            let _ = set_cookie(
-              "jwt",
-              &jwt.clone().into_inner(),
-              &core::time::Duration::from_secs(604800),
-            )
-            .await;
+            let _ = set_cookie("jwt", &jwt.clone().into_inner(), &core::time::Duration::from_secs(604800)).await;
             user.set(Some(true));
             leptos_router::use_navigate()("/", Default::default());
           }
@@ -153,17 +142,9 @@ pub fn LoginForm() -> impl IntoView {
                 None,
               )))
             });
-            // error.set(Some((
-            //   LemmyAppError {
-            //     error_type: LemmyAppErrorType::MissingToken,
-            //     content: String::default(),
-            //   },
-            //   None,
-            // )));
           }
           Err(e) => {
             error.update(|es| es.push(Some((e.clone(), None))));
-            // error.set(Some((e.clone(), None)));
             password_validation.set("".to_string());
             username_validation.set("".to_string());
 
@@ -204,7 +185,7 @@ pub fn LoginForm() -> impl IntoView {
         input_type=InputType::Password
         label="Password"
       />
-      <button class="btn btn-lg" type="submit">
+      <button class="btn btn-md" type="submit">
         "Login"
       </button>
     </ActionForm>

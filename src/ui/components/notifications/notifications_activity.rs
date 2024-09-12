@@ -15,7 +15,7 @@ use leptos_router::{use_location, use_query_map, A};
 use crate::{
   errors::{message_from_error, LemmyAppError},
   ui::components::{comment::comment_node::CommentNode, common::about::About},
-  LemmyClient, PublicFetch,
+  LemmyApi, LemmyClient,
 };
 
 #[component]

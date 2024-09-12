@@ -7,7 +7,11 @@ use crate::{
 };
 use ev::{MouseEvent, SubmitEvent, TouchEvent};
 use lemmy_api_common::{
-  comment::{CreateCommentLike, SaveComment},
+  comment::{CreateComment, CreateCommentLike, SaveComment},
+  lemmy_db_schema::{
+    newtypes::{CommentId, PostId},
+    source::comment::Comment,
+  },
   lemmy_db_views::structs::CommentView,
   post::{CreatePostLike, PostResponse},
 };
@@ -88,9 +92,11 @@ pub fn CommentNode(
 
   let still_down = RwSignal::new(false);
   let vote_show = RwSignal::new(false);
+  let reply_show = RwSignal::new(false);
   let still_handle: RwSignal<Option<TimeoutHandle>> = RwSignal::new(None);
 
   let comment_view = RwSignal::new(comment_view.get());
+  let content = RwSignal::new(String::default());
 
   // let show = move || {
   //   if hidden_comments.get().contains(&parent_comment_id) {
@@ -192,15 +198,39 @@ pub fn CommentNode(
     );
   };
 
-  // let on_this_toggle = move |i: i32| {
-  //   child_show.set(!child_show.get());
-  // };
+  let on_reply_click = move |ev: MouseEvent| {
+    ev.prevent_default();
+
+    create_local_resource(
+      move || (),
+      move |()| async move {
+        let form = CreateComment {
+          content: content.get(),
+          post_id: comment_view.get().comment.post_id,
+          parent_id: Some(comment_view.get().comment.id),
+          language_id: None,
+        };
+
+        let result = LemmyClient.reply_comment(form).await;
+
+        match result {
+          Ok(o) => {
+            // comment_view.set(o.comment_view);
+          }
+          Err(e) => {
+            error.update(|es| es.push(Some((e, None))));
+            // error.set(Some((e, None)));
+          }
+        }
+      },
+    );
+  };
 
   view! {
     <div
       // on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
       // on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
-      class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" }, if !hidden_comments.get().contains(&parent_comment_id) { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" })
+      class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-300 pr-4 pt-2 pb-1" } else { "" }, if !hidden_comments.get().contains(&parent_comment_id) { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" })
     >
       <div on:click=move |e: MouseEvent| {
         if still_down.get() {
@@ -294,7 +324,7 @@ pub fn CommentNode(
               <Icon icon=Downvote/>
             </button>
           </Form>
-          <span class="text-base-content/50" title="Reply">
+          <span on:click={ move |_| reply_show.update(|b| *b = !*b) } title="Reply">
             <Icon icon=Reply/>
           </span>
           <Form
@@ -331,6 +361,25 @@ pub fn CommentNode(
           { com_sig.get().len() + des_sig.get().len() } " replies"
         </span>
       </div>
+      <Show when=move || reply_show.get() fallback=|| view! {  }>
+        <div class="space-y-3 mb-3">
+          <label class="form-control">
+            <textarea class="textarea textarea-bordered h-24" placeholder="Comment text" prop:value={ move || content.get() } on:input={ move |ev| content.set(event_target_value(&ev)) } >{ content.get_untracked() }</textarea>
+          </label>
+          <div class="space-x-3 flex row">
+            // <div class="flex row gap-4">
+            <button on:click=on_reply_click type="button" class="btn btn-md">
+                "Comment"
+            </button>
+            // </div>
+            <label class="label cursor-pointer space-x-3">
+              <input type="checkbox" checked="checked" class="checkbox" />
+              <span class="label-text">Markdown</span>
+            </label>
+            // </div>
+          </div>
+        </div>
+      </Show>
       // {move || {
       //   if hidden_comments.get().contains(&comment_view.get().comment.id.0) {
       //     child_show.set(false);

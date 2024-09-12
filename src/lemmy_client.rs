@@ -24,9 +24,14 @@ pub enum HttpType {
 
 pub struct LemmyClient;
 
-impl PublicFetch for LemmyClient {}
+pub trait Fetch {
+  async fn make_request<Response, Form>(&self, method: HttpType, path: &str, form: Form) -> LemmyAppResult<Response>
+  where
+    Response: Serializable + for<'de> Deserialize<'de> + 'static,
+    Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug;
+}
 
-pub trait PublicFetch: private_trait::PrivateFetch {
+pub trait LemmyApi: Fetch {
   async fn login(&self, form: Login) -> LemmyAppResult<LoginResponse> {
     self.make_request(HttpType::Post, "user/login", form).await
   }
@@ -100,21 +105,21 @@ pub trait PublicFetch: private_trait::PrivateFetch {
   async fn mark_comment(&self, form: MarkCommentReplyAsRead) -> LemmyAppResult<CommentReplyView> {
     self.make_request(HttpType::Post, "comment/mark_as_read", form).await
   }
-}
 
-mod private_trait {
-  use super::HttpType;
-  use crate::errors::LemmyAppResult;
-  use leptos::Serializable;
-  use serde::{Deserialize, Serialize};
-
-  pub trait PrivateFetch {
-    async fn make_request<Response, Form>(&self, method: HttpType, path: &str, form: Form) -> LemmyAppResult<Response>
-    where
-      Response: Serializable + for<'de> Deserialize<'de> + 'static,
-      Form: Serialize + core::clone::Clone + 'static + core::fmt::Debug;
+  async fn reply_comment(&self, form: CreateComment) -> LemmyAppResult<CommentResponse> {
+    self.make_request(HttpType::Post, "comment", form).await
   }
 }
+
+// mod private_fetch {
+// use super::HttpType;
+// use crate::errors::LemmyAppResult;
+// use leptos::Serializable;
+// use serde::{Deserialize, Serialize};
+
+impl LemmyApi for LemmyClient {}
+
+// }
 
 fn build_route(route: &str) -> String {
   format!("http{}://{}/api/v3/{}", if get_https() == "true" { "s" } else { "" }, get_host(), route)
@@ -141,7 +146,7 @@ cfg_if! {
             }
         }
 
-        impl private_trait::PrivateFetch for LemmyClient {
+        impl Fetch for LemmyClient {
             async fn make_request<Response, Form>(
                 &self,
                 method: HttpType,
@@ -216,7 +221,7 @@ cfg_if! {
             }
         }
 
-        impl private_trait::PrivateFetch for LemmyClient {
+        impl Fetch for LemmyClient {
             async fn make_request<Response, Form>(
                 &self,
                 method: HttpType,

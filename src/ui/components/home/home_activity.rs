@@ -669,7 +669,7 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
                           loading.get().then(move || {
                             view! {
                               // <div class="px-8 py-4 animate-[popout_0.5s_step-end_2]">
-                              <div class="overflow-hidden animate-[popdown_0.5s_step-end_1]">
+                              <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
                                 <div class="px-8 py-4">
                                     <div class="alert">
                                       <span> "Loading" </span>
@@ -745,7 +745,7 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
                 }
                 None => {
                   view! {
-                    <div class="overflow-hidden animate-[popdown_0.5s_step-end_1]">
+                    <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
                       <div class="px-8 py-4">
                         <div class="alert">
                           <span> "Loading" </span>
@@ -806,9 +806,11 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
                     </div>
                   },
                   _ => view! {
-                    <div class="px-8 py-4 animate-[popout_0.5s_step-end_2]">
-                      <div class="alert">
-                        <span> "Loading..." </span>
+                    <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
+                      <div class="px-8 py-4">
+                        <div class="alert">
+                          <span> "Loading..." </span>
+                        </div>
                       </div>
                     </div>
                   },
