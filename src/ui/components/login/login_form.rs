@@ -89,7 +89,7 @@ pub fn LoginForm() -> impl IntoView {
   let query = use_query_map();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
-  let user = expect_context::<RwSignal<Option<bool>>>();
+  let authenticated = expect_context::<RwSignal<Option<bool>>>();
 
   let name = RwSignal::new(String::new());
   let password = RwSignal::new(String::new());
@@ -129,7 +129,7 @@ pub fn LoginForm() -> impl IntoView {
         match result {
           Ok(LoginResponse { jwt: Some(jwt), .. }) => {
             let _ = set_cookie("jwt", &jwt.clone().into_inner(), &core::time::Duration::from_secs(604800)).await;
-            user.set(Some(true));
+            authenticated.set(Some(true));
             leptos_router::use_navigate()("/", Default::default());
           }
           Ok(LoginResponse { jwt: None, .. }) => {
@@ -185,7 +185,7 @@ pub fn LoginForm() -> impl IntoView {
         input_type=InputType::Password
         label="Password"
       />
-      <button class="btn btn-md" type="submit">
+      <button class="btn btn-neutral" type="submit">
         "Login"
       </button>
     </ActionForm>

@@ -4,15 +4,16 @@ use crate::{
   i18n::*,
   lemmy_client::*,
   ui::components::common::icon::{Icon, IconType::*},
-  OnlineSetter,
+  FocusSetter, OnlineSetter,
 };
 use ev::MouseEvent;
 use lemmy_api_common::{
-  lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, site::GetSiteResponse,
+  lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, person::GetUnreadCountResponse, site::GetSiteResponse,
 };
 use leptos::*;
 use leptos_router::*;
-use web_sys::SubmitEvent;
+use leptos_use::use_document_visibility;
+use web_sys::{SubmitEvent, VisibilityState};
 
 #[server(LogoutFn, "/serverfn")]
 pub async fn logout() -> Result<(), ServerFnError> {
@@ -41,12 +42,7 @@ pub async fn logout() -> Result<(), ServerFnError> {
 
 #[server(ChangeLangFn, "/serverfn")]
 pub async fn change_lang(lang: String) -> Result<(), ServerFnError> {
-  let _ = set_cookie(
-    "i18n_pref_locale",
-    &lang.to_lowercase(),
-    &core::time::Duration::from_secs(604800),
-  )
-  .await;
+  let _ = set_cookie("i18n_pref_locale", &lang.to_lowercase(), &core::time::Duration::from_secs(604800)).await;
   Ok(())
 }
 
@@ -64,9 +60,7 @@ pub async fn change_theme(theme: String) -> Result<(), ServerFnError> {
 }
 
 #[component]
-pub fn TopNav(
-  site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
-) -> impl IntoView {
+pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>) -> impl IntoView {
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
@@ -102,7 +96,7 @@ pub fn TopNav(
   //   }
   // }
 
-  let user = expect_context::<RwSignal<Option<bool>>>();
+  let authenticated = expect_context::<RwSignal<Option<bool>>>();
 
   let logout_action = create_server_action::<LogoutFn>();
 
@@ -116,7 +110,7 @@ pub fn TopNav(
         match result {
           Ok(_o) => {
             let _ = remove_cookie("jwt").await;
-            user.set(Some(false));
+            authenticated.set(Some(false));
           }
           Err(e) => {
             logging::warn!("logout error {:#?}", e);
@@ -129,21 +123,34 @@ pub fn TopNav(
   };
 
   // let site_signal = RwSignal::new::<Option<Result<GetSiteResponse, LemmyAppError>>>(None);
+  let logged_in = Signal::derive(move || {
+    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
+      Some(true)
+    } else {
+      Some(false)
+    }
+  });
+
+  let refresh = RwSignal::new(true);
 
   let ssr_unread = Resource::new(
-    move || (user.get()),
-    move |user| async move {
-      let result =
-      //  if user == Some(true) {
+    move || (refresh.get(), logged_in.get()),
+    move |(_refresh, logged_in)| async move {
+      // logging::log!("vivance");
+      let result = if logged_in == Some(true) {
         LemmyClient.unread_count().await
-      // } else {
+      } else {
         // LemmyClient.unread_count().await;
-      //   Err(LemmyAppError {
-      //     error_type: LemmyAppErrorType::MissingToken,
-      //     content: "".into(),
-      //   })
-      // }
-      ;
+        //   Err(LemmyAppError {
+        //     error_type: LemmyAppErrorType::MissingToken,
+        //     content: "".into(),
+        //   })
+        Ok(GetUnreadCountResponse {
+          replies: 0,
+          mentions: 0,
+          private_messages: 0,
+        })
+      };
 
       // logging::log!("{:#?}", result);
 
@@ -156,6 +163,59 @@ pub fn TopNav(
       }
     },
   );
+
+  let ui_focus = RwSignal::new(FocusSetter(true));
+  // let on_focus = move |b| {
+  //   move |_| {
+  //     logging::log!("focus {}", b);
+  //     ui_focus.set(FocusSetter(b));
+  //   }
+  // };
+
+  #[cfg(not(feature = "ssr"))]
+  let visibility = use_document_visibility();
+
+  #[cfg(not(feature = "ssr"))]
+  let e = Effect::new(move |_| {
+    match visibility.get() {
+      VisibilityState::Visible => {
+        refresh.update(|b| *b = !*b);
+        // logging::log!(" bam do thing");
+      }
+      VisibilityState::Hidden => {
+        // refresh.update(|b| *b = !*b);
+        // logging::log!("no do thing");
+      }
+      _ => {
+        // refresh.update(|b| *b = !*b);
+        // logging::log!("fuck do thing");
+      }
+    }
+    // refresh.update(|b| *b = !*b);
+    // logging::log!(" bam {:#?}", visibility.get());
+  });
+
+  // let _onfocus_handle = window_event_listener_untyped("visibilitychange", on_focus(true));
+  // let _onblur_handle = window_event_listener_untyped("onblur", on_focus(false));
+
+  #[cfg(not(feature = "ssr"))]
+  set_interval_with_handle(
+    move || match visibility.get() {
+      VisibilityState::Visible => {
+        refresh.update(|b| *b = !*b);
+        // logging::log!("ping do thing");
+      }
+      VisibilityState::Hidden => {
+        // refresh.update(|b| *b = !*b);
+        // logging::log!("no do thing");
+      }
+      _ => {
+        // refresh.update(|b| *b = !*b);
+        // logging::log!("fuck do thing");
+      }
+    },
+    std::time::Duration::from_millis(30000),
+  ); //refresh.set(!refresh.get()), Duration::from_millis(5000)).expect("could not create interval");
 
   let ui_theme = expect_context::<RwSignal<Option<String>>>();
   let ui_online = expect_context::<RwSignal<OnlineSetter>>();
@@ -432,6 +492,11 @@ pub fn TopNav(
             fallback=move || {
                 view! {
                   <li>
+                    // <ActionForm action=theme_action on:submit=on_theme_submit("retro")>
+                    //   <input type="hidden" name="theme" value="retro"/>
+                    //   <button type="submit">"Retro"</button>
+                    // </ActionForm>
+
                     <A href="/login">{t!(i18n, login)}</A>
                   </li>
                   <li class="hidden lg:flex">
@@ -562,9 +627,7 @@ pub fn TopNav(
 }
 
 #[component]
-pub fn BottomNav(
-  site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
-) -> impl IntoView {
+pub fn BottomNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>) -> impl IntoView {
   let i18n = use_i18n();
   const FE_VERSION: &str = env!("CARGO_PKG_VERSION");
   const GIT_HASH: std::option::Option<&'static str> = option_env!("GIT_HASH");

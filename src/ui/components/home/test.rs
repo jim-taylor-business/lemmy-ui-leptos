@@ -14,7 +14,7 @@
 //   let error = expect_context::<RwSignal<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>();
 
 //   let ssr_unread = Resource::new(
-//     move || (/* user.get() */),
+//     move || (/* authenticated.get() */),
 //     move |()/* user */| async move {
 //       logging::log!("oeoe");
 

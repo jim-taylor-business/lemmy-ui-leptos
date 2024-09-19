@@ -31,7 +31,7 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
-  let user = expect_context::<RwSignal<Option<bool>>>();
+  // let authenticated = expect_context::<RwSignal<Option<bool>>>();
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
   let online = expect_context::<RwSignal<OnlineSetter>>();
 
@@ -84,13 +84,21 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
   let loading = RwSignal::new(false);
   let refresh = RwSignal::new(false);
 
+  let logged_in = Signal::derive(move || {
+    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
+      Some(true)
+    } else {
+      Some(false)
+    }
+  });
+
   ui_title.set(None);
 
   let posts_resource = Resource::new(
     move || {
       (
         refresh.get(),
-        user.get(),
+        logged_in.get(),
         ssr_list(),
         ssr_sort(),
         ssr_from(),
@@ -98,7 +106,7 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
         community_name(),
       )
     },
-    move |(_refresh, _user, list_type, sort_type, from, limit, name)| async move {
+    move |(_refresh, _logged_in, list_type, sort_type, from, limit, name)| async move {
       let form = GetPosts {
         type_: Some(list_type),
         sort: Some(sort_type),
@@ -622,7 +630,7 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
                               <A
                                 on:click=move |_| { loading.set(true); }
                                 href=format!("{}{}", use_location().pathname.get(), query_params.to_query_string())
-                                class=move || format!("btn join-item{}", if !ssr_prev().is_empty() { "" } else { " btn-disabled" } )
+                                class=move || format!("btn join-item{}", if !ssr_prev().is_empty() { "" } else { " btn-disabled" })
                               >
                                 "Prev"
                               </A>

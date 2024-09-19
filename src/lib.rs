@@ -13,7 +13,7 @@ mod ui;
 #[cfg(not(feature = "ssr"))]
 mod indexed_db;
 
-use std::collections::BTreeMap;
+use std::{collections::BTreeMap, sync::LazyLock};
 
 use crate::{
   errors::LemmyAppError,
@@ -21,20 +21,19 @@ use crate::{
   layout::Layout,
   lemmy_client::*,
   ui::components::{
-    communities::communities_activity::CommunitiesActivity, home::home_activity::HomeActivity,
-    login::login_activity::LoginActivity, post::post_activity::PostActivity,
+    communities::communities_activity::CommunitiesActivity, home::home_activity::HomeActivity, login::login_activity::LoginActivity,
+    post::post_activity::PostActivity,
   },
 };
 
-use lemmy_api_common::{
-  lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse,
-  site::GetSiteResponse,
-};
+use lemmy_api_common::{lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse, site::GetSiteResponse};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
+use leptos_use::use_document_visibility;
 use ui::components::notifications::notifications_activity::NotificationsActivity;
+use web_sys::VisibilityState;
 
 leptos_i18n::load_locales!();
 
@@ -48,17 +47,20 @@ enum ResourceStatus {
   Ok,
   Err,
 }
+#[derive(Clone, Debug)]
+pub struct FocusSetter(bool);
+
+// static authenticated: LazyLock<RwSignal<Option<bool>>> = std::sync::LazyLock::new(|| RwSignal::new(None));
 
 #[component]
 pub fn App() -> impl IntoView {
   provide_meta_context();
   provide_i18n_context();
 
-  let error: RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>> =
-    RwSignal::new(Vec::new());
+  let error: RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>> = RwSignal::new(Vec::new());
   provide_context(error);
-  let user: RwSignal<Option<bool>> = RwSignal::new(None);
-  provide_context(user);
+  let authenticated: RwSignal<Option<bool>> = RwSignal::new(None);
+  provide_context(authenticated);
   let ui_theme: RwSignal<Option<String>> = RwSignal::new(None);
   provide_context(ui_theme);
   let ui_title: RwSignal<Option<TitleSetter>> = RwSignal::new(None);
@@ -75,11 +77,8 @@ pub fn App() -> impl IntoView {
   let _offline_handle = window_event_listener_untyped("offline", on_online(false));
   let _online_handle = window_event_listener_untyped("online", on_online(true));
 
-  // let csr_pages: RwSignal<BTreeMap<usize, GetPostsResponse>> = RwSignal::new(BTreeMap::new());
-  // provide_context(csr_pages);
-  let csr_resources: RwSignal<
-    BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>,
-  > = RwSignal::new(BTreeMap::new());
+  let csr_resources: RwSignal<BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>> =
+    RwSignal::new(BTreeMap::new());
   provide_context(csr_resources);
   let csr_sort: RwSignal<SortType> = RwSignal::new(SortType::Active);
   provide_context(csr_sort);
@@ -89,7 +88,7 @@ pub fn App() -> impl IntoView {
   let site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>> = RwSignal::new(None);
 
   let ssr_site = Resource::new(
-    move || (user.get()),
+    move || (authenticated.get()),
     move |user| async move {
       let result = if user == Some(false) {
         if let Some(Ok(mut s)) = site_signal.get() {
@@ -106,7 +105,6 @@ pub fn App() -> impl IntoView {
         Ok(o) => Ok(o),
         Err(e) => {
           error.update(|es| es.push(Some((e.clone(), None))));
-          // error.set(Some((e.clone(), None)));
           Err(e)
         }
       }

@@ -52,10 +52,7 @@ pub async fn save_post_fn(post_id: i32, save: bool) -> Result<Option<PostRespons
 }
 
 #[server(BlockUserFn, "/serverfn")]
-pub async fn block_user_fn(
-  person_id: i32,
-  block: bool,
-) -> Result<Option<BlockPersonResponse>, ServerFnError> {
+pub async fn block_user_fn(person_id: i32, block: bool) -> Result<Option<BlockPersonResponse>, ServerFnError> {
   use lemmy_api_common::lemmy_db_schema::newtypes::PersonId;
 
   let form = BlockPerson {
@@ -102,10 +99,7 @@ async fn try_report(form: CreatePostReport) -> Result<PostReportResponse, LemmyA
 }
 
 #[server(ReportPostFn, "/serverfn")]
-pub async fn report_post_fn(
-  post_id: i32,
-  reason: String,
-) -> Result<Option<PostReportResponse>, ServerFnError> {
+pub async fn report_post_fn(post_id: i32, reason: String) -> Result<Option<PostReportResponse>, ServerFnError> {
   use lemmy_api_common::lemmy_db_schema::newtypes::PostId;
 
   let form = CreatePostReport {
@@ -132,11 +126,8 @@ pub fn PostListing(
   post_number: usize,
 ) -> impl IntoView {
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
-  let user = Signal::derive(move || {
-    if let Some(Ok(GetSiteResponse {
-      my_user: Some(_), ..
-    })) = site_signal.get()
-    {
+  let logged_in = Signal::derive(move || {
+    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
       Some(true)
     } else {
       Some(false)
@@ -174,20 +165,12 @@ pub fn PostListing(
   };
 
   let on_up_vote_submit = move |ev: SubmitEvent| {
-    let score = if Some(1) == post_view.get().my_vote {
-      0
-    } else {
-      1
-    };
+    let score = if Some(1) == post_view.get().my_vote { 0 } else { 1 };
     on_vote_submit(ev, score);
   };
 
   let on_down_vote_submit = move |ev: SubmitEvent| {
-    let score = if Some(-1) == post_view.get().my_vote {
-      0
-    } else {
-      -1
-    };
+    let score = if Some(-1) == post_view.get().my_vote { 0 } else { -1 };
     on_vote_submit(ev, score);
   };
 
@@ -329,16 +312,11 @@ pub fn PostListing(
     }
     #[cfg(feature = "ssr")]
     {
-      std::time::SystemTime::now()
-        .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
-        .as_millis() as u64
+      std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).unwrap().as_millis() as u64
     }
   };
   let duration_in_text = pretty_duration::pretty_duration(
-    &std::time::Duration::from_millis(
-      now_in_millis - post_view.get().post.published.timestamp_millis() as u64,
-    ),
+    &std::time::Duration::from_millis(now_in_millis - post_view.get().post.published.timestamp_millis() as u64),
     Some(pretty_duration::PrettyDurationOptions {
       output_format: Some(pretty_duration::PrettyDurationOutputFormat::Compact),
       singular_labels: None,
@@ -369,11 +347,11 @@ pub fn PostListing(
               class=move || {
                   format!(
                       "align-bottom{}{}",
-                      { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-secondary/50" } },
+                      { if Some(true) != logged_in.get() { " text-base-content/50" } else { " hover:text-secondary/50" } },
                       { if Some(1) == post_view.get().my_vote { " text-secondary" } else { "" } },
                   )
               }
-              disabled=move || Some(true) != user.get()
+              disabled=move || Some(true) != logged_in.get()
               title="Up vote"
             >
               <Icon icon=Upvote />
@@ -393,11 +371,11 @@ pub fn PostListing(
               class=move || {
                   format!(
                       "align-top{}{}",
-                      { if Some(true) != user.get() { " text-base-content/50" } else { " hover:text-primary/50" } },
+                      { if Some(true) != logged_in.get() { " text-base-content/50" } else { " hover:text-primary/50" } },
                       { if Some(-1) == post_view.get().my_vote { " text-primary" } else { "" } },
                   )
               }
-              disabled=move || Some(true) != user.get()
+              disabled=move || Some(true) != logged_in.get()
               title="Down vote"
             >
               <Icon icon=Downvote />
@@ -539,14 +517,15 @@ pub fn PostListing(
               <Icon icon=External/>
             </A>
           </span>
-          <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() && e.shift_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
-            // <A href="/create_post">
-              <Icon icon=Crosspost/>
-            // </A>
-          </span>
-          {
-            if post_number == 0 {
-              view! {
+          <Show when=move || { post_number == 0 } fallback=|| {}>
+            <span class="text-base-content/50" title="Cross post" on:click=move |e: MouseEvent| { if e.ctrl_key() && e.shift_key() { let _ = window().location().set_href(&format!("//lemmy.world/post/{}", post_view.get().post.id)); } }>
+              // <A href="/create_post">
+                <Icon icon=Crosspost/>
+              // </A>
+            </span>
+          // {
+          //   if post_number == 0 {
+          //     view! {
                 <div class="dropdown max-sm:dropdown-end">
                   <label tabindex="0">
                     <Icon icon=VerticalDots/>
@@ -584,13 +563,14 @@ pub fn PostListing(
                     </li>
                   </ul>
                 </div>
-              }
-            } else {
-              view! {
-                <div class="hidden"></div>
-              }
-            }
-          }
+          //     }
+          //   } else {
+          //     view! {
+          //       <div class="hidden"></div>
+          //     }
+          //   }
+          // }
+          </Show>
           <span class="grow text-right text-base-content/25"> { if post_number != 0 { format!("{}", post_number) } else { "".into() } } </span>
       </div>
     </div>

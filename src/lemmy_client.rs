@@ -9,7 +9,8 @@ use lemmy_api_common::lemmy_db_schema::source::private_message::PrivateMessage;
 use lemmy_api_common::lemmy_db_views_actor::structs::CommentReplyView;
 use lemmy_api_common::private_message::PrivateMessagesResponse;
 use lemmy_api_common::{comment::*, community::*, person::*, post::*, private_message::GetPrivateMessages, site::* /* , LemmyErrorType */};
-use leptos::Serializable;
+use leptos::leptos_dom::logging;
+use leptos::{Serializable, SignalSet};
 use serde::{Deserialize, Serialize};
 
 #[derive(Clone)]
@@ -183,11 +184,18 @@ cfg_if! {
                         let api_result = r.json::<LemmyErrorType>().await;
 
                         match api_result {
+                            // Ok(LemmyErrorType::IncorrectLogin) => {
+                            //     let authenticated = leptos::expect_context::<leptos::RwSignal<Option<bool>>>();
+                            //     authenticated.set(Some(false));
+                            //     leptos::logging::log!("authy bumbum {:#?}", leptos::SignalGet::get(&authenticated));
+
+                            //     return Err(LemmyAppError{ error_type: LemmyAppErrorType::ApiError(LemmyErrorType::IncorrectLogin), content: format!("{:#?}", LemmyErrorType::IncorrectLogin) })
+                            // },
                             Ok(le) => {
-                              return Err(LemmyAppError{ error_type: LemmyAppErrorType::ApiError(le.clone()), content: format!("{:#?}", le) })
+                                return Err(LemmyAppError{ error_type: LemmyAppErrorType::ApiError(le.clone()), content: format!("{:#?}", le) })
                             },
                             Err(e) => {
-                              return Err(LemmyAppError{ error_type: LemmyAppErrorType::Unknown, content: format!("{:#?}", e) })
+                                return Err(LemmyAppError{ error_type: LemmyAppErrorType::Unknown, content: format!("{:#?}", e) })
                             },
                         }
                     },
@@ -195,7 +203,25 @@ cfg_if! {
                     },
                 };
 
+                // let authenticated = leptos::expect_context::<leptos::RwSignal<Option<bool>>>();
+                // leptos::logging::log!("authy bumbum {:#?}", leptos::SignalGet::get(&authenticated));
+
                 r.json::<Response>().limit(10485760).await.map_err(Into::into)
+
+                // let d: LemmyAppResult<Response> = r.json::<Response>().limit(10485760).await.map_err(Into::into);
+
+                // match d {
+                //   Err(f) => {
+                //     leptos::logging::log!("authy bumbum {:#?}", f);
+                //   // Err(LemmyAppError { error_type: LemmyAppErrorType::ApiError(LemmyErrorType::IncorrectLogin), .. }) => {
+                //   //   leptos::logging::log!("authy bumbum {:#?}", leptos::SignalGet::get(&authenticated));
+                //     // d.into()
+                //     Err(f).into()
+                //   }
+                //   _ => {
+                //     d.into()
+                //   }
+                // }
             }
         }
 
@@ -266,6 +292,13 @@ cfg_if! {
                     400..=599 => {
                         let api_result = r.json::<LemmyErrorType>().await;
                         match api_result {
+                            Ok(LemmyErrorType::IncorrectLogin) => {
+                                let authenticated = leptos::expect_context::<leptos::RwSignal<Option<bool>>>();
+                                authenticated.set(Some(false));
+                                // leptos::logging::log!("authy bumbum {:#?}", leptos::SignalGet::get(&authenticated));
+
+                                return Err(LemmyAppError{ error_type: LemmyAppErrorType::ApiError(LemmyErrorType::IncorrectLogin), content: format!("{:#?}", LemmyErrorType::IncorrectLogin) })
+                            },
                             Ok(le) => {
                                 return Err(LemmyAppError{ error_type: LemmyAppErrorType::ApiError(le.clone()), content: format!("{:#?}", le) })
                             },
@@ -278,7 +311,24 @@ cfg_if! {
                     },
                 };
 
+                // let authenticated = leptos::expect_context::<leptos::RwSignal<Option<bool>>>();
+                // leptos::logging::log!("authy bumbum {:#?}", leptos::SignalGet::get(&authenticated));
+
                 r.json::<Response>().await.map_err(Into::into)
+                //
+                // let d: LemmyAppResult<Response> = r.json::<Response>().await.map_err(Into::into);
+
+                // match d {
+                //   // Err(LemmyAppError { error_type: LemmyAppErrorType::ApiError(LemmyErrorType::IncorrectLogin), .. }) => {
+                //   Err(f) => {
+                //     leptos::logging::log!("authy bumbum {:#?}", f);
+                //     // d.into()
+                //     Err(f).into()
+                //   }
+                //   _ => {
+                //     d.into()
+                //   }
+                // }
             }
         }
 

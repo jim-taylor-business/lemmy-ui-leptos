@@ -155,7 +155,6 @@ pub fn CommentNode(
           }
           Err(e) => {
             error.update(|es| es.push(Some((e, None))));
-            // error.set(Some((e, None)));
           }
         }
       },
@@ -191,7 +190,6 @@ pub fn CommentNode(
           }
           Err(e) => {
             error.update(|es| es.push(Some((e, None))));
-            // error.set(Some((e, None)));
           }
         }
       },
@@ -215,11 +213,11 @@ pub fn CommentNode(
 
         match result {
           Ok(o) => {
-            // comment_view.set(o.comment_view);
+            com_sig.update(|cs| cs.push(o.comment_view));
+            reply_show.update(|b| *b = !*b);
           }
           Err(e) => {
             error.update(|es| es.push(Some((e, None))));
-            // error.set(Some((e, None)));
           }
         }
       },
@@ -230,7 +228,7 @@ pub fn CommentNode(
     <div
       // on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
       // on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
-      class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-300 pr-4 pt-2 pb-1" } else { "" }, if !hidden_comments.get().contains(&parent_comment_id) { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" })
+      class=move || format!("pl-4{}{}{}", if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" }, if !hidden_comments.get().contains(&parent_comment_id) { "" } else { " hidden" }, if back_show.get() { " bg-base-300" } else { "" })
     >
       <div on:click=move |e: MouseEvent| {
         if still_down.get() {
@@ -361,23 +359,23 @@ pub fn CommentNode(
           { com_sig.get().len() + des_sig.get().len() } " replies"
         </span>
       </div>
-      <Show when=move || reply_show.get() fallback=|| view! {  }>
+      <Show when=move || reply_show.get() fallback=|| {}>
         <div class="space-y-3 mb-3">
           <label class="form-control">
-            <textarea class="textarea textarea-bordered h-24" placeholder="Comment text" prop:value={ move || content.get() } on:input={ move |ev| content.set(event_target_value(&ev)) } >{ content.get_untracked() }</textarea>
+            <textarea class="textarea textarea-bordered text-base h-24" placeholder="Comment text" prop:value={ move || content.get() } on:input={ move |ev| content.set(event_target_value(&ev)) } >{ content.get_untracked() }</textarea>
           </label>
-          <div class="space-x-3 flex row">
+          // <div class="space-x-3 flex row">
             // <div class="flex row gap-4">
-            <button on:click=on_reply_click type="button" class="btn btn-md">
+            <button on:click=on_reply_click type="button" class="btn btn-neutral" /*class=format!("btn btn-neutral{}", if content.get().len() > 0 { "" } else { " btn-disabled" })*/>
                 "Comment"
             </button>
             // </div>
-            <label class="label cursor-pointer space-x-3">
-              <input type="checkbox" checked="checked" class="checkbox" />
-              <span class="label-text">Markdown</span>
-            </label>
-            // </div>
-          </div>
+          //   <label class="label cursor-pointer space-x-3">
+          //     <input type="checkbox" checked="checked" class="checkbox" />
+          //     <span class="label-text">Markdown</span>
+          //   </label>
+          //   // </div>
+          // </div>
         </div>
       </Show>
       // {move || {
