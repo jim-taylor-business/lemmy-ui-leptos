@@ -103,7 +103,7 @@ pub trait LemmyApi: Fetch {
     self.make_request(HttpType::Get, "private_message/list", form).await
   }
 
-  async fn mark_comment(&self, form: MarkCommentReplyAsRead) -> LemmyAppResult<CommentReplyView> {
+  async fn mark_comment(&self, form: MarkCommentReplyAsRead) -> LemmyAppResult<CommentReplyResponse> {
     self.make_request(HttpType::Post, "comment/mark_as_read", form).await
   }
 

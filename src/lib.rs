@@ -49,6 +49,8 @@ enum ResourceStatus {
 }
 #[derive(Clone, Debug)]
 pub struct FocusSetter(bool);
+#[derive(Clone, Debug, PartialEq)]
+pub struct NotificationsRefresh(bool);
 
 // static authenticated: LazyLock<RwSignal<Option<bool>>> = std::sync::LazyLock::new(|| RwSignal::new(None));
 
@@ -67,6 +69,8 @@ pub fn App() -> impl IntoView {
   provide_context(ui_title);
   let ui_online = RwSignal::new(OnlineSetter(true));
   provide_context(ui_online);
+  let notifications_refresh = RwSignal::new(NotificationsRefresh(true));
+  provide_context(notifications_refresh);
 
   let on_online = move |b: bool| {
     move |_| {

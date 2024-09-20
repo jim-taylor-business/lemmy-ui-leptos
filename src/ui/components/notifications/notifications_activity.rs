@@ -15,16 +15,20 @@ use leptos_router::{use_location, use_query_map, A};
 use crate::{
   errors::{message_from_error, LemmyAppError},
   ui::components::{comment::comment_node::CommentNode, common::about::About},
-  LemmyApi, LemmyClient,
+  LemmyApi, LemmyClient, NotificationsRefresh,
 };
 
 #[component]
 pub fn NotificationsActivity() -> impl IntoView {
   let errors = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
 
+  let notifications_refresh = expect_context::<RwSignal<NotificationsRefresh>>();
+
+  let replies_refresh = RwSignal::new(true);
+
   let replies = Resource::new(
-    move || (),
-    move |()| async move {
+    move || (replies_refresh.get()),
+    move |(_replies_refresh)| async move {
       let form = GetReplies {
         sort: Some(CommentSortType::New),
         page: Some(1),
@@ -110,11 +114,11 @@ pub fn NotificationsActivity() -> impl IntoView {
 
           match result {
             Ok(o) => {
-              // comment_view.set(o.comment_view);
+              replies_refresh.update(|b| *b = !*b);
+              notifications_refresh.update(|n| n.0 = !n.0);
             }
             Err(e) => {
-              // error.update(|es| es.push(Some((e, None))));
-              // error.set(Some((e, None)));
+              errors.update(|es| es.push(Some((e, None))));
             }
           }
         },

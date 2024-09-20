@@ -4,7 +4,7 @@ use crate::{
   i18n::*,
   lemmy_client::*,
   ui::components::common::icon::{Icon, IconType::*},
-  FocusSetter, OnlineSetter,
+  FocusSetter, NotificationsRefresh, OnlineSetter,
 };
 use ev::MouseEvent;
 use lemmy_api_common::{
@@ -98,6 +98,8 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
 
   let authenticated = expect_context::<RwSignal<Option<bool>>>();
 
+  let notifications_refresh = expect_context::<RwSignal<NotificationsRefresh>>();
+
   let logout_action = create_server_action::<LogoutFn>();
 
   let on_logout_submit = move |ev: SubmitEvent| {
@@ -134,8 +136,8 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
   let refresh = RwSignal::new(true);
 
   let ssr_unread = Resource::new(
-    move || (refresh.get(), logged_in.get()),
-    move |(_refresh, logged_in)| async move {
+    move || (refresh.get(), logged_in.get(), notifications_refresh.get()),
+    move |(_refresh, logged_in, _notifications_refresh)| async move {
       // logging::log!("vivance");
       let result = if logged_in == Some(true) {
         LemmyClient.unread_count().await
