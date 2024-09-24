@@ -107,6 +107,8 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
       )
     },
     move |(_refresh, _logged_in, list_type, sort_type, from, limit, name)| async move {
+      loading.set(true);
+
       let form = GetPosts {
         type_: Some(list_type),
         sort: Some(sort_type),
