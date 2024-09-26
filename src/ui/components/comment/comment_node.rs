@@ -322,9 +322,6 @@ pub fn CommentNode(
               <Icon icon=Downvote/>
             </button>
           </Form>
-          <span on:click={ move |_| reply_show.update(|b| *b = !*b) } title="Reply">
-            <Icon icon=Reply/>
-          </span>
           <Form
             action="POST"
             on:submit=on_save_submit
@@ -340,6 +337,12 @@ pub fn CommentNode(
               <Icon icon=Save/>
             </button>
           </Form>
+          <span on:click={ move |_| reply_show.update(|b| *b = !*b) } title="Reply">
+            <Icon icon=Reply/>
+          </span>
+          <span /*on:click={ move |_| reply_show.update(|b| *b = !*b) }*/ title="Edit">
+            <Icon icon=Pencil/>
+          </span>
           <span class="mb-1 break-words overflow-hidden">
             <span>
               { abbr_duration.clone() }

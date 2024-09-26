@@ -119,11 +119,11 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
         saved_only: None,
         disliked_only: None,
         liked_only: None,
-        page_cursor: from.1.clone(), // show_hidden: None,
+        page_cursor: from.1.clone(),
+        // show_hidden: None,
       };
 
       if online.get().0 {
-        // logging::log!("load!");
         let result = LemmyClient.list_posts(form.clone()).await;
         loading.set(false);
         ui_title.set(None);
@@ -132,9 +132,7 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
           Ok(o) => {
             #[cfg(not(feature = "ssr"))]
             if let Ok(Some(s)) = window().local_storage() {
-              if let Ok(Some(_)) = s.get_item(&serde_json::to_string(&form).ok().unwrap()) {
-                // logging::log!("cached!");
-              }
+              if let Ok(Some(_)) = s.get_item(&serde_json::to_string(&form).ok().unwrap()) {}
               s.set_item(&serde_json::to_string(&form).ok().unwrap(), &serde_json::to_string(&o).ok().unwrap());
             }
             Ok((from, o))
@@ -146,10 +144,8 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
         }
       } else {
         #[cfg(not(feature = "ssr"))]
-        // logging::log!("test!");
         if let Ok(Some(s)) = window().local_storage() {
           if let Ok(Some(c)) = s.get_item(&serde_json::to_string(&form).ok().unwrap()) {
-            // logging::log!("cached offline!");
             if let Ok(o) = serde_json::from_str::<GetPostsResponse>(&c) {
               loading.set(false);
               return Ok((from, o));
@@ -157,10 +153,7 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
           }
         }
 
-        // logging::log!("here!");
-
         loading.set(false);
-
         let e = LemmyAppError {
           error_type: LemmyAppErrorType::OfflineError,
           content: String::from(""),
@@ -171,21 +164,14 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
     },
   );
 
-  // let csr_resources: RwSignal<
-  //   BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>,
-  // > = RwSignal::new(BTreeMap::new());
-
-  // let csr_pages = expect_context::<RwSignal<BTreeMap<usize, GetPostsResponse>>>();
   let csr_resources = expect_context::<RwSignal<BTreeMap<(usize, ResourceStatus), (Option<PaginationCursor>, Option<GetPostsResponse>)>>>();
   let csr_sort = expect_context::<RwSignal<SortType>>();
   let csr_next_page_cursor = expect_context::<RwSignal<(usize, Option<PaginationCursor>)>>();
 
   let on_csr_sort_click = move |s: SortType| {
-    // logging::log!("buuu");
     move |_e: MouseEvent| {
       csr_next_page_cursor.set((0, None));
       csr_sort.set(s);
-      // csr_pages.set(BTreeMap::new());
       csr_resources.set(BTreeMap::new());
     }
   };

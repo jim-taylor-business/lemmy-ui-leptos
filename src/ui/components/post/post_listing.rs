@@ -124,6 +124,7 @@ pub fn PostListing(
   post_view: MaybeSignal<PostView>,
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
   post_number: usize,
+  reply_show: RwSignal<bool>,
 ) -> impl IntoView {
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let logged_in = Signal::derive(move || {
@@ -195,7 +196,6 @@ pub fn PostListing(
           }
           Err(e) => {
             error.update(|es| es.push(Some((e, None))));
-            // error.set(Some((e, None)));
           }
         }
       },
@@ -221,7 +221,6 @@ pub fn PostListing(
           Ok(_o) => {}
           Err(e) => {
             error.update(|es| es.push(Some((e, None))));
-            // error.set(Some((e, None)));
           }
         }
       },
@@ -277,7 +276,6 @@ pub fn PostListing(
           Ok(_o) => {}
           Err(e) => {
             error.update(|es| es.push(Some((e.clone(), None))));
-            // error.set(Some((e.clone(), None)));
 
             let _id = format!("{}", post_view.get().post.id);
 
@@ -512,6 +510,9 @@ pub fn PostListing(
               <Icon icon=Save/>
             </button>
           </ActionForm>
+          <span class="cursor-pointer" on:click={ move |_| reply_show.update(|b| *b = !*b) } title="Reply">
+            <Icon icon=Reply/>
+          </span>
           <span class=format!("text-base-content{}", if post_view.get().post.local { " hidden" } else { "" }) title="Original post">
             <A href={ post_view.get().post.ap_id.inner().to_string() }>
               <Icon icon=External/>

@@ -20,6 +20,7 @@ pub enum IconType {
   Link,
   Translate,
   Palette,
+  Pencil,
 }
 
 impl IconType {
@@ -43,15 +44,13 @@ impl IconType {
       IconType::Link => "link",
       IconType::Translate => "translate",
       IconType::Palette => "palette",
+      IconType::Pencil => "pencil",
     }
   }
 }
 
 #[component]
-pub fn Icon(
-  #[prop(into)] icon: MaybeSignal<IconType>,
-  #[prop(optional)] class: MaybeProp<TextProp>,
-) -> impl IntoView {
+pub fn Icon(#[prop(into)] icon: MaybeSignal<IconType>, #[prop(optional)] class: MaybeProp<TextProp>) -> impl IntoView {
   let href = Signal::derive(move || format!("/icons.svg#{}", icon.get().as_str()));
 
   view! {

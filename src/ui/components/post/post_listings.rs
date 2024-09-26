@@ -12,9 +12,9 @@ pub fn PostListings(
   view! {
     <For each=move || posts.get() key=|pv| pv.post.id let:pv>
       {
-        post_number.set(post_number.get() + 1); 
+        post_number.set(post_number.get() + 1);
         view! {
-          <PostListing post_view=pv.into() site_signal post_number=post_number.get()/>
+          <PostListing post_view=pv.into() site_signal post_number=post_number.get() reply_show=false.into()/>
         }
       }
     </For>

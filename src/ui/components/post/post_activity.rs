@@ -1,5 +1,3 @@
-#[cfg(not(feature = "ssr"))]
-use crate::indexed_db::*;
 use crate::{
   errors::LemmyAppError,
   lemmy_client::*,
@@ -9,7 +7,7 @@ use crate::{
 
 use ev::MouseEvent;
 use lemmy_api_common::{
-  comment::GetComments,
+  comment::{CreateComment, GetComments},
   lemmy_db_schema::{newtypes::PostId, CommentSortType},
   post::GetPost,
   site::GetSiteResponse,
@@ -20,45 +18,18 @@ use web_sys::wasm_bindgen::JsCast;
 use web_sys::{HtmlAnchorElement, HtmlImageElement};
 
 #[component]
-pub fn PostActivity(
-  site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
-) -> impl IntoView {
+pub fn PostActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>) -> impl IntoView {
   let params = use_params_map();
-  let post_id = move || {
-    params
-      .get()
-      .get("id")
-      .cloned()
-      .unwrap_or_default()
-      .parse::<i32>()
-      .ok()
-  };
+  let post_id = move || params.get().get("id").cloned().unwrap_or_default().parse::<i32>().ok();
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
-  // #[cfg(not(feature = "ssr"))]
-  // spawn_local(async {
-  //   if let Ok(d) = build_comment_database().await {
-  //     // if let Ok(i) = add_comment(&d, 1, 1, true).await {
-  //     //   logging::log!("poo {:#?}", get_employee(&r, i).await);
-  //     // }
+  let reply_show = RwSignal::new(false);
+  let refresh_comments = RwSignal::new(false);
+  let content = RwSignal::new(String::default());
 
-  //     logging::log!("{:#?}", add_array(&d, 1, vec![1, 2, 3]).await);
-  //     logging::log!("{:#?}", add_array(&d, 1000, vec![1, 2, 3]).await);
-  //     logging::log!("{:#?}", add_array(&d, 2000, vec![1, 2, 3]).await);
-  //     // logging::log!("{:#?}", add_comment(&d, 1, 11, true).await);
-  //     // logging::log!("{:#?}", add_comment(&d, 2, 12, true).await);
-  //     // logging::log!("{:#?}", add_comment(&d, 2, 13, true).await);
-  //     // logging::log!("{:#?}", add_comment(&d, 3, 14, true).await);
-
-  //     logging::log!("v {:#?}", get_array(&d, 1).await);
-  //   }
-  // });
-
-  // #[cfg(not(feature = "ssr"))]
   let post = Resource::new(post_id, move |id_string| async move {
     if let Some(id) = id_string {
-      // if let Ok(id) = id_string.parse::<i32>() {
       let form = GetPost {
         id: Some(PostId(id)),
         comment_id: None,
@@ -70,7 +41,6 @@ pub fn PostActivity(
         Ok(o) => Some(o),
         Err(e) => {
           error.update(|es| es.push(Some((e, None))));
-          // error.set(Some((e, None)));
           None
         }
       }
@@ -79,38 +49,69 @@ pub fn PostActivity(
     }
   });
 
-  let comments = Resource::new(post_id, move |id_string| async move {
-    if let Some(id) = id_string {
-      // if let Ok(id) = id_string.parse::<i32>() {
-      let form = GetComments {
-        post_id: Some(PostId(id)),
-        community_id: None,
-        type_: None,
-        sort: Some(CommentSortType::Top),
-        max_depth: Some(8),
-        page: None,
-        limit: None,
-        community_name: None,
-        parent_id: None,
-        saved_only: None,
-        disliked_only: None,
-        liked_only: None,
-      };
+  let comments = Resource::new(
+    move || (post_id(), refresh_comments.get()),
+    move |(post_id, _refresh)| async move {
+      if let Some(id) = post_id {
+        let form = GetComments {
+          post_id: Some(PostId(id)),
+          community_id: None,
+          type_: None,
+          sort: Some(CommentSortType::Top),
+          max_depth: Some(8),
+          page: None,
+          limit: None,
+          community_name: None,
+          parent_id: None,
+          saved_only: None,
+          disliked_only: None,
+          liked_only: None,
+        };
 
-      let result = LemmyClient.get_comments(form).await;
+        let result = LemmyClient.get_comments(form).await;
 
-      match result {
-        Ok(o) => Some(o),
-        Err(e) => {
-          error.update(|es| es.push(Some((e, None))));
-          // error.set(Some((e, None)));
-          None
+        match result {
+          Ok(o) => Some(o),
+          Err(e) => {
+            error.update(|es| es.push(Some((e, None))));
+            None
+          }
         }
+      } else {
+        None
       }
-    } else {
-      None
-    }
-  });
+    },
+  );
+
+  let on_reply_click = move |ev: MouseEvent| {
+    ev.prevent_default();
+
+    create_local_resource(
+      move || (),
+      move |()| async move {
+        if let Some(id) = post_id() {
+          let form = CreateComment {
+            content: content.get(),
+            post_id: PostId(id),
+            parent_id: None,
+            language_id: None,
+          };
+
+          let result = LemmyClient.reply_comment(form).await;
+
+          match result {
+            Ok(o) => {
+              refresh_comments.update(|b| *b = !*b);
+              reply_show.update(|b| *b = !*b);
+            }
+            Err(e) => {
+              error.update(|es| es.push(Some((e, None))));
+            }
+          }
+        }
+      },
+    );
+  };
 
   view! {
     <main role="main" class="w-full flex flex-col flex-grow">
@@ -134,7 +135,7 @@ pub fn PostActivity(
 
                       view! {
                         <div>
-                          <PostListing post_view=res.post_view.into() site_signal post_number=0/>
+                          <PostListing post_view=res.post_view.into() site_signal post_number=0 reply_show />
                         </div>
                         {
                           if let Some(ref content) = text {
@@ -164,7 +165,7 @@ pub fn PostActivity(
                                     if let Some(i) = t.dyn_ref::<HtmlImageElement>() {
                                       let _ = window().location().set_href(&i.src());
                                     } else if let Some(l) = t.dyn_ref::<HtmlAnchorElement>() {
-                                                                          }
+                                    }
                                   }
                                 }>
                                   <div class="prose max-w-none"
@@ -177,6 +178,16 @@ pub fn PostActivity(
                             view! { <div class="hidden"></div> }
                           }
                         }
+                        <Show when=move || reply_show.get() fallback=|| {}>
+                          <div class="space-y-3 mb-3">
+                            <label class="form-control">
+                              <textarea class="textarea textarea-bordered text-base h-24" placeholder="Comment text" prop:value={ move || content.get() } on:input={ move |ev| content.set(event_target_value(&ev)) } >{ content.get_untracked() }</textarea>
+                            </label>
+                            <button on:click=on_reply_click type="button" class="btn btn-neutral" /*class=format!("btn btn-neutral{}", if content.get().len() > 0 { "" } else { " btn-disabled" })*/>
+                              "Comment"
+                            </button>
+                          </div>
+                        </Show>
                       }
                     })
             }}

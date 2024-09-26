@@ -306,15 +306,15 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
               <summary><Icon icon=Translate /></summary>
               <ul>
                 <li>
-                  <ActionForm action=lang_action on:submit=on_lang_submit(Locale::fr)>
+                  <ActionForm class="p-0" action=lang_action on:submit=on_lang_submit(Locale::fr)>
                     <input type="hidden" name="lang" value="FR"/>
-                    <button type="submit">"FR"</button>
+                    <button class="px-4 py-2" type="submit">"FR"</button>
                   </ActionForm>
                 </li>
                 <li>
-                  <ActionForm action=lang_action on:submit=on_lang_submit(Locale::en)>
+                  <ActionForm class="p-0" action=lang_action on:submit=on_lang_submit(Locale::en)>
                     <input type="hidden" name="lang" value="EN"/>
-                    <button type="submit">"EN"</button>
+                    <button class="px-4 py-2" type="submit">"EN"</button>
                   </ActionForm>
                 </li>
               </ul>
@@ -325,21 +325,21 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
               <summary><Icon icon=Palette /></summary>
               <ul>
                 <li>
-                  <ActionForm action=theme_action on:submit=on_theme_submit("dark")>
+                  <ActionForm class="p-0" action=theme_action on:submit=on_theme_submit("dark")>
                     <input type="hidden" name="theme" value="dark"/>
-                    <button type="submit">"Dark"</button>
+                    <button class="px-4 py-2" type="submit">"Dark"</button>
                   </ActionForm>
                 </li>
                 <li>
-                  <ActionForm action=theme_action on:submit=on_theme_submit("light")>
+                  <ActionForm class="p-0" action=theme_action on:submit=on_theme_submit("light")>
                     <input type="hidden" name="theme" value="light"/>
-                    <button type="submit">"Light"</button>
+                    <button class="px-4 py-2" type="submit">"Light"</button>
                   </ActionForm>
                 </li>
                 <li>
-                  <ActionForm action=theme_action on:submit=on_theme_submit("retro")>
+                  <ActionForm class="p-0" action=theme_action on:submit=on_theme_submit("retro")>
                     <input type="hidden" name="theme" value="retro"/>
-                    <button type="submit">"Retro"</button>
+                    <button class="px-4 py-2" type="submit">"Retro"</button>
                   </ActionForm>
                 </li>
               </ul>
