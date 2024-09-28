@@ -3,9 +3,7 @@ use lemmy_api_common::site::GetSiteResponse;
 use leptos::*;
 
 #[component]
-pub fn SiteSummary(
-  site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
-) -> impl IntoView {
+pub fn SiteSummary(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>) -> impl IntoView {
   let _i18n = use_i18n();
 
   view! {
@@ -14,7 +12,7 @@ pub fn SiteSummary(
             .get()
             .map(|o| match o {
                 Ok(o) => {
-                    view! {
+                    Some(view! {
                       <div class="card w-full bg-base-300 text-base-content mb-6">
                         <figure>
                           <div class="card-body bg-neutral">
@@ -78,10 +76,11 @@ pub fn SiteSummary(
                           </p>
                         </div>
                       </div>
-                    }
+                    })
                 }
                 _ => {
-                    view! { <div class="hidden"></div> }
+                  None
+                    // view! { <div class="hidden"></div> }
                 }
             })
     }}

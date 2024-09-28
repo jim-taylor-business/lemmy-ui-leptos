@@ -158,7 +158,7 @@ pub fn PostActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
                             let mut safe_html = String::new();
                             pulldown_cmark::html::push_html(&mut safe_html, custom);
 
-                            view! {
+                            Some(view! {
                               <div class="pl-4 pr-4">
                                 <div class="py-2"  on:click=move |e: MouseEvent| {
                                   if let Some(t) = e.target() {
@@ -173,9 +173,10 @@ pub fn PostActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
                                   />
                                 </div>
                               </div>
-                            }
+                            })
                           } else {
-                            view! { <div class="hidden"></div> }
+                            None
+                            // view! { <div class="hidden"></div> }
                           }
                         }
                         <Show when=move || reply_show.get() fallback=|| {}>

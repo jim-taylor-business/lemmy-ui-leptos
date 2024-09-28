@@ -510,9 +510,11 @@ pub fn PostListing(
               <Icon icon=Save/>
             </button>
           </ActionForm>
-          <span class="cursor-pointer" on:click={ move |_| reply_show.update(|b| *b = !*b) } title="Reply">
-            <Icon icon=Reply/>
-          </span>
+          <Show when=move || { post_number == 0 } fallback=|| {}>
+            <span class="cursor-pointer text-base-content/50" on:click={ move |_| reply_show.update(|b| *b = !*b) } title="Reply">
+              <Icon icon=Reply/>
+            </span>
+          </Show>
           <span class=format!("text-base-content{}", if post_view.get().post.local { " hidden" } else { "" }) title="Original post">
             <A href={ post_view.get().post.ap_id.inner().to_string() }>
               <Icon icon=External/>

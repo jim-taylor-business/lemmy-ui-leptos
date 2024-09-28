@@ -4,7 +4,7 @@ use crate::{
   i18n::*,
   lemmy_client::*,
   ui::components::common::icon::{Icon, IconType::*},
-  FocusSetter, NotificationsRefresh, OnlineSetter,
+  FocusSetter, NotificationsRefresh, OnlineSetter, UriSetter,
 };
 use ev::MouseEvent;
 use lemmy_api_common::{
@@ -97,9 +97,10 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
   // }
 
   let authenticated = expect_context::<RwSignal<Option<bool>>>();
-
   let notifications_refresh = expect_context::<RwSignal<NotificationsRefresh>>();
+  let uri = expect_context::<RwSignal<UriSetter>>();
 
+  // let login_action = create_server_action::<NavigateLoginFn>();
   let logout_action = create_server_action::<LogoutFn>();
 
   let on_logout_submit = move |ev: SubmitEvent| {
@@ -117,14 +118,12 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
           Err(e) => {
             logging::warn!("logout error {:#?}", e);
             error.update(|es| es.push(Some((e, None))));
-            // error.set(Some((e, None)));
           }
         }
       },
     );
   };
 
-  // let site_signal = RwSignal::new::<Option<Result<GetSiteResponse, LemmyAppError>>>(None);
   let logged_in = Signal::derive(move || {
     if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
       Some(true)
@@ -142,19 +141,12 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
       let result = if logged_in == Some(true) {
         LemmyClient.unread_count().await
       } else {
-        // LemmyClient.unread_count().await;
-        //   Err(LemmyAppError {
-        //     error_type: LemmyAppErrorType::MissingToken,
-        //     content: "".into(),
-        //   })
         Ok(GetUnreadCountResponse {
           replies: 0,
           mentions: 0,
           private_messages: 0,
         })
       };
-
-      // logging::log!("{:#?}", result);
 
       match result {
         Ok(o) => Ok(o),
@@ -167,60 +159,33 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
   );
 
   let ui_focus = RwSignal::new(FocusSetter(true));
-  // let on_focus = move |b| {
-  //   move |_| {
-  //     logging::log!("focus {}", b);
-  //     ui_focus.set(FocusSetter(b));
-  //   }
-  // };
 
   #[cfg(not(feature = "ssr"))]
   let visibility = use_document_visibility();
 
   #[cfg(not(feature = "ssr"))]
-  let e = Effect::new(move |_| {
-    match visibility.get() {
-      VisibilityState::Visible => {
-        refresh.update(|b| *b = !*b);
-        // logging::log!(" bam do thing");
-      }
-      VisibilityState::Hidden => {
-        // refresh.update(|b| *b = !*b);
-        // logging::log!("no do thing");
-      }
-      _ => {
-        // refresh.update(|b| *b = !*b);
-        // logging::log!("fuck do thing");
-      }
+  let e = Effect::new(move |_| match visibility.get() {
+    VisibilityState::Visible => {
+      refresh.update(|b| *b = !*b);
     }
-    // refresh.update(|b| *b = !*b);
-    // logging::log!(" bam {:#?}", visibility.get());
+    VisibilityState::Hidden => {}
+    _ => {}
   });
-
-  // let _onfocus_handle = window_event_listener_untyped("visibilitychange", on_focus(true));
-  // let _onblur_handle = window_event_listener_untyped("onblur", on_focus(false));
 
   #[cfg(not(feature = "ssr"))]
   set_interval_with_handle(
     move || match visibility.get() {
       VisibilityState::Visible => {
         refresh.update(|b| *b = !*b);
-        // logging::log!("ping do thing");
       }
-      VisibilityState::Hidden => {
-        // refresh.update(|b| *b = !*b);
-        // logging::log!("no do thing");
-      }
-      _ => {
-        // refresh.update(|b| *b = !*b);
-        // logging::log!("fuck do thing");
-      }
+      VisibilityState::Hidden => {}
+      _ => {}
     },
     std::time::Duration::from_millis(30000),
-  ); //refresh.set(!refresh.get()), Duration::from_millis(5000)).expect("could not create interval");
+  );
 
-  let ui_theme = expect_context::<RwSignal<Option<String>>>();
-  let ui_online = expect_context::<RwSignal<OnlineSetter>>();
+  let theme = expect_context::<RwSignal<Option<String>>>();
+  let online = expect_context::<RwSignal<OnlineSetter>>();
   let theme_action = create_server_action::<ChangeThemeFn>();
 
   let on_theme_submit = move |theme_name: &'static str| {
@@ -232,7 +197,7 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
           let _ = set_cookie("theme", &t, &core::time::Duration::from_secs(604800)).await;
         },
       );
-      ui_theme.set(Some(theme_name.to_string()));
+      theme.set(Some(theme_name.to_string()));
     }
   };
 
@@ -243,6 +208,13 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
       ev.prevent_default();
       i18n.set_locale(lang);
     }
+  };
+
+  let on_navigate_login = move |ev: SubmitEvent| {
+    ev.prevent_default();
+    let l = use_location();
+    uri.set(UriSetter(format!("{}{}", l.pathname.get(), l.query.get().to_query_string())));
+    use_navigate()("/login", NavigateOptions::default());
   };
 
   view! {
@@ -360,7 +332,7 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
                           <li title=move || {
                             format!("{}{}{}",
                               if error.get().len() > 0 { format!("{} errors, ", error.get().len()) } else { "".into() },
-                              if ui_online.get().0 { "app online" } else { "app offline" },
+                              if online.get().0 { "app online" } else { "app offline" },
                               unread,
                             )
                           }>
@@ -368,57 +340,34 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
                               <span class="flex flex-row items-center">
                                 {move || {
                                   let v = error.get();
-                                  if v.len() > 0 {
+                                  (v.len() > 0).then(move || {
                                     let l = v.len();
                                     view! {
                                       <div class="badge badge-error badge-xs"> { l } </div>
                                     }
-                                  } else {
-                                    view! {
-                                      <div class="hidden"></div>
-                                    }
-                                  }
+                                  })
                                 }}
                                 <span>
                                   {move || {
-                                    if ui_online.get().0 {
-                                      view! {
-                                        <div class="hidden"></div>
-                                        // <div class="absolute top-0 badge badge-success badge-xs"></div>
-                                      }
-                                    } else {
+                                    (!online.get().0).then(move ||
                                       view! {
                                         <div class="absolute top-0 badge badge-warning badge-xs"></div>
                                       }
-                                    }
+                                    )
                                   }}
                                   <Icon icon=Notifications/>
                                 </span>
-                                // <Transition fallback=|| {}>
-                                //   {move || {
-                                //       ssr_unread
-                                //           .get()
-                                //           .map(|u| {
                                 {
-                                              if let Ok(c) = u {
-                                                if c.replies + c.mentions + c.private_messages > 0 {
-                                                  view! {
-                                                    <div class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
-                                                  }
-                                                } else {
-                                                  view! {
-                                                    <div class="hidden"></div>
-                                                  }
-                                                }
-                                              } else {
-                                                view! {
-                                                  <div class="hidden"></div>
-                                                }
-                                              }
+                                  if let Ok(c) = u {
+                                    (c.replies + c.mentions + c.private_messages > 0).then(move ||
+                                      view! {
+                                        <div class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
+                                      }
+                                    )
+                                  } else {
+                                    None
+                                  }
                                 }
-                                //           })
-                                //   }}
-                                // </Transition>
                               </span>
                             </A>
                           </li>
@@ -426,62 +375,6 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
                     })
             }}
           </Transition>
-          // <li title=move || {
-          //   format!("{}{}{}",
-          //     if error.get().len() > 0 { format!("{} errors", error.get().len()) } else { "".into() },
-          //     if ui_online.get().0 { "app online" } else { "app offline" },
-          //     if ui_online.get().0 { "" } else { "" },
-          //   )
-          // }>
-          //   <A href="/notifications">
-          //     <span class="flex flex-row items-center">
-          //       {move || {
-          //         let v = error.get();
-          //         if v.len() > 0 {
-          //           let l = v.len();
-          //           view! {
-          //             <div title=move || format!("{} errors", l) class="badge badge-error badge-xs"> { l } </div>
-          //           }
-          //         } else {
-          //           view! {
-          //             <div class="hidden"></div>
-          //           }
-          //         }
-          //       }}
-          //       <span>
-          //         {move || {
-          //           if ui_online.get().0 {
-          //             view! {
-          //               <div title="online" class="absolute top-0 badge badge-success badge-xs"></div>
-          //             }
-          //           } else {
-          //             view! {
-          //               <div title="offline" class="absolute top-0 badge badge-warning badge-xs"></div>
-          //             }
-          //           }
-          //         }}
-          //         <Icon icon=Notifications/>
-          //       </span>
-          //       <Transition fallback=|| {}>
-          //         {move || {
-          //             ssr_unread
-          //                 .get()
-          //                 .map(|u| {
-          //                     if let Ok(c) = u {
-          //                       view! {
-          //                         <div title=move || format!("{} unread", c.replies + c.mentions + c.private_messages) class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
-          //                       }
-          //                     } else {
-          //                       view! {
-          //                         <div class="hidden"></div>
-          //                       }
-          //                     }
-          //                 })
-          //         }}
-          //       </Transition>
-          //     </span>
-          //   </A>
-          // </li>
           <Show
             when=move || {
                 if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
@@ -492,14 +385,22 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
             }
 
             fallback=move || {
+                // let l = use_location();
+
                 view! {
                   <li>
-                    // <ActionForm action=theme_action on:submit=on_theme_submit("retro")>
-                    //   <input type="hidden" name="theme" value="retro"/>
-                    //   <button type="submit">"Retro"</button>
+                    // <ActionForm action="/login" on:submit=|_| {}>
+                    //   <input type="hidden" name="uri" value=move || format!("{}{}", l.pathname.get(), l.query.get().to_query_string())/>
+                    //   <button type="submit">"lowgin"</button>
                     // </ActionForm>
-
-                    <A href="/login">{t!(i18n, login)}</A>
+                    // <Form action="/login" method="POST" on:submit=|_| {}>
+                    //   <input type="hidden" name="theme" value="retro"/>
+                    //   <button type="submit">"LOGIN"</button>
+                    // </Form>
+                    <form action="/login" method="POST" on:submit=on_navigate_login>
+                      <button type="submit">{t!(i18n, login)}</button>
+                    </form>
+                    // <A href="/login">{t!(i18n, login)}</A>
                   </li>
                   <li class="hidden lg:flex">
                     <A href="/signup" class="pointer-events-none text-base-content/50">{t!(i18n, signup)}</A>

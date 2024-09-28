@@ -3,10 +3,12 @@ use crate::{
   errors::{LemmyAppError, LemmyAppErrorType},
   i18n::*,
   ui::components::common::text_input::{InputType, TextInput},
+  UriSetter,
 };
 use lemmy_api_common::person::{Login, LoginResponse};
 use leptos::*;
 use leptos_router::*;
+use leptos_use::storage::use_storage;
 use web_sys::SubmitEvent;
 
 fn validate_login(form: &Login) -> Option<LemmyAppErrorType> {
@@ -50,7 +52,7 @@ async fn try_login(form: Login) -> Result<LoginResponse, LemmyAppError> {
 }
 
 #[server(LoginFn, "/serverfn")]
-pub async fn login(username_or_email: String, password: String) -> Result<(), ServerFnError> {
+pub async fn login(username_or_email: String, password: String, uri: String) -> Result<(), ServerFnError> {
   use leptos_actix::redirect;
 
   let req = Login {
@@ -66,7 +68,8 @@ pub async fn login(username_or_email: String, password: String) -> Result<(), Se
       let r = set_cookie("jwt", &jwt.unwrap_or_default().into_inner(), &core::time::Duration::from_secs(604800)).await;
       match r {
         Ok(_o) => {
-          redirect("/");
+          // redirect("/");
+          redirect(&uri);
           Ok(())
         }
         Err(e) => {
@@ -82,14 +85,44 @@ pub async fn login(username_or_email: String, password: String) -> Result<(), Se
   }
 }
 
+#[derive(serde::Deserialize)]
+struct Theme {
+  theme: String,
+  // uri: String,
+}
+
 #[component]
 pub fn LoginForm() -> impl IntoView {
   let _i18n = use_i18n();
 
   let query = use_query_map();
+  // let params = use_params_map();
+
+  // #[cfg(feature = "ssr")]
+  // let f = {
+  //   use actix_web::{web::Form, HttpRequest};
+  //   use leptos_actix::extract;
+  //   Resource::new(
+  //     move || {},
+  //     move |()| async move {
+  //       // let request = extract::<HttpRequest>().await;
+  //       let t = if let Some(Form(form)) = extract::<Form<Theme>>().await.ok() {
+  //         form.theme
+  //       } else {
+  //         "".into()
+  //       };
+  //       t
+  //     },
+  //   )
+  // };
+  // #[cfg(not(feature = "ssr"))]
+  // let f = RwSignal::new("value".to_string());
+
+  // logging::log!("{:#?} {:#?} {:#?}", f.get(), query.get(), params.get());
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let authenticated = expect_context::<RwSignal<Option<bool>>>();
+  let uri = expect_context::<RwSignal<UriSetter>>();
 
   let name = RwSignal::new(String::new());
   let password = RwSignal::new(String::new());
@@ -130,7 +163,9 @@ pub fn LoginForm() -> impl IntoView {
           Ok(LoginResponse { jwt: Some(jwt), .. }) => {
             let _ = set_cookie("jwt", &jwt.clone().into_inner(), &core::time::Duration::from_secs(604800)).await;
             authenticated.set(Some(true));
-            leptos_router::use_navigate()("/", Default::default());
+            // leptos_router::use_navigate()("/", Default::default());
+            // leptos_router::use_navigate()(&query.get().get("uri").cloned().unwrap_or("/".into()), Default::default());
+            leptos_router::use_navigate()(&uri.get().0, Default::default());
           }
           Ok(LoginResponse { jwt: None, .. }) => {
             error.update(|es| {
@@ -171,6 +206,7 @@ pub fn LoginForm() -> impl IntoView {
 
   view! {
     <ActionForm class="space-y-3" action=login on:submit=on_submit>
+      <input type="hidden" name="uri" value=move || query.get().get("uri").cloned().unwrap_or("".into())/>
       <TextInput
         id="username"
         name="username_or_email"

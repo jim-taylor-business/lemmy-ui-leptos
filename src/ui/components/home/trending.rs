@@ -44,11 +44,12 @@ pub fn Trending() -> impl IntoView {
               .get()
               .map(|r| match r {
                   None => {
-                      view! { <div class="hidden"></div> }
+                    None
+                      // view! { <div class="hidden"></div> }
                   }
                   Some(c) => {
                       let c_signal = RwSignal::new(c.communities);
-                      view! {
+                      Some(view! {
                         <div class="card w-full bg-base-300 text-base-content mb-0">
                           <figure>
                             <div class="card-body bg-info">
@@ -63,12 +64,11 @@ pub fn Trending() -> impl IntoView {
                                 children=move |cv: CommunityView| {
                                     view! {
                                       <A
-                                        class="text-l font-bold link link-accent"
+                                        class="text-l font-bold block link link-accent no-underline"
                                         href=format!("/c/{}", cv.community.name)
                                       >
                                         {cv.community.title}
                                       </A>
-                                      " "
                                     }
                                 }
                               />
@@ -82,7 +82,7 @@ pub fn Trending() -> impl IntoView {
                             </A>
                           </div>
                         </div>
-                      }
+                      })
                   }
               })
       }}

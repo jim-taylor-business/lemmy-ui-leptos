@@ -40,6 +40,8 @@ leptos_i18n::load_locales!();
 #[derive(Clone)]
 pub struct TitleSetter(String);
 #[derive(Clone)]
+pub struct UriSetter(String);
+#[derive(Clone)]
 pub struct OnlineSetter(bool);
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash, Debug)]
 enum ResourceStatus {
@@ -63,18 +65,20 @@ pub fn App() -> impl IntoView {
   provide_context(error);
   let authenticated: RwSignal<Option<bool>> = RwSignal::new(None);
   provide_context(authenticated);
-  let ui_theme: RwSignal<Option<String>> = RwSignal::new(None);
-  provide_context(ui_theme);
-  let ui_title: RwSignal<Option<TitleSetter>> = RwSignal::new(None);
-  provide_context(ui_title);
-  let ui_online = RwSignal::new(OnlineSetter(true));
-  provide_context(ui_online);
+  let theme: RwSignal<Option<String>> = RwSignal::new(None);
+  provide_context(theme);
+  let title: RwSignal<Option<TitleSetter>> = RwSignal::new(None);
+  provide_context(title);
+  let online = RwSignal::new(OnlineSetter(true));
+  provide_context(online);
   let notifications_refresh = RwSignal::new(NotificationsRefresh(true));
   provide_context(notifications_refresh);
+  let uri: RwSignal<UriSetter> = RwSignal::new(UriSetter("".into()));
+  provide_context(uri);
 
   let on_online = move |b: bool| {
     move |_| {
-      ui_online.set(OnlineSetter(b));
+      online.set(OnlineSetter(b));
     }
   };
 
@@ -141,7 +145,7 @@ pub fn App() -> impl IntoView {
           <Route path="create_community" view=CommunitiesActivity/>
           <Route path="c/:name" view=move || view! { <HomeActivity site_signal/> }/>/>
 
-          <Route path="login" view=LoginActivity/>
+          <Route path="login" methods=&[Method::Get, Method::Post] view=LoginActivity/>
           <Route path="logout" view=CommunitiesActivity/>
           <Route path="signup" view=CommunitiesActivity/>
 

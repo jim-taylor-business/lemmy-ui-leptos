@@ -103,7 +103,6 @@ pub fn NotificationsActivity() -> impl IntoView {
 
   let on_clear_reply_click = move |id: CommentReplyId| {
     move |_e: MouseEvent| {
-      // move |ev: ClickEvent, id: i32| {
       create_local_resource(
         move || (),
         move |()| async move {
@@ -132,88 +131,71 @@ pub fn NotificationsActivity() -> impl IntoView {
     <main class="mx-auto">
       <Transition fallback=|| { }>
         {move || {
-            replies
-                .get()
-                .unwrap_or(None)
-                .map(|g| {
-                  view! {
-                    <div class="w-full">
-                      <For each=move || g.replies.clone() key=|r| r.comment.id let:r>
-                        {
-                          let c = CommentView {
-                            comment: r.comment,
-                            creator: r.creator,
-                            post: r.post,
-                            community: r.community,
-                            counts: r.counts,
-                            creator_banned_from_community: false,
-                            creator_is_moderator: r.creator_is_moderator,
-                            creator_is_admin: r.creator_is_admin,
-                            subscribed: r.subscribed,
-                            saved: r.saved,
-                            creator_blocked: r.creator_blocked,
-                            my_vote: r.my_vote,
-                          };
+          replies.get().unwrap_or(None).map(|g| {
+            view! {
+              <div class="w-full">
+                <For each=move || g.replies.clone() key=|r| r.comment.id let:r>
+                  {
+                    let c = CommentView {
+                      comment: r.comment,
+                      creator: r.creator,
+                      post: r.post,
+                      community: r.community,
+                      counts: r.counts,
+                      creator_banned_from_community: false,
+                      creator_is_moderator: r.creator_is_moderator,
+                      creator_is_admin: r.creator_is_admin,
+                      subscribed: r.subscribed,
+                      saved: r.saved,
+                      creator_blocked: r.creator_blocked,
+                      my_vote: r.my_vote,
+                    };
 
-                          view! {
-                            <div class="mb-6">
-                              <CommentNode parent_comment_id=0 hidden_comments=RwSignal::new(vec![]) on_toggle=on_hide_show comment_view=c.into() comments=vec![].into() level=1 now_in_millis/>
-                              <button class="btn btn-sm" on:click=on_clear_reply_click(r.comment_reply.id)> "Clear" </button>
-                            </div>
-                          }
-                        }
-                      </For>
+                    view! {
+                      <div class="mb-6">
+                        <CommentNode parent_comment_id=0 hidden_comments=RwSignal::new(vec![]) on_toggle=on_hide_show comment_view=c.into() comments=vec![].into() level=1 now_in_millis/>
+                        <button class="btn btn-sm" on:click=on_clear_reply_click(r.comment_reply.id)> "Clear" </button>
+                      </div>
+                    }
+                  }
+                </For>
+              </div>
+            }
+          })
+        }}
+      </Transition>
+      <Transition fallback=|| { }>
+        {move || {
+          mentions.get().unwrap_or(None).map(|m| {
+            (m.mentions.len() > 0).then(move ||
+              view! {
+                <div class="w-full">
+                    <div class="px-8 mb-6">
+                        <div class="alert">
+                          <span> {m.mentions.len()} " mentions" </span>
+                        </div>
                     </div>
-                  }
-                })
+                </div>
+              }
+            )
+          })
         }}
       </Transition>
       <Transition fallback=|| { }>
         {move || {
-            mentions
-                .get()
-                .unwrap_or(None)
-                .map(|m| {
-                  if m.mentions.len() > 0 {
-                    view! {
-                      <div class="w-full">
-                          <div class="px-8 mb-6">
-                              <div class="alert">
-                                <span> {m.mentions.len()} " mentions" </span>
-                              </div>
-                          </div>
-                      </div>
-                    }
-                  } else {
-                    view! {
-                      <div class="hidden"/>
-                    }
-                  }
-                })
-        }}
-      </Transition>
-      <Transition fallback=|| { }>
-        {move || {
-            messages
-                .get()
-                .unwrap_or(None)
-                .map(|p| {
-                  if p.private_messages.len() > 0 {
-                    view! {
-                      <div class="w-full">
-                          <div class="px-8 mb-6">
-                              <div class="alert">
-                                <span> {p.private_messages.len()} " messages" </span>
-                              </div>
-                          </div>
-                      </div>
-                    }
-                  } else {
-                    view! {
-                      <div class="hidden"/>
-                    }
-                  }
-                })
+          messages.get().unwrap_or(None).map(|p| {
+            (p.private_messages.len() > 0).then(move ||
+              view! {
+                <div class="w-full">
+                    <div class="px-8 mb-6">
+                        <div class="alert">
+                          <span> {p.private_messages.len()} " messages" </span>
+                        </div>
+                    </div>
+                </div>
+              }
+            )
+          })
         }}
       </Transition>
       {move || {
