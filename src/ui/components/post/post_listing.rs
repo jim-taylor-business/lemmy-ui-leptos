@@ -511,7 +511,7 @@ pub fn PostListing(
             </button>
           </ActionForm>
           <Show when=move || { post_number == 0 } fallback=|| {}>
-            <span class="cursor-pointer text-base-content/50" on:click={ move |_| reply_show.update(|b| *b = !*b) } title="Reply">
+            <span class="cursor-pointer" on:click={ move |_| reply_show.update(|b| *b = !*b) } title="Reply">
               <Icon icon=Reply/>
             </span>
           </Show>

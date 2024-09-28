@@ -340,7 +340,7 @@ pub fn CommentNode(
           <span on:click={ move |_| reply_show.update(|b| *b = !*b) } title="Reply">
             <Icon icon=Reply/>
           </span>
-          <span /*on:click={ move |_| reply_show.update(|b| *b = !*b) }*/ title="Edit">
+          <span class="pointer-events-none text-base-content/50" /*on:click={ move |_| reply_show.update(|b| *b = !*b) }*/ title="Edit">
             <Icon icon=Pencil/>
           </span>
           <span class="mb-1 break-words overflow-hidden">

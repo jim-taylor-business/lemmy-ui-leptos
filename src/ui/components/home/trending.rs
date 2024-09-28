@@ -30,7 +30,6 @@ pub fn Trending() -> impl IntoView {
         Ok(o) => Some(o),
         Err(e) => {
           error.update(|es| es.push(Some((e, None))));
-          // error.set(Some((e, None)));
           None
         }
       }
@@ -38,55 +37,49 @@ pub fn Trending() -> impl IntoView {
   );
 
   view! {
-    <Transition fallback=|| {}>
+    <Transition fallback={|| {}}>
       {move || {
-          trending
-              .get()
-              .map(|r| match r {
-                  None => {
-                    None
-                      // view! { <div class="hidden"></div> }
-                  }
-                  Some(c) => {
-                      let c_signal = RwSignal::new(c.communities);
-                      Some(view! {
-                        <div class="card w-full bg-base-300 text-base-content mb-0">
-                          <figure>
-                            <div class="card-body bg-info">
-                              <h2 class="card-title text-info-content">"Trending Communities"</h2>
-                            </div>
-                          </figure>
-                          <div class="card-body">
-                            <p>
-                              <For
-                                each=move || c_signal.get()
-                                key=|community| community.community.id
-                                children=move |cv: CommunityView| {
-                                    view! {
-                                      <A
-                                        class="text-l font-bold block link link-accent no-underline"
-                                        href=format!("/c/{}", cv.community.name)
-                                      >
-                                        {cv.community.title}
-                                      </A>
-                                    }
-                                }
-                              />
-
-                            </p>
-                            <A class="btn" href="/create_community">
-                              "Create a community"
-                            </A>
-                            <A class="btn btn-disabled" href="/communities">
-                              "Explore communities"
-                            </A>
-                          </div>
-                        </div>
-                      })
-                  }
-              })
+        trending
+          .get()
+          .map(|r| match r {
+            None => None,
+            Some(c) => {
+              let c_signal = RwSignal::new(c.communities);
+              Some(
+                view! {
+                  <div class="mb-0 w-full card bg-base-300 text-base-content">
+                    <figure>
+                      <div class="card-body bg-info">
+                        <h2 class="card-title text-info-content">"Trending Communities"</h2>
+                      </div>
+                    </figure>
+                    <div class="card-body">
+                      <p>
+                        <For
+                          each={move || c_signal.get()}
+                          key={|community| community.community.id}
+                          children={move |cv: CommunityView| {
+                            view! {
+                              <A class="block font-bold no-underline mb-1 text-l link link-accent" href={format!("/c/{}", cv.community.name)}>
+                                {cv.community.title}
+                              </A>
+                            }
+                          }}
+                        />
+                      </p>
+                      <A class="btn" href="/create_community">
+                        "Create a community"
+                      </A>
+                      <A class="btn btn-disabled" href="/communities">
+                        "Explore communities"
+                      </A>
+                    </div>
+                  </div>
+                },
+              )
+            }
+          })
       }}
-
     </Transition>
   }
 }
