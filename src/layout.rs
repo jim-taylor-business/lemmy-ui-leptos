@@ -12,16 +12,14 @@ use leptos_router::Outlet;
 #[component]
 pub fn Layout(
   site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
+  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
 ) -> impl IntoView {
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
-  let title = move || match site_signal.get() {
+  let title = move || match ssr_site.get() {
     Some(Ok(site)) => {
       if let Some(TitleSetter(t)) = ui_title.get() {
         if let Some(d) = site.site_view.site.description {
-          format!(
-            "{} - Tech Demo UI for {} - {}",
-            t, site.site_view.site.name, d
-          )
+          format!("{} - Tech Demo UI for {} - {}", t, site.site_view.site.name, d)
         } else {
           format!("{} - Tech Demo UI for {}", t, site.site_view.site.name)
         }
@@ -35,6 +33,25 @@ pub fn Layout(
     }
     _ => "Lemmy".to_string(),
   };
+
+  // let title = move || match site_signal.get() {
+  //   Some(Ok(site)) => {
+  //     if let Some(TitleSetter(t)) = ui_title.get() {
+  //       if let Some(d) = site.site_view.site.description {
+  //         format!("{} - Tech Demo UI for {} - {}", t, site.site_view.site.name, d)
+  //       } else {
+  //         format!("{} - Tech Demo UI for {}", t, site.site_view.site.name)
+  //       }
+  //     } else {
+  //       if let Some(d) = site.site_view.site.description {
+  //         format!("Tech Demo UI for {} - {}", site.site_view.site.name, d)
+  //       } else {
+  //         format!("Tech Demo UI for {}", site.site_view.site.name)
+  //       }
+  //     }
+  //   }
+  //   _ => "Lemmy".to_string(),
+  // };
 
   let ui_theme = expect_context::<RwSignal<Option<String>>>();
   let theme = Resource::new(

@@ -208,7 +208,6 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
       };
 
       if iw >= 640f64 {
-        // csr_pages.set(BTreeMap::new());
         csr_resources.set(BTreeMap::new());
         csr_next_page_cursor.set((0, None));
       }
@@ -234,9 +233,11 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
     } = use_intersection_observer_with_options(
       scroll_element,
       move |entries, _| {
+        // logging::log!("scroll");
         let iw = window().inner_width().ok().map(|b| b.as_f64().unwrap_or(0.0)).unwrap_or(0.0);
 
         if iw < 640f64 {
+          // logging::log!("width");
           if csr_resources
             .get()
             .get(&(csr_next_page_cursor.get().0, ResourceStatus::Loading))
@@ -244,6 +245,8 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
             && csr_resources.get().get(&(csr_next_page_cursor.get().0, ResourceStatus::Ok)).is_none()
             && csr_resources.get().get(&(csr_next_page_cursor.get().0, ResourceStatus::Err)).is_none()
           {
+            // error.update(|es| es.push(None));
+            // logging::log!("update");
             csr_resources.update(|h| {
               h.insert(
                 (csr_next_page_cursor.get().0, ResourceStatus::Loading),
@@ -492,6 +495,7 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
     </div>
     <main node_ref=resize_element class="w-full flex flex-col sm:flex-row flex-grow">
       <div class="relative w-full lg:w-2/3 2xl:w-3/4 3xl:w-4/5 4xl:w-5/6 sm:pr-4">
+
         <Transition fallback=|| { }>
           {move || {
             match posts_resource.get() {
@@ -628,6 +632,14 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
           }}
         </Transition>
 
+        // <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
+        //   <div class="px-8 py-4">
+        //     <div class="alert">
+        //       <span> "Loading..." </span>
+        //     </div>
+        //   </div>
+        // </div>
+
         <For each=move || csr_resources.get() key=|r| r.0.clone() let:r>
           {
             let r_copy = r.clone();
@@ -660,7 +672,9 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
             }
           }
         </For>
-        <div node_ref=scroll_element class="sm:hidden block"></div>
+        // <div node_ref=scroll_element class="sm:hidden block"></div>
+        <div node_ref=scroll_element class="bg-transparent block h-[1px] sm:hidden"></div>
+
       </div>
       <div class="lg:w-1/3 hidden lg:block 2xl:w-1/4 3xl:w-1/5 4xl:w-1/6">
         <About/>
