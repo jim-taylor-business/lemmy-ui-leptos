@@ -68,8 +68,11 @@ pub async fn login(username_or_email: String, password: String, uri: String) -> 
       let r = set_cookie("jwt", &jwt.unwrap_or_default().into_inner(), &core::time::Duration::from_secs(604800)).await;
       match r {
         Ok(_o) => {
-          // redirect("/");
-          redirect(&uri);
+          if uri.len() > 0 {
+            redirect(&uri);
+          } else {
+            redirect("/");
+          }
           Ok(())
         }
         Err(e) => {
