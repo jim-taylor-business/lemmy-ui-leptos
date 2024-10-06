@@ -60,7 +60,10 @@ pub async fn change_theme(theme: String) -> Result<(), ServerFnError> {
 }
 
 #[component]
-pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>) -> impl IntoView {
+pub fn TopNav(
+  // site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
+  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
+) -> impl IntoView {
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
@@ -125,7 +128,7 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
   };
 
   let logged_in = Signal::derive(move || {
-    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
+    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = ssr_site.get() {
       Some(true)
     } else {
       Some(false)
@@ -225,7 +228,7 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
           <li>
             <A href="/" class="text-xl whitespace-nowrap">
               {move || {
-                  if let Some(Ok(GetSiteResponse { site_view: SiteView { site: Site { icon: Some(i), .. }, .. },  .. })) = site_signal.get() {
+                  if let Some(Ok(GetSiteResponse { site_view: SiteView { site: Site { icon: Some(i), .. }, .. },  .. })) = ssr_site.get() {
                       view! { <img class="h-8" src={ i.inner().to_string() } /> }
                   } else {
                       view! { <img class="h-8" src="/lemmy.svg" /> }
@@ -233,7 +236,7 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
               }}
               <span class="hidden lg:flex">
               {move || {
-                  if let Some(Ok(m)) = site_signal.get() {
+                  if let Some(Ok(m)) = ssr_site.get() {
                       m.site_view.site.name
                   } else {
                       "Lemmy".to_string()
@@ -377,7 +380,7 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
           </Transition>
           <Show
             when=move || {
-                if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
+                if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = ssr_site.get() {
                     true
                 } else {
                     false
@@ -397,8 +400,8 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
                     //   <input type="hidden" name="theme" value="retro"/>
                     //   <button type="submit">"LOGIN"</button>
                     // </Form>
-                    <form action="/login" method="POST" on:submit=on_navigate_login>
-                      <button type="submit">{t!(i18n, login)}</button>
+                    <form class="p-0" action="/login" method="POST" on:submit=on_navigate_login>
+                      <button class="px-4 py-2" type="submit">{t!(i18n, login)}</button>
                     </form>
                     // <A href="/login">{t!(i18n, login)}</A>
                   </li>
@@ -412,7 +415,7 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
               <details>
                 <summary>
                   {move || {
-                      if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = site_signal.get()
+                      if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = ssr_site.get()
                       {
                           m.local_user_view
                               .person
@@ -429,7 +432,7 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
                     <A on:click=move |e: MouseEvent| {
                       if e.ctrl_key() && e.shift_key() {
                         e.stop_propagation();
-                        if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = site_signal.get()
+                        if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = ssr_site.get()
                         {
                           let _ = window().location().set_href(&format!("//lemmy.world/u/{}", m.local_user_view.person.name));
                         }
@@ -437,8 +440,7 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
                     } href=move || {
                         format!(
                             "/u/{}",
-                            if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = site_signal
-                                .get()
+                            if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = ssr_site.get()
                             {
                                 m.local_user_view.person.name
                             } else {
@@ -530,7 +532,10 @@ pub fn TopNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError
 }
 
 #[component]
-pub fn BottomNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>) -> impl IntoView {
+pub fn BottomNav(
+  // site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>
+  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
+) -> impl IntoView {
   let i18n = use_i18n();
   const FE_VERSION: &str = env!("CARGO_PKG_VERSION");
   const GIT_HASH: std::option::Option<&'static str> = option_env!("GIT_HASH");
@@ -550,7 +555,7 @@ pub fn BottomNav(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppEr
             <a href="//github.com/LemmyNet/lemmy/releases" class="text-md">
               "BE: "
               {move || {
-                  if let Some(Ok(m)) = site_signal.get() { m.version } else { "Lemmy".to_string() }
+                  if let Some(Ok(m)) = ssr_site.get() { m.version } else { "Lemmy".to_string() }
               }}
             </a>
           </li>

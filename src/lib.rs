@@ -132,7 +132,7 @@ pub fn App() -> impl IntoView {
     </Transition>
     <Router>
       <Routes>
-        <Route path="/" view=move || view! { <Layout site_signal ssr_site /> } ssr=SsrMode::Async>
+        <Route path="/" view=move || view! { <Layout /*site_signal*/ ssr_site /> } ssr=SsrMode::Async>
           <Route path="/*any" view=NotFound/>
 
           <Route path="" view=move || view! { <HomeActivity site_signal/> }/>

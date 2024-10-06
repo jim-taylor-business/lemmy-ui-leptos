@@ -11,7 +11,7 @@ use leptos_router::Outlet;
 
 #[component]
 pub fn Layout(
-  site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
+  // site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
   ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
 ) -> impl IntoView {
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
@@ -78,7 +78,7 @@ pub fn Layout(
                   ui_theme.set(Some(m));
                   view! {
                     <div class="flex flex-col min-h-screen" data-theme=move || ui_theme.get()>
-                      <TopNav site_signal/>
+                      <TopNav /*site_signal*/ ssr_site />
                       <div class="w-full flex flex-col flex-grow">
                         <div class="sm:container sm:mx-auto">
                           <div class="w-full flex flex-col flex-grow px-0 lg:px-6">
@@ -86,7 +86,7 @@ pub fn Layout(
                           </div>
                         </div>
                       </div>
-                      <BottomNav site_signal/>
+                      <BottomNav /*site_signal*/ ssr_site />
                     </div>
                   }
               })
