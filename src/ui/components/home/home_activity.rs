@@ -606,7 +606,7 @@ pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAp
                                 <A
                                   on:click=move |_| { loading.set(true); }
                                   href=format!("{}{}", use_location().pathname.get(), query_params.to_query_string())
-                                  class=move || format!("btn join-item{}{}", if next_page.is_some() && !loading.get() { "" } else { " btn-disabled" }, if loading.get() { " btn-disabled" } else { "" } )
+                                  class=move || format!("btn join-item{}{}", if next_page.clone().unwrap_or((0, None)).1.is_some() && !loading.get() { "" } else { " btn-disabled" }, if loading.get() { " btn-disabled" } else { "" } )
                                 >
                                   "Next"
                                 </A>
