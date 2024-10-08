@@ -122,7 +122,8 @@ pub async fn report_post_fn(post_id: i32, reason: String) -> Result<Option<PostR
 #[component]
 pub fn PostListing(
   post_view: MaybeSignal<PostView>,
-  site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
+  site_signal: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
+  //RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
   post_number: usize,
   reply_show: RwSignal<bool>,
 ) -> impl IntoView {

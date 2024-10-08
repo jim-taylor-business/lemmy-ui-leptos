@@ -135,15 +135,15 @@ pub fn App() -> impl IntoView {
         <Route path="/" view=move || view! { <Layout /*site_signal*/ ssr_site /> } ssr=SsrMode::Async>
           <Route path="/*any" view=NotFound/>
 
-          <Route path="" view=move || view! { <HomeActivity site_signal/> }/>
+          <Route path="" view=move || view! { <HomeActivity site_signal=ssr_site/> }/>
 
           <Route path="create_post" view=CommunitiesActivity/>
-          <Route path="post/:id" view=move || view! { <PostActivity site_signal/> }/>
+          <Route path="post/:id" view=move || view! { <PostActivity site_signal=ssr_site/> }/>
 
           <Route path="search" view=CommunitiesActivity/>
           <Route path="communities" view=CommunitiesActivity/>
           <Route path="create_community" view=CommunitiesActivity/>
-          <Route path="c/:name" view=move || view! { <HomeActivity site_signal/> }/>/>
+          <Route path="c/:name" view=move || view! { <HomeActivity site_signal=ssr_site/> }/>/>
 
           <Route path="login" methods=&[Method::Get, Method::Post] view=LoginActivity/>
           <Route path="logout" view=CommunitiesActivity/>

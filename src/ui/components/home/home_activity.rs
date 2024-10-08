@@ -27,7 +27,9 @@ use leptos::html::*;
 use leptos_use::*;
 
 #[component]
-pub fn HomeActivity(site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>) -> impl IntoView {
+pub fn HomeActivity(
+  site_signal: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>, /*RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>*/
+) -> impl IntoView {
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
