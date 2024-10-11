@@ -221,39 +221,33 @@ pub fn TopNav(
   };
 
   view! {
-    <nav class="navbar container mx-auto flex sticky top-0 bg-base-100 z-[1]">
+    <nav class="container flex sticky top-0 mx-auto navbar bg-base-100 z-[1]">
       <div class="navbar-start">
         // <div class="dropdown"><div tabindex="0" role="button" class="btn btn-ghost lg:hidden"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16"></path></svg></div> <ul tabindex="0" class="mt-3 z-[1] p-2 shadow menu menu-sm dropdown-content bg-base-100 rounded-box w-52"><li><button>Item 1</button></li> <li><button>Parent</button> <ul class="p-2 bg-base-100 w-40"><li><button>Submenu 1</button></li> <li><button>Submenu 2</button></li></ul></li> <li><button>Item 3</button></li></ul></div>
-        <ul class="menu menu-horizontal flex-nowrap items-center">
+        <ul class="flex-nowrap items-center menu menu-horizontal">
           <li>
             <A href="/" class="text-xl whitespace-nowrap">
               {move || {
-                  if let Some(Ok(GetSiteResponse { site_view: SiteView { site: Site { icon: Some(i), .. }, .. },  .. })) = ssr_site.get() {
-                      view! { <img class="h-8" src={ i.inner().to_string() } /> }
-                  } else {
-                      view! { <img class="h-8" src="/lemmy.svg" /> }
-                  }
+                if let Some(Ok(GetSiteResponse { site_view: SiteView { site: Site { icon: Some(i), .. }, .. }, .. })) = ssr_site.get() {
+                  view! { <img class="h-8" src={i.inner().to_string()} /> }
+                } else {
+                  view! { <img class="h-8" src="/lemmy.svg" /> }
+                }
               }}
               <span class="hidden lg:flex">
-              {move || {
-                  if let Some(Ok(m)) = ssr_site.get() {
-                      m.site_view.site.name
-                  } else {
-                      "Lemmy".to_string()
-                  }
-              }}
+                {move || { if let Some(Ok(m)) = ssr_site.get() { m.site_view.site.name } else { "Lemmy".to_string() } }}
               </span>
             </A>
           </li>
           // <li class="hidden lg:flex">
-          //   <A href="/communities" class="text-md">
-          //     {t!(i18n, communities)}
-          //   </A>
+          // <A href="/communities" class="text-md">
+          // {t!(i18n, communities)}
+          // </A>
           // </li>
           // <li class="hidden lg:flex">
-          //   <A href="/create_post" class="text-md pointer-events-none text-base-content/50">
-          //     {t!(i18n, create_post)}
-          //   </A>
+          // <A href="/create_post" class="text-md pointer-events-none text-base-content/50">
+          // {t!(i18n, create_post)}
+          // </A>
           // </li>
           <li class="hidden lg:flex">
             <A href="/communities" class="text-md">
@@ -261,200 +255,197 @@ pub fn TopNav(
             </A>
           </li>
           <li class="hidden lg:flex">
-            <a title=t!(i18n, donate) href="//ko-fi.com/fhfworld">
-              <Icon icon=Donate/>
+            <a title={t!(i18n, donate)} href="//ko-fi.com/fhfworld">
+              <Icon icon={Donate} />
             </a>
           </li>
         </ul>
       </div>
       <div class="navbar-end">
-        <ul class="menu menu-horizontal flex-nowrap items-center">
+        <ul class="flex-nowrap items-center menu menu-horizontal">
           <li class="hidden lg:flex">
             <A href="/search" class="pointer-events-none text-base-content/50">
               <span title="t!(i18n, search)">
-                <Icon icon=Search/>
+                <Icon icon={Search} />
               </span>
             </A>
           </li>
-          <li class="z-[1] hidden lg:flex">
+          <li class="hidden lg:flex z-[1]">
             <details>
-              <summary><Icon icon=Translate /></summary>
+              <summary>
+                <Icon icon={Translate} />
+              </summary>
               <ul>
                 <li>
-                  <ActionForm class="p-0" action=lang_action on:submit=on_lang_submit(Locale::fr)>
-                    <input type="hidden" name="lang" value="FR"/>
-                    <button class="px-4 py-2" type="submit">"FR"</button>
+                  <ActionForm class="p-0" action={lang_action} on:submit={on_lang_submit(Locale::fr)}>
+                    <input type="hidden" name="lang" value="FR" />
+                    <button class="py-2 px-4" type="submit">
+                      "FR"
+                    </button>
                   </ActionForm>
                 </li>
                 <li>
-                  <ActionForm class="p-0" action=lang_action on:submit=on_lang_submit(Locale::en)>
-                    <input type="hidden" name="lang" value="EN"/>
-                    <button class="px-4 py-2" type="submit">"EN"</button>
+                  <ActionForm class="p-0" action={lang_action} on:submit={on_lang_submit(Locale::en)}>
+                    <input type="hidden" name="lang" value="EN" />
+                    <button class="py-2 px-4" type="submit">
+                      "EN"
+                    </button>
                   </ActionForm>
                 </li>
               </ul>
             </details>
           </li>
-          <li class="z-[1] hidden lg:flex">
+          <li class="hidden lg:flex z-[1]">
             <details>
-              <summary><Icon icon=Palette /></summary>
+              <summary>
+                <Icon icon={Palette} />
+              </summary>
               <ul>
                 <li>
-                  <ActionForm class="p-0" action=theme_action on:submit=on_theme_submit("dark")>
-                    <input type="hidden" name="theme" value="dark"/>
-                    <button class="px-4 py-2" type="submit">"Dark"</button>
+                  <ActionForm class="p-0" action={theme_action} on:submit={on_theme_submit("dark")}>
+                    <input type="hidden" name="theme" value="dark" />
+                    <button class="py-2 px-4" type="submit">
+                      "Dark"
+                    </button>
                   </ActionForm>
                 </li>
                 <li>
-                  <ActionForm class="p-0" action=theme_action on:submit=on_theme_submit("light")>
-                    <input type="hidden" name="theme" value="light"/>
-                    <button class="px-4 py-2" type="submit">"Light"</button>
+                  <ActionForm class="p-0" action={theme_action} on:submit={on_theme_submit("light")}>
+                    <input type="hidden" name="theme" value="light" />
+                    <button class="py-2 px-4" type="submit">
+                      "Light"
+                    </button>
                   </ActionForm>
                 </li>
                 <li>
-                  <ActionForm class="p-0" action=theme_action on:submit=on_theme_submit("retro")>
-                    <input type="hidden" name="theme" value="retro"/>
-                    <button class="px-4 py-2" type="submit">"Retro"</button>
+                  <ActionForm class="p-0" action={theme_action} on:submit={on_theme_submit("retro")}>
+                    <input type="hidden" name="theme" value="retro" />
+                    <button class="py-2 px-4" type="submit">
+                      "Retro"
+                    </button>
                   </ActionForm>
                 </li>
               </ul>
             </details>
           </li>
-          <Transition fallback=|| {}>
+          <Transition fallback={|| {}}>
             {move || {
-                ssr_unread
-                    .get()
-                    .map(|u| {
-                        let unread = if let Ok(c) = u.clone() {
-                          format!(", {} unread", c.replies + c.mentions + c.private_messages)
-                        } else {
-                          "".into()
-                        };
-
-                        view! {
-                          <li title=move || {
-                            format!("{}{}{}",
-                              if error.get().len() > 0 { format!("{} errors, ", error.get().len()) } else { "".into() },
-                              if online.get().0 { "app online" } else { "app offline" },
-                              unread,
-                            )
-                          }>
-                            <A href="/notifications">
-                              <span class="flex flex-row items-center">
-                                {move || {
-                                  let v = error.get();
-                                  (v.len() > 0).then(move || {
-                                    let l = v.len();
-                                    view! {
-                                      <div class="badge badge-error badge-xs"> { l } </div>
-                                    }
-                                  })
-                                }}
-                                <span>
-                                  {move || {
-                                    (!online.get().0).then(move ||
-                                      view! {
-                                        <div class="absolute top-0 badge badge-warning badge-xs"></div>
-                                      }
-                                    )
-                                  }}
-                                  <Icon icon=Notifications/>
-                                </span>
-                                {
-                                  if let Ok(c) = u {
-                                    (c.replies + c.mentions + c.private_messages > 0).then(move ||
-                                      view! {
-                                        <div class="badge badge-primary badge-xs"> { c.replies + c.mentions + c.private_messages } </div>
-                                      }
-                                    )
-                                  } else {
-                                    None
-                                  }
-                                }
-                              </span>
-                            </A>
-                          </li>
-                        }
-                    })
+              ssr_unread
+                .get()
+                .map(|u| {
+                  let unread = if let Ok(c) = u.clone() { format!(", {} unread", c.replies + c.mentions + c.private_messages) } else { "".into() };
+                  view! {
+                    <li title={move || {
+                      format!(
+                        "{}{}{}",
+                        if error.get().len() > 0 { format!("{} errors, ", error.get().len()) } else { "".into() },
+                        if online.get().0 { "app online" } else { "app offline" },
+                        unread,
+                      )
+                    }}>
+                      <A href="/notifications">
+                        <span class="flex flex-row items-center">
+                          {move || {
+                            let v = error.get();
+                            (v.len() > 0)
+                              .then(move || {
+                                let l = v.len();
+                                view! { <div class="badge badge-error badge-xs">{l}</div> }
+                              })
+                          }}
+                          <span>
+                            {move || { (!online.get().0).then(move || view! { <div class="absolute top-0 badge badge-warning badge-xs" /> }) }}
+                            <Icon icon={Notifications} />
+                          </span>
+                          {if let Ok(c) = u {
+                            (c.replies + c.mentions + c.private_messages > 0)
+                              .then(move || view! { <div class="badge badge-primary badge-xs">{c.replies + c.mentions + c.private_messages}</div> })
+                          } else {
+                            None
+                          }}
+                        </span>
+                      </A>
+                    </li>
+                  }
+                })
             }}
           </Transition>
           <Show
-            when=move || {
-                if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = ssr_site.get() {
-                    true
-                } else {
-                    false
-                }
-            }
+            when={move || { if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = ssr_site.get() { true } else { false } }}
 
-            fallback=move || {
+            fallback={move || {
+              view! {
                 // let l = use_location();
 
-                view! {
-                  <li>
-                    // <ActionForm action="/login" on:submit=|_| {}>
-                    //   <input type="hidden" name="uri" value=move || format!("{}{}", l.pathname.get(), l.query.get().to_query_string())/>
-                    //   <button type="submit">"lowgin"</button>
-                    // </ActionForm>
-                    // <Form action="/login" method="POST" on:submit=|_| {}>
-                    //   <input type="hidden" name="theme" value="retro"/>
-                    //   <button type="submit">"LOGIN"</button>
-                    // </Form>
-                    <form class="p-0" action="/login" method="POST" on:submit=on_navigate_login>
-                      <button class="px-4 py-2" type="submit">{t!(i18n, login)}</button>
-                    </form>
-                    // <A href="/login">{t!(i18n, login)}</A>
-                  </li>
-                  <li class="hidden lg:flex">
-                    <A href="/signup" class="pointer-events-none text-base-content/50">{t!(i18n, signup)}</A>
-                  </li>
-                }
-            }
+                <li>
+                  // <ActionForm action="/login" on:submit=|_| {}>
+                  // <input type="hidden" name="uri" value=move || format!("{}{}", l.pathname.get(), l.query.get().to_query_string())/>
+                  // <button type="submit">"lowgin"</button>
+                  // </ActionForm>
+                  // <Form action="/login" method="POST" on:submit=|_| {}>
+                  // <input type="hidden" name="theme" value="retro"/>
+                  // <button type="submit">"LOGIN"</button>
+                  // </Form>
+                  <form class="p-0" action="/login" method="POST" on:submit={on_navigate_login}>
+                    <button class="py-2 px-4" type="submit">
+                      {t!(i18n, login)}
+                    </button>
+                  </form>
+                // <A href="/login">{t!(i18n, login)}</A>
+                </li>
+                <li class="hidden lg:flex">
+                  <A href="/signup" class="pointer-events-none text-base-content/50">
+                    {t!(i18n, signup)}
+                  </A>
+                </li>
+              }
+            }}
           >
             <li>
               <details>
                 <summary>
                   {move || {
-                      if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = ssr_site.get()
-                      {
-                          m.local_user_view
-                              .person
-                              .display_name
-                              .unwrap_or(m.local_user_view.person.name)
-                      } else {
-                          String::default()
-                      }
+                    if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = ssr_site.get() {
+                      m.local_user_view.person.display_name.unwrap_or(m.local_user_view.person.name)
+                    } else {
+                      String::default()
+                    }
                   }}
 
                 </summary>
                 <ul class="z-10">
                   <li>
-                    <A on:click=move |e: MouseEvent| {
-                      if e.ctrl_key() && e.shift_key() {
-                        e.stop_propagation();
-                        if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = ssr_site.get()
-                        {
-                          let _ = window().location().set_href(&format!("//lemmy.world/u/{}", m.local_user_view.person.name));
+                    <A
+                      on:click={move |e: MouseEvent| {
+                        if e.ctrl_key() && e.shift_key() {
+                          e.stop_propagation();
+                          if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = ssr_site.get() {
+                            let _ = window().location().set_href(&format!("//lemmy.world/u/{}", m.local_user_view.person.name));
+                          }
                         }
-                      }
-                    } href=move || {
+                      }}
+                      href={move || {
                         format!(
-                            "/u/{}",
-                            if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = ssr_site.get()
-                            {
-                                m.local_user_view.person.name
-                            } else {
-                                String::default()
-                            },
+                          "/u/{}",
+                          if let Some(Ok(GetSiteResponse { my_user: Some(m), .. })) = ssr_site.get() {
+                            m.local_user_view.person.name
+                          } else {
+                            String::default()
+                          },
                         )
-                    }>{t!(i18n, profile)}</A>
+                      }}
+                    >
+                      {t!(i18n, profile)}
+                    </A>
                   </li>
                   <li>
-                    <A class="pointer-events-none text-base-content/50" href="/settings">{t!(i18n, settings)}</A>
+                    <A class="pointer-events-none text-base-content/50" href="/settings">
+                      {t!(i18n, settings)}
+                    </A>
                   </li>
-                  <div class="divider my-0"></div>
+                  <div class="my-0 divider" />
                   <li>
-                    <ActionForm action=logout_action on:submit=on_logout_submit>
+                    <ActionForm action={logout_action} on:submit={on_logout_submit}>
                       <button type="submit">{t!(i18n, logout)}</button>
                     </ActionForm>
                   </li>
@@ -466,68 +457,51 @@ pub fn TopNav(
       </div>
     </nav>
     // <Show
-    //   when=move || error.get().is_some()
-    //   fallback=move || {
-    //       view! { <div class="hidden"></div> }
-    //   }
+    // when=move || error.get().is_some()
+    // fallback=move || {
+    // view! { <div class="hidden"></div> }
+    // }
     // >
 
     // {move || {
-    //   site_signal.get()
-    //         .map(|res| {
+    // site_signal.get()
+    // .map(|res| {
 
-    //           if let Err(err) = res {
-    //             view! {
-    //               <div class="container mx-auto alert alert-error mb-8">
-    //                 <span>"S" {message_from_error(&err)} " - " {err.content}</span>
-    //                 <div>
-    //                   <A href=use_location().pathname.get() class="btn btn-sm"> "Retry" </A>
-    //                 </div>
-    //               </div>
-    //             }
-    //           } else {
-    //             view! {
-    //               <div class="hidden" />
-    //             }
+    // if let Err(err) = res {
+    // view! {
+    // <div class="container mx-auto alert alert-error mb-8">
+    // <span>"S" {message_from_error(&err)} " - " {err.content}</span>
+    // <div>
+    // <A href=use_location().pathname.get() class="btn btn-sm"> "Retry" </A>
+    // </div>
+    // </div>
+    // }
+    // } else {
+    // view! {
+    // <div class="hidden" />
+    // }
 
-    //           }
-    //         })
+    // }
+    // })
     // }}
 
     {move || {
-        ssr_query_error()
-            .map(|err| {
-                let mut query_params = query.get();
-                query_params.remove("error".into());
-                view! {
-                  <div class="container mx-auto alert alert-error mb-8">
-                    <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
-                    <div>
-                      <A class="btn btn-sm" href=format!("./?{}", &query_params.to_query_string())> "Clear" </A>
-                    </div>
-                  </div>
-                }
-            })
+      ssr_query_error()
+        .map(|err| {
+          let mut query_params = query.get();
+          query_params.remove("error".into());
+          view! {
+            <div class="container mx-auto mb-8 alert alert-error">
+              <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
+              <div>
+                <A class="btn btn-sm" href={format!("./?{}", &query_params.to_query_string())}>
+                  "Clear"
+                </A>
+              </div>
+            </div>
+          }
+        })
     }}
-
-    // {move || {
-    //     error.get()
-    //       .map(|err| {
-    //           view! {
-    //             <div class="container mx-auto alert alert-error mb-8">
-    //               <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
-    //               <div>
-    //                 <Show when=move || { if let Some(r) = err.1 { true } else { false } } /* let:r */ fallback=|| {}>
-    //                   <button on:click=move |_| { if let Some(r) = err.1 { r.set(!r.get()); } else { } } class="btn btn-sm"> "Retry" </button>
-    //                 </Show>
-    //                 <button class="btn btn-sm" on:click=move |_| { error.set(None); }> "Clear" </button>
-    //               </div>
-    //             </div>
-    //           }
-    //       })
-    // }}
-
-    // </Show>
   }
 }
 
@@ -541,31 +515,31 @@ pub fn BottomNav(
   const GIT_HASH: std::option::Option<&'static str> = option_env!("GIT_HASH");
 
   view! {
-    <nav class="container navbar mx-auto hidden lg:flex">
-      <div class="navbar-start w-auto"></div>
-      <div class="navbar-end grow w-auto">
-        <ul class="menu menu-horizontal flex-nowrap items-center">
+    <nav class="container hidden mx-auto lg:flex navbar">
+      <div class="w-auto navbar-start" />
+      <div class="w-auto navbar-end grow">
+        <ul class="flex-nowrap items-center menu menu-horizontal">
           <li>
             <a href="//github.com/jim-taylor-business/lemmy-ui-leptos/releases" class="text-md">
               "FE: "
-              {FE_VERSION} "." {GIT_HASH}
+              {FE_VERSION}
+              "."
+              {GIT_HASH}
             </a>
           </li>
           <li>
             <a href="//github.com/LemmyNet/lemmy/releases" class="text-md">
               "BE: "
-              {move || {
-                  if let Some(Ok(m)) = ssr_site.get() { m.version } else { "Lemmy".to_string() }
-              }}
+              {move || { if let Some(Ok(m)) = ssr_site.get() { m.version } else { "Lemmy".to_string() } }}
             </a>
           </li>
           <li>
-            <A href="/modlog" class="text-md pointer-events-none text-base-content/50">
+            <A href="/modlog" class="pointer-events-none text-md text-base-content/50">
               {t!(i18n, modlog)}
             </A>
           </li>
           <li>
-            <A href="/instances" class="text-md pointer-events-none text-base-content/50">
+            <A href="/instances" class="pointer-events-none text-md text-base-content/50">
               {t!(i18n, instances)}
             </A>
           </li>

@@ -66,30 +66,30 @@ pub fn Layout(
   );
 
   view! {
-    <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css"/>
-    <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico"/>
-    <Title text=move || title() />
-    <Meta name="description" content=move || title() />
-    <Transition fallback=|| {}>
+    <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css" />
+    <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico" />
+    <Title text={move || title()} />
+    <Meta name="description" content={move || title()} />
+    <Transition fallback={|| {}}>
       {move || {
-          theme
-              .get()
-              .map(|m| {
-                  ui_theme.set(Some(m));
-                  view! {
-                    <div class="flex flex-col min-h-screen" data-theme=move || ui_theme.get()>
-                      <TopNav /*site_signal*/ ssr_site />
-                      <div class="w-full flex flex-col flex-grow">
-                        <div class="sm:container sm:mx-auto">
-                          <div class="w-full flex flex-col flex-grow px-0 lg:px-6">
-                            <Outlet/>
-                          </div>
-                        </div>
-                      </div>
-                      <BottomNav /*site_signal*/ ssr_site />
+        theme
+          .get()
+          .map(|m| {
+            ui_theme.set(Some(m));
+            view! {
+              <div class="flex flex-col min-h-screen" data-theme={move || ui_theme.get()}>
+                <TopNav ssr_site />
+                <div class="flex flex-col flex-grow w-full">
+                  <div class="sm:container sm:mx-auto">
+                    <div class="flex flex-col flex-grow px-0 w-full lg:px-6">
+                      <Outlet />
                     </div>
-                  }
-              })
+                  </div>
+                </div>
+                <BottomNav ssr_site />
+              </div>
+            }
+          })
       }}
     </Transition>
   }

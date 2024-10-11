@@ -120,42 +120,42 @@ pub fn App() -> impl IntoView {
   );
 
   view! {
-    <Transition fallback=|| {}>
+    <Transition fallback={|| {}}>
       {move || {
-          ssr_site
-              .get()
-              .map(|m| {
-                  site_signal.set(Some(m));
-              });
+        ssr_site
+          .get()
+          .map(|m| {
+            site_signal.set(Some(m));
+          });
       }}
-
     </Transition>
     <Router>
       <Routes>
-        <Route path="/" view=move || view! { <Layout /*site_signal*/ ssr_site /> } ssr=SsrMode::Async>
-          <Route path="/*any" view=NotFound/>
+        <Route path="/" view={move || view! { <Layout ssr_site /> }} ssr={SsrMode::Async}>
+          <Route path="/*any" view={NotFound} />
 
-          <Route path="" view=move || view! { <HomeActivity site_signal=ssr_site/> }/>
+          <Route path="" view={move || view! { <HomeActivity site_signal={ssr_site} /> }} />
 
-          <Route path="create_post" view=CommunitiesActivity/>
-          <Route path="post/:id" view=move || view! { <PostActivity site_signal=ssr_site/> }/>
+          <Route path="create_post" view={CommunitiesActivity} />
+          <Route path="post/:id" view={move || view! { <PostActivity site_signal={ssr_site} /> }} />
 
-          <Route path="search" view=CommunitiesActivity/>
-          <Route path="communities" view=CommunitiesActivity/>
-          <Route path="create_community" view=CommunitiesActivity/>
-          <Route path="c/:name" view=move || view! { <HomeActivity site_signal=ssr_site/> }/>/>
+          <Route path="search" view={CommunitiesActivity} />
+          <Route path="communities" view={CommunitiesActivity} />
+          <Route path="create_community" view={CommunitiesActivity} />
+          <Route path="c/:name" view={move || view! { <HomeActivity site_signal={ssr_site} /> }} />
+          />
 
-          <Route path="login" methods=&[Method::Get, Method::Post] view=LoginActivity/>
-          <Route path="logout" view=CommunitiesActivity/>
-          <Route path="signup" view=CommunitiesActivity/>
+          <Route path="login" methods={&[Method::Get, Method::Post]} view={LoginActivity} />
+          <Route path="logout" view={CommunitiesActivity} />
+          <Route path="signup" view={CommunitiesActivity} />
 
-          <Route path="inbox" view=CommunitiesActivity/>
-          <Route path="settings" view=CommunitiesActivity/>
-          <Route path="notifications" view=NotificationsActivity/>
-          <Route path="u/:id" view=CommunitiesActivity/>
+          <Route path="inbox" view={CommunitiesActivity} />
+          <Route path="settings" view={CommunitiesActivity} />
+          <Route path="notifications" view={NotificationsActivity} />
+          <Route path="u/:id" view={CommunitiesActivity} />
 
-          <Route path="modlog" view=CommunitiesActivity/>
-          <Route path="instances" view=CommunitiesActivity/>
+          <Route path="modlog" view={CommunitiesActivity} />
+          <Route path="instances" view={CommunitiesActivity} />
         </Route>
       </Routes>
     </Router>

@@ -54,8 +54,8 @@ pub fn Icon(#[prop(into)] icon: MaybeSignal<IconType>, #[prop(optional)] class: 
   let href = Signal::derive(move || format!("/icons.svg#{}", icon.get().as_str()));
 
   view! {
-    <svg class=class width="1.5em" height="1.5em">
-      <use_ href=href xlink:href=href></use_>
+    <svg class={class} width="1.5em" height="1.5em">
+      <use_ href={href} xlink:href={href} />
     </svg>
   }
 }

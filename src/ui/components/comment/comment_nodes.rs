@@ -85,8 +85,16 @@ pub fn CommentNodes(
   };
 
   view! {
-    <For each=move || com_sig.get() key=|cv| cv.comment.id let:cv>
-      <CommentNode parent_comment_id=0 hidden_comments=hidden_comments on_toggle=on_hide_show comment_view=cv.into() comments=comments.get().into() level=1 now_in_millis/>
+    <For each={move || com_sig.get()} key={|cv| cv.comment.id} let:cv>
+      <CommentNode
+        parent_comment_id=0
+        hidden_comments={hidden_comments}
+        on_toggle={on_hide_show}
+        comment_view={cv.into()}
+        comments={comments.get().into()}
+        level=1
+        now_in_millis
+      />
     </For>
   }
 }

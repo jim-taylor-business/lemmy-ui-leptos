@@ -60,7 +60,7 @@ pub fn Trending() -> impl IntoView {
                           key={|community| community.community.id}
                           children={move |cv: CommunityView| {
                             view! {
-                              <A class="block font-bold no-underline mb-1 text-l link link-accent" href={format!("/c/{}", cv.community.name)}>
+                              <A class="block mb-1 font-bold no-underline text-l link link-accent" href={format!("/c/{}", cv.community.name)}>
                                 {cv.community.title}
                               </A>
                             }

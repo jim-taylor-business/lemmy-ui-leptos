@@ -208,20 +208,15 @@ pub fn LoginForm() -> impl IntoView {
   };
 
   view! {
-    <ActionForm class="space-y-3" action=login on:submit=on_submit>
-      <input type="hidden" name="uri" value=move || query.get().get("uri").cloned().unwrap_or("".into())/>
-      <TextInput
-        id="username"
-        name="username_or_email"
-        on_input=move |s| update!(| name | * name = s)
-        label="Username"
-      />
+    <ActionForm class="space-y-3" action={login} on:submit={on_submit}>
+      <input type="hidden" name="uri" value={move || query.get().get("uri").cloned().unwrap_or("".into())} />
+      <TextInput id="username" name="username_or_email" on_input={move |s| update!(| name | * name = s)} label="Username" />
       <TextInput
         id="password"
         name="password"
-        validation_class=password_validation.into()
-        on_input=move |s| update!(| password | * password = s)
-        input_type=InputType::Password
+        validation_class={password_validation.into()}
+        on_input={move |s| update!(| password | * password = s)}
+        input_type={InputType::Password}
         label="Password"
       />
       <button class="btn btn-neutral" type="submit">

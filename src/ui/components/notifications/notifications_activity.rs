@@ -129,96 +129,148 @@ pub fn NotificationsActivity() -> impl IntoView {
 
   view! {
     <main class="mx-auto">
-      <Transition fallback=|| { }>
+      <Transition fallback={|| {}}>
         {move || {
-          replies.get().unwrap_or(None).map(|g| {
-            view! {
-              <div class="w-full">
-                <For each=move || g.replies.clone() key=|r| r.comment.id let:r>
-                  {
-                    let c = CommentView {
-                      comment: r.comment,
-                      creator: r.creator,
-                      post: r.post,
-                      community: r.community,
-                      counts: r.counts,
-                      creator_banned_from_community: false,
-                      creator_is_moderator: r.creator_is_moderator,
-                      creator_is_admin: r.creator_is_admin,
-                      subscribed: r.subscribed,
-                      saved: r.saved,
-                      creator_blocked: r.creator_blocked,
-                      my_vote: r.my_vote,
-                    };
-
-                    view! {
-                      <div class="mb-6">
-                        <CommentNode parent_comment_id=0 hidden_comments=RwSignal::new(vec![]) on_toggle=on_hide_show comment_view=c.into() comments=vec![].into() level=1 now_in_millis/>
-                        <button class="btn btn-sm" on:click=on_clear_reply_click(r.comment_reply.id)> "Clear" </button>
-                      </div>
+          replies
+            .get()
+            .unwrap_or(None)
+            .map(|g| {
+              view! {
+                <div class="w-full">
+                  <For each={move || g.replies.clone()} key={|r| r.comment.id} let:r>
+                    {
+                      let c = CommentView {
+                        comment: r.comment,
+                        creator: r.creator,
+                        post: r.post,
+                        community: r.community,
+                        counts: r.counts,
+                        creator_banned_from_community: false,
+                        creator_is_moderator: r.creator_is_moderator,
+                        creator_is_admin: r.creator_is_admin,
+                        subscribed: r.subscribed,
+                        saved: r.saved,
+                        creator_blocked: r.creator_blocked,
+                        my_vote: r.my_vote,
+                      };
+                      view! {
+                        <div class="mb-6">
+                          <CommentNode
+                            parent_comment_id=0
+                            hidden_comments={RwSignal::new(vec![])}
+                            on_toggle={on_hide_show}
+                            comment_view={c.into()}
+                            comments={vec![].into()}
+                            level=1
+                            now_in_millis
+                          />
+                          <button class="btn btn-sm" on:click={on_clear_reply_click(r.comment_reply.id)}>
+                            "Clear"
+                          </button>
+                        </div>
+                      }
                     }
+                  </For>
+                </div>
+              }
+            })
+        }}
+      </Transition>
+      <Transition fallback={|| {}}>
+        {move || {
+          mentions
+            .get()
+            .unwrap_or(None)
+            .map(|m| {
+              (m.mentions.len() > 0)
+                .then(move || {
+                  view! {
+                    <div class="w-full">
+                      <div class="px-8 mb-6">
+                        <div class="alert">
+                          <span>{m.mentions.len()} " mentions"</span>
+                        </div>
+                      </div>
+                    </div>
                   }
-                </For>
-              </div>
-            }
-          })
+                })
+            })
         }}
       </Transition>
-      <Transition fallback=|| { }>
+      <Transition fallback={|| {}}>
         {move || {
-          mentions.get().unwrap_or(None).map(|m| {
-            (m.mentions.len() > 0).then(move ||
-              view! {
-                <div class="w-full">
-                    <div class="px-8 mb-6">
+          messages
+            .get()
+            .unwrap_or(None)
+            .map(|p| {
+              (p.private_messages.len() > 0)
+                .then(move || {
+                  view! {
+                    <div class="w-full">
+                      <div class="px-8 mb-6">
                         <div class="alert">
-                          <span> {m.mentions.len()} " mentions" </span>
+                          <span>{p.private_messages.len()} " messages"</span>
                         </div>
+                      </div>
                     </div>
-                </div>
-              }
-            )
-          })
-        }}
-      </Transition>
-      <Transition fallback=|| { }>
-        {move || {
-          messages.get().unwrap_or(None).map(|p| {
-            (p.private_messages.len() > 0).then(move ||
-              view! {
-                <div class="w-full">
-                    <div class="px-8 mb-6">
-                        <div class="alert">
-                          <span> {p.private_messages.len()} " messages" </span>
-                        </div>
-                    </div>
-                </div>
-              }
-            )
-          })
+                  }
+                })
+            })
         }}
       </Transition>
       {move || {
-        errors.get().into_iter().enumerate().map(|(i, error)| {
-          error.map(|err| {
-            view! {
-              <div class="px-8 mb-6">
-                <div class="alert alert-error flex justify-between">
-                  <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
-                  <div>
-                    <Show when=move || { if let Some(r) = err.1 { true } else { false } } /* let:r */ fallback=|| {}>
-                      <button on:click=move |_| { if let Some(r) = err.1 { r.set(!r.get()); } else { } } class="btn btn-sm"> "Retry" </button>
-                    </Show>
-                    <button class="btn btn-sm" on:click=move |_| { errors.update(|es| { es.remove(i); }); }> "Clear" </button>
+        errors
+          .get()
+          .into_iter()
+          .enumerate()
+          .map(|(i, error)| {
+            error
+              .map(|err| {
+                view! {
+                  <div class="px-8 mb-6">
+                    <div class="flex justify-between alert alert-error">
+                      <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
+                      <div>
+                        <Show when={move || { if let Some(r) = err.1 { true } else { false } }} fallback={|| {}}>
+                          <button
+                            on:click={move |_| {
+                              if let Some(r) = err.1 {
+                                r.set(!r.get());
+                              } else {}
+                            }}
+                            class="btn btn-sm"
+                          >
+                            "Retry"
+                          </button>
+                        </Show>
+                        <button
+                          class="btn btn-sm"
+                          on:click={move |_| {
+                            errors
+                              .update(|es| {
+                                es.remove(i);
+                              });
+                          }}
+                        >
+                          "Clear"
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </div>
-            }
+                }
+              })
           })
-        }).collect::<Vec<_>>()
+          .collect::<Vec<_>>()
       }}
       <div class="px-8 mb-6">
-        <button class=move || format!("btn{}", if errors.get().len() > 0 { "" } else { " hidden" }) on:click=move |_| { errors.set(vec![]); }> "Clear All Errors" </button>
+        <button
+          class={move || format!("btn{}", if errors.get().len() > 0 { "" } else { " hidden" })}
+          on:click={move |_| {
+            errors.set(vec![]);
+          }}
+        >
+          "Clear All Errors"
+        </button>
       </div>
       <About />
     </main>
