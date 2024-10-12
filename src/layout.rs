@@ -12,10 +12,7 @@ use leptos_router::Outlet;
 use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 
 #[component]
-pub fn Layout(
-  // site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
-  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
-) -> impl IntoView {
+pub fn Layout(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
   let title = move || match ssr_site.get() {
     Some(Ok(site)) => {
@@ -36,26 +33,7 @@ pub fn Layout(
     _ => "Lemmy".to_string(),
   };
 
-  // let title = move || match site_signal.get() {
-  //   Some(Ok(site)) => {
-  //     if let Some(TitleSetter(t)) = ui_title.get() {
-  //       if let Some(d) = site.site_view.site.description {
-  //         format!("{} - Tech Demo UI for {} - {}", t, site.site_view.site.name, d)
-  //       } else {
-  //         format!("{} - Tech Demo UI for {}", t, site.site_view.site.name)
-  //       }
-  //     } else {
-  //       if let Some(d) = site.site_view.site.description {
-  //         format!("Tech Demo UI for {} - {}", site.site_view.site.name, d)
-  //       } else {
-  //         format!("Tech Demo UI for {}", site.site_view.site.name)
-  //       }
-  //     }
-  //   }
-  //   _ => "Lemmy".to_string(),
-  // };
-
-  let (theme_cookie, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+  let (theme_cookie, _) = use_cookie_with_options::<String, FromToStringCodec>(
     "theme",
     UseCookieOptions::default()
       .max_age(604800)
@@ -85,7 +63,7 @@ pub fn Layout(
        {move || {
          ssr_site
            .get()
-           .map(|s| {
+           .map(|_| {
              // ui_theme.set(Some(m));
              view! {
                <div class="flex flex-col min-h-screen" data-theme={move || theme_cookie.get()}>
@@ -103,16 +81,5 @@ pub fn Layout(
            })
        }}
      </Transition>
-     // <div class="flex flex-col min-h-screen"/*  data-theme={move || theme_cookie.get()} */>
-       // <TopNav ssr_site />
-       // <div class="flex flex-col flex-grow w-full">
-       //   <div class="sm:container sm:mx-auto">
-       //     <div class="flex flex-col flex-grow px-0 w-full lg:px-6">
-       //       <Outlet />
-       //     </div>
-       //   </div>
-       // </div>
-       // <BottomNav ssr_site />
-     // </div>
   }
 }

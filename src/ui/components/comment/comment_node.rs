@@ -1,25 +1,18 @@
-use std::any::Any;
-
 use crate::{
-  errors::{LemmyAppError, LemmyAppErrorType},
+  errors::LemmyAppError,
   lemmy_client::*,
   ui::components::common::icon::{Icon, IconType::*},
 };
 use ev::{MouseEvent, SubmitEvent, TouchEvent};
 use lemmy_api_common::{
   comment::{CreateComment, CreateCommentLike, SaveComment},
-  lemmy_db_schema::{
-    newtypes::{CommentId, PostId},
-    source::comment::Comment,
-  },
   lemmy_db_views::structs::CommentView,
-  post::{CreatePostLike, PostResponse},
 };
 use leptos::*;
 use leptos_dom::helpers::TimeoutHandle;
 use leptos_router::{Form, A};
 use web_sys::wasm_bindgen::JsCast;
-use web_sys::{HtmlAnchorElement, HtmlImageElement, HtmlLinkElement};
+use web_sys::{HtmlAnchorElement, HtmlImageElement};
 
 #[component]
 pub fn CommentNode(
@@ -106,13 +99,13 @@ pub fn CommentNode(
   //   }
   // };
 
-  let child_show = move || {
-    if hidden_comments.get().contains(&comment_view.get().comment.id.0) {
-      false
-    } else {
-      true
-    }
-  };
+  // let child_show = move || {
+  //   if hidden_comments.get().contains(&comment_view.get().comment.id.0) {
+  //     false
+  //   } else {
+  //     true
+  //   }
+  // };
 
   let duration_in_text = pretty_duration::pretty_duration(
     &std::time::Duration::from_millis(now_in_millis - comment_view.get().post.published.timestamp_millis() as u64),
@@ -251,13 +244,13 @@ pub fn CommentNode(
             if let Some(t) = e.target() {
               if let Some(i) = t.dyn_ref::<HtmlImageElement>() {
                 let _ = window().location().set_href(&i.src());
-              } else if let Some(l) = t.dyn_ref::<HtmlAnchorElement>() {} else {
+              } else if let Some(_l) = t.dyn_ref::<HtmlAnchorElement>() {} else {
                 on_toggle.call(comment_view.get().comment.id.0);
               }
             }
           }
         }}
-        on:mousedown={move |e: MouseEvent| {
+        on:mousedown={move |_e: MouseEvent| {
           still_handle
             .set(
               set_timeout_with_handle(
@@ -270,7 +263,7 @@ pub fn CommentNode(
                 .ok(),
             );
         }}
-        on:touchstart={move |e: TouchEvent| {
+        on:touchstart={move |_e: TouchEvent| {
           back_show.set(!back_show.get());
           still_handle
             .set(
@@ -284,23 +277,23 @@ pub fn CommentNode(
                 .ok(),
             );
         }}
-        on:touchend={move |e: TouchEvent| {
+        on:touchend={move |_e: TouchEvent| {
           back_show.set(!back_show.get());
           if let Some(h) = still_handle.get() {
             h.clear();
           }
         }}
-        on:touchmove={move |e: TouchEvent| {
+        on:touchmove={move |_e: TouchEvent| {
           if let Some(h) = still_handle.get() {
             h.clear();
           }
         }}
-        on:mouseup={move |e: MouseEvent| {
+        on:mouseup={move |_e: MouseEvent| {
           if let Some(h) = still_handle.get() {
             h.clear();
           }
         }}
-        on:dblclick={move |e: MouseEvent| {
+        on:dblclick={move |_e: MouseEvent| {
           vote_show.set(!vote_show.get());
         }}
         on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }

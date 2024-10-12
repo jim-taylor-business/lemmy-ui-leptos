@@ -22,7 +22,7 @@ pub fn TextInput(
   #[prop(optional)] validation_class: MaybeSignal<String>,
 ) -> impl IntoView {
   let show_password = RwSignal::new(false);
-  let for_id = id.get().clone();
+  // let for_id = id.get().clone();
   let eye_icon = Signal::derive(move || with!(|show_password| if *show_password { EyeSlash } else { Eye }));
 
   view! {

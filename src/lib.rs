@@ -13,7 +13,7 @@ mod ui;
 #[cfg(not(feature = "ssr"))]
 mod indexed_db;
 
-use std::{collections::BTreeMap, sync::LazyLock};
+use std::collections::BTreeMap;
 
 use crate::{
   errors::LemmyAppError,
@@ -31,9 +31,7 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
-use leptos_use::use_document_visibility;
 use ui::components::notifications::notifications_activity::NotificationsActivity;
-use web_sys::VisibilityState;
 
 leptos_i18n::load_locales!();
 
@@ -49,8 +47,8 @@ enum ResourceStatus {
   Ok,
   Err,
 }
-#[derive(Clone, Debug)]
-pub struct FocusSetter(bool);
+// #[derive(Clone, Debug)]
+// pub struct FocusSetter(bool);
 #[derive(Clone, Debug, PartialEq)]
 pub struct NotificationsRefresh(bool);
 
@@ -59,7 +57,7 @@ pub struct NotificationsRefresh(bool);
 #[component]
 pub fn App() -> impl IntoView {
   provide_meta_context();
-  provide_i18n_context();
+  // provide_i18n_context();
 
   let error: RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>> = RwSignal::new(Vec::new());
   provide_context(error);
@@ -129,6 +127,7 @@ pub fn App() -> impl IntoView {
           });
       }}
     </Transition>
+    <I18nContextProvider>
     <Router>
       <Routes>
         <Route path="/" view={move || view! { <Layout ssr_site /> }} ssr={SsrMode::Async}>
@@ -159,6 +158,7 @@ pub fn App() -> impl IntoView {
         </Route>
       </Routes>
     </Router>
+    </I18nContextProvider>
   }
 }
 

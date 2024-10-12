@@ -11,29 +11,22 @@ use crate::{
   },
   OnlineSetter, ResourceStatus, TitleSetter,
 };
-use html::Div;
 use lemmy_api_common::{
   lemmy_db_schema::{ListingType, SortType},
-  lemmy_db_views::structs::{PaginationCursor, PostView},
-  post::{self, GetPosts, GetPostsResponse},
+  lemmy_db_views::structs::PaginationCursor,
+  post::{GetPosts, GetPostsResponse},
   site::GetSiteResponse,
 };
+use leptos::html::*;
 use leptos::*;
 use leptos_router::*;
-// use strum_macros::Display;
 use web_sys::MouseEvent;
 
-use leptos::html::*;
-use leptos_use::*;
-
 #[component]
-pub fn HomeActivity(
-  site_signal: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>, /*RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>*/
-) -> impl IntoView {
+pub fn HomeActivity(site_signal: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
-  // let authenticated = expect_context::<RwSignal<Option<bool>>>();
   let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
   let online = expect_context::<RwSignal<OnlineSetter>>();
 
@@ -134,7 +127,7 @@ pub fn HomeActivity(
             #[cfg(not(feature = "ssr"))]
             if let Ok(Some(s)) = window().local_storage() {
               if let Ok(Some(_)) = s.get_item(&serde_json::to_string(&form).ok().unwrap()) {}
-              s.set_item(&serde_json::to_string(&form).ok().unwrap(), &serde_json::to_string(&o).ok().unwrap());
+              let _ = s.set_item(&serde_json::to_string(&form).ok().unwrap(), &serde_json::to_string(&o).ok().unwrap());
             }
             Ok((from, o))
           }
@@ -177,13 +170,15 @@ pub fn HomeActivity(
     }
   };
 
-  let resize_element = create_node_ref::<Main>();
-  let scroll_element = create_node_ref::<Div>();
+  let _resize_element = create_node_ref::<Main>();
+  let _scroll_element = create_node_ref::<Div>();
 
   #[cfg(not(feature = "ssr"))]
   {
-    use_resize_observer(resize_element, move |entries, _| {
-      let rect = entries[0].content_rect();
+    use leptos_use::*;
+
+    use_resize_observer(_resize_element, move |entries, _| {
+      let _rect = entries[0].content_rect();
       // logging::log!("width: {:.0} height: {:.0}", rect.width(), rect.height());
       let iw = window().inner_width().ok().map(|b| b.as_f64().unwrap_or(0.0)).unwrap_or(0.0);
 
@@ -227,19 +222,12 @@ pub fn HomeActivity(
       }
     });
 
-    let UseIntersectionObserverReturn {
-      is_active,
-      // pause,
-      // resume,
-      ..
-    } = use_intersection_observer_with_options(
-      scroll_element,
-      move |entries, _| {
-        // logging::log!("scroll");
+    use_intersection_observer_with_options(
+      _scroll_element,
+      move |_entries, _| {
         let iw = window().inner_width().ok().map(|b| b.as_f64().unwrap_or(0.0)).unwrap_or(0.0);
 
         if iw < 640f64 {
-          // logging::log!("width");
           if csr_resources
             .get()
             .get(&(csr_next_page_cursor.get().0, ResourceStatus::Loading))
@@ -247,8 +235,6 @@ pub fn HomeActivity(
             && csr_resources.get().get(&(csr_next_page_cursor.get().0, ResourceStatus::Ok)).is_none()
             && csr_resources.get().get(&(csr_next_page_cursor.get().0, ResourceStatus::Err)).is_none()
           {
-            // error.update(|es| es.push(None));
-            // logging::log!("update");
             csr_resources.update(|h| {
               h.insert(
                 (csr_next_page_cursor.get().0, ResourceStatus::Loading),
@@ -256,7 +242,7 @@ pub fn HomeActivity(
               );
             });
 
-            let csr_resource = create_local_resource(
+            let _csr_resource = create_local_resource(
               move || (),
               move |()| async move {
                 let from = csr_next_page_cursor.get();
@@ -281,12 +267,10 @@ pub fn HomeActivity(
                 match result {
                   Ok(o) => {
                     csr_next_page_cursor.set((from.0 + ssr_limit(), o.next_page.clone()));
-
                     csr_resources.update(move |h| {
                       h.remove(&(from.0, ResourceStatus::Loading));
                       h.insert((from.0, ResourceStatus::Ok), (from.1.clone(), Some(o.clone())));
                     });
-
                     Some(())
                   }
                   Err(e) => {
@@ -307,17 +291,12 @@ pub fn HomeActivity(
     );
   }
 
-  // let on_retry_click = move |c: (usize, Option<PaginationCursor>)| {
   let on_retry_click = move |i: (usize, ResourceStatus)| {
-    // let value = c.clone();
-
     move |_e: MouseEvent| {
-      let csr_resource = create_local_resource(
+      let _csr_resource = create_local_resource(
         move || (),
         move |()| //{
-        // let value = c.clone();
         async move {
-          // let from = value;
           let from = csr_resources.get().get(&i).unwrap().0.clone();
 
           let form = GetPosts {
@@ -339,23 +318,19 @@ pub fn HomeActivity(
           let from_clone = from.clone();
 
           csr_resources.update(move |h| {
-            // let f = from.clone();
             h.remove(&(i.0, ResourceStatus::Err));
             h.insert((i.0, ResourceStatus::Loading), (from_clone, None));
           });
 
-          // logging::log!("GET {}", from.0);
           let result = LemmyClient.list_posts(form).await;
 
           match result {
             Ok(o) => {
               csr_next_page_cursor.set((i.0 + ssr_limit(), o.next_page.clone()));
-
               csr_resources.update(move |h| {
                 h.remove(&(i.0, ResourceStatus::Loading));
                 h.insert((i.0, ResourceStatus::Ok), (from, Some(o.clone())));
               });
-
               Some(())
             }
             Err(e) => {
@@ -367,8 +342,6 @@ pub fn HomeActivity(
               None
             }
           }
-
-        //}
         },
       );
     }
@@ -475,7 +448,7 @@ pub fn HomeActivity(
         </ul>
       </div>
     </div>
-    <main node_ref={resize_element} class="flex flex-col flex-grow w-full sm:flex-row">
+    <main node_ref={_resize_element} class="flex flex-col flex-grow w-full sm:flex-row">
       <div class="relative w-full sm:pr-4 lg:w-2/3 2xl:w-3/4 3xl:w-4/5 4xl:w-5/6">
 
         <Transition fallback={|| {}}>
@@ -487,7 +460,7 @@ pub fn HomeActivity(
                     <div class="flex justify-between alert alert-error">
                       <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
                       <div>
-                        <Show when={move || { if let Some(r) = err.1 { true } else { false } }} fallback={|| {}}>
+                        <Show when={move || { if let Some(_) = err.1 { true } else { false } }} fallback={|| {}}>
                           <button
                             on:click={move |_| {
                               if let Some(r) = err.1 {
@@ -530,7 +503,7 @@ pub fn HomeActivity(
                       }
                     }
                     {
-                      let mut query_params = query.get();
+                      let query_params = query.get();
                       view! {
                         <A
                           href={format!("{}{}", use_location().pathname.get(), query_params.to_query_string())}
@@ -638,14 +611,6 @@ pub fn HomeActivity(
           }}
         </Transition>
 
-        // <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
-        // <div class="px-8 py-4">
-        // <div class="alert">
-        // <span> "Loading..." </span>
-        // </div>
-        // </div>
-        // </div>
-
         <For each={move || csr_resources.get()} key={|r| r.0.clone()} let:r>
           {
             let r_copy = r.clone();
@@ -685,8 +650,7 @@ pub fn HomeActivity(
             }
           }
         </For>
-        // <div node_ref=scroll_element class="sm:hidden block"></div>
-        <div node_ref={scroll_element} class="block bg-transparent sm:hidden h-[1px]" />
+        <div node_ref={_scroll_element} class="block bg-transparent sm:hidden h-[1px]" />
 
       </div>
       <div class="hidden lg:block lg:w-1/3 2xl:w-1/4 3xl:w-1/5 4xl:w-1/6">

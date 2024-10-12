@@ -6,12 +6,9 @@ use crate::{
 };
 use cfg_if::cfg_if;
 use codee::string::FromToStringCodec;
-use lemmy_api_common::lemmy_db_schema::source::private_message::PrivateMessage;
-use lemmy_api_common::lemmy_db_views_actor::structs::CommentReplyView;
 use lemmy_api_common::private_message::PrivateMessagesResponse;
 use lemmy_api_common::{comment::*, community::*, person::*, post::*, private_message::GetPrivateMessages, site::* /* , LemmyErrorType */};
-use leptos::leptos_dom::logging;
-use leptos::{Serializable, SignalGet, SignalSet};
+use leptos::{Serializable, SignalGet};
 use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 use serde::{Deserialize, Serialize};
 
@@ -204,6 +201,7 @@ cfg_if! {
     use gloo_net::{http, http::RequestBuilder};
     use leptos::wasm_bindgen::UnwrapThrowExt;
     use web_sys::AbortController;
+    use leptos::SignalSet;
 
     trait MaybeBearerAuth {
       fn maybe_bearer_auth(self, token: Option<&str>) -> Self;

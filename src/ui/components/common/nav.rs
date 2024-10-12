@@ -1,10 +1,9 @@
 use crate::{
   // cookie::{remove_cookie, set_cookie},
-  errors::{message_from_error, LemmyAppError, LemmyAppErrorType},
+  errors::{message_from_error, LemmyAppError},
   i18n::*,
   lemmy_client::*,
   ui::components::common::icon::{Icon, IconType::*},
-  FocusSetter,
   NotificationsRefresh,
   OnlineSetter,
   UriSetter,
@@ -16,8 +15,8 @@ use lemmy_api_common::{
 };
 use leptos::*;
 use leptos_router::*;
-use leptos_use::{use_cookie_with_options, use_document_visibility, SameSite, UseCookieOptions};
-use web_sys::{SubmitEvent, VisibilityState};
+use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
+use web_sys::SubmitEvent;
 
 #[server(LogoutFn, "/serverfn")]
 pub async fn logout() -> Result<(), ServerFnError> {
@@ -91,13 +90,10 @@ pub async fn change_theme(theme: String) -> Result<(), ServerFnError> {
 }
 
 #[component]
-pub fn TopNav(
-  // site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
-  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
-) -> impl IntoView {
+pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let i18n = use_i18n();
 
-  let (theme_cookie, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+  let (_, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
     "theme",
     UseCookieOptions::default()
       .max_age(604800)
@@ -554,10 +550,7 @@ pub fn TopNav(
 }
 
 #[component]
-pub fn BottomNav(
-  // site_signal: RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>
-  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
-) -> impl IntoView {
+pub fn BottomNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let i18n = use_i18n();
   const FE_VERSION: &str = env!("CARGO_PKG_VERSION");
   const GIT_HASH: std::option::Option<&'static str> = option_env!("GIT_HASH");

@@ -102,7 +102,7 @@ pub fn PostActivity(
           let result = LemmyClient.reply_comment(form).await;
 
           match result {
-            Ok(o) => {
+            Ok(_o) => {
               refresh_comments.update(|b| *b = !*b);
               reply_show.update(|b| *b = !*b);
             }
@@ -165,7 +165,7 @@ pub fn PostActivity(
                                 if let Some(t) = e.target() {
                                   if let Some(i) = t.dyn_ref::<HtmlImageElement>() {
                                     let _ = window().location().set_href(&i.src());
-                                  } else if let Some(l) = t.dyn_ref::<HtmlAnchorElement>() {}
+                                  } else if let Some(_l) = t.dyn_ref::<HtmlAnchorElement>() {}
                                 }
                               }}
                             >
@@ -206,7 +206,7 @@ pub fn PostActivity(
                 .map(|res| {
                   view! {
                     <div class="w-full">
-                      <CommentNodes comments={res.comments.into()} post_id={post_id().into()} />
+                      <CommentNodes comments={res.comments.into()} _post_id={post_id().into()} />
                     </div>
                   }
                 })

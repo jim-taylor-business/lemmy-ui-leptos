@@ -1,16 +1,11 @@
-use std::collections::BTreeMap;
-
 use ev::MouseEvent;
 use lemmy_api_common::{
-  lemmy_db_schema::{newtypes::CommentReplyId, source::comment_reply::CommentReply, CommentSortType},
-  lemmy_db_views::structs::{CommentView, PaginationCursor},
-  lemmy_db_views_actor::structs::CommentReplyView,
+  lemmy_db_schema::{newtypes::CommentReplyId, CommentSortType},
+  lemmy_db_views::structs::CommentView,
   person::{GetPersonMentions, GetReplies, MarkCommentReplyAsRead},
-  post::{GetPosts, GetPostsResponse},
   private_message::GetPrivateMessages,
 };
 use leptos::*;
-use leptos_router::{use_location, use_query_map, A};
 
 use crate::{
   errors::{message_from_error, LemmyAppError},
@@ -30,7 +25,7 @@ pub fn NotificationsActivity() -> impl IntoView {
 
   let replies = Resource::new(
     move || (replies_refresh.get()),
-    move |(_replies_refresh)| async move {
+    move |_replies_refresh| async move {
       let form = GetReplies {
         sort: Some(CommentSortType::New),
         page: Some(1),
@@ -114,7 +109,7 @@ pub fn NotificationsActivity() -> impl IntoView {
           let result = LemmyClient.mark_comment(form).await;
 
           match result {
-            Ok(o) => {
+            Ok(_o) => {
               replies_refresh.update(|b| *b = !*b);
               notifications_refresh.update(|n| n.0 = !n.0);
             }
@@ -231,7 +226,7 @@ pub fn NotificationsActivity() -> impl IntoView {
                     <div class="flex justify-between alert alert-error">
                       <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
                       <div>
-                        <Show when={move || { if let Some(r) = err.1 { true } else { false } }} fallback={|| {}}>
+                        <Show when={move || { if let Some(_) = err.1 { true } else { false } }} fallback={|| {}}>
                           <button
                             on:click={move |_| {
                               if let Some(r) = err.1 {

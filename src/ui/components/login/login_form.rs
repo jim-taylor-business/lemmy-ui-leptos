@@ -9,7 +9,7 @@ use codee::string::FromToStringCodec;
 use lemmy_api_common::person::{Login, LoginResponse};
 use leptos::*;
 use leptos_router::*;
-use leptos_use::{storage::use_storage, use_cookie_with_options, SameSite, UseCookieOptions};
+use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 use web_sys::SubmitEvent;
 
 fn validate_login(form: &Login) -> Option<LemmyAppErrorType> {
@@ -92,40 +92,11 @@ pub async fn login(username_or_email: String, password: String, uri: String) -> 
   }
 }
 
-#[derive(serde::Deserialize)]
-struct Theme {
-  theme: String,
-  // uri: String,
-}
-
 #[component]
 pub fn LoginForm() -> impl IntoView {
   let _i18n = use_i18n();
 
   let query = use_query_map();
-  // let params = use_params_map();
-
-  // #[cfg(feature = "ssr")]
-  // let f = {
-  //   use actix_web::{web::Form, HttpRequest};
-  //   use leptos_actix::extract;
-  //   Resource::new(
-  //     move || {},
-  //     move |()| async move {
-  //       // let request = extract::<HttpRequest>().await;
-  //       let t = if let Some(Form(form)) = extract::<Form<Theme>>().await.ok() {
-  //         form.theme
-  //       } else {
-  //         "".into()
-  //       };
-  //       t
-  //     },
-  //   )
-  // };
-  // #[cfg(not(feature = "ssr"))]
-  // let f = RwSignal::new("value".to_string());
-
-  // logging::log!("{:#?} {:#?} {:#?}", f.get(), query.get(), params.get());
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let authenticated = expect_context::<RwSignal<Option<bool>>>();
@@ -221,7 +192,7 @@ pub fn LoginForm() -> impl IntoView {
   };
 
   view! {
-    <ActionForm class="space-y-3" action={login} on:submit={on_submit}>
+    <ActionForm class="space-y-3" action={login} on:submit=on_submit>
       <input type="hidden" name="uri" value={move || query.get().get("uri").cloned().unwrap_or("".into())} />
       <TextInput id="username" name="username_or_email" on_input={move |s| update!(| name | * name = s)} label="Username" />
       <TextInput
