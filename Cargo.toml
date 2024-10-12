@@ -24,6 +24,7 @@ leptos_router = "0"
 
 leptos_i18n = "0"
 leptos-use = "0"
+codee = "0"
 
 serde = { version = "1", features = ["derive"] }
 serde_urlencoded = "0"

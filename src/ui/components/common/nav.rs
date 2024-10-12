@@ -1,18 +1,22 @@
 use crate::{
-  cookie::{remove_cookie, set_cookie},
+  // cookie::{remove_cookie, set_cookie},
   errors::{message_from_error, LemmyAppError, LemmyAppErrorType},
   i18n::*,
   lemmy_client::*,
   ui::components::common::icon::{Icon, IconType::*},
-  FocusSetter, NotificationsRefresh, OnlineSetter, UriSetter,
+  FocusSetter,
+  NotificationsRefresh,
+  OnlineSetter,
+  UriSetter,
 };
+use codee::string::FromToStringCodec;
 use ev::MouseEvent;
 use lemmy_api_common::{
   lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, person::GetUnreadCountResponse, site::GetSiteResponse,
 };
 use leptos::*;
 use leptos_router::*;
-use leptos_use::use_document_visibility;
+use leptos_use::{use_cookie_with_options, use_document_visibility, SameSite, UseCookieOptions};
 use web_sys::{SubmitEvent, VisibilityState};
 
 #[server(LogoutFn, "/serverfn")]
@@ -21,17 +25,26 @@ pub async fn logout() -> Result<(), ServerFnError> {
   let result = LemmyClient.logout().await;
   match result {
     Ok(_o) => {
-      let r = remove_cookie("jwt").await;
-      match r {
-        Ok(_o) => {
-          redirect("/");
-          Ok(())
-        }
-        Err(e) => {
-          redirect(&format!("/login?error={}", serde_json::to_string(&e)?)[..]);
-          Ok(())
-        }
-      }
+      let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+        "jwt",
+        UseCookieOptions::default()
+          .max_age(604800)
+          // .domain(None.into())
+          .path("/")
+          .same_site(SameSite::Lax),
+      );
+      set_auth_cookie.set(None);
+      // let r = remove_cookie("jwt").await;
+      // match r {
+      //   Ok(_o) => {
+      //     redirect("/");
+      Ok(())
+      //   }
+      //   Err(e) => {
+      //     redirect(&format!("/login?error={}", serde_json::to_string(&e)?)[..]);
+      //     Ok(())
+      //   }
+      // }
     }
     Err(e) => {
       redirect(&format!("/login?error={}", serde_json::to_string(&e)?)[..]);
@@ -42,21 +55,39 @@ pub async fn logout() -> Result<(), ServerFnError> {
 
 #[server(ChangeLangFn, "/serverfn")]
 pub async fn change_lang(lang: String) -> Result<(), ServerFnError> {
-  let _ = set_cookie("i18n_pref_locale", &lang.to_lowercase(), &core::time::Duration::from_secs(604800)).await;
+  let (_, set_locale_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+    "i18n_pref_locale",
+    UseCookieOptions::default()
+      .max_age(604800)
+      // .domain(None.into())
+      .path("/")
+      .same_site(SameSite::Lax),
+  );
+  set_locale_cookie.set(Some(lang.to_lowercase()));
+  // let _ = set_cookie("i18n_pref_locale", &lang.to_lowercase(), &core::time::Duration::from_secs(604800)).await;
   Ok(())
 }
 
 #[server(ChangeThemeFn, "/serverfn")]
 pub async fn change_theme(theme: String) -> Result<(), ServerFnError> {
-  use leptos_actix::redirect;
-  let r = set_cookie("theme", &theme, &core::time::Duration::from_secs(604800)).await;
-  match r {
-    Ok(_o) => Ok(()),
-    Err(e) => {
-      redirect(&format!("/login?error={}", serde_json::to_string(&e)?)[..]);
-      Ok(())
-    }
-  }
+  // use leptos_actix::redirect;
+  let (_, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+    "theme",
+    UseCookieOptions::default()
+      .max_age(604800)
+      // .domain(None.into())
+      .path("/")
+      .same_site(SameSite::Lax),
+  );
+  set_theme_cookie.set(Some(theme));
+  // let r = set_cookie("theme", &theme, &core::time::Duration::from_secs(604800)).await;
+  // match r {
+  //   Ok(_o) => Ok(()),
+  //   Err(e) => {
+  //     redirect(&format!("/login?error={}", serde_json::to_string(&e)?)[..]);
+  Ok(())
+  //   }
+  // }
 }
 
 #[component]
@@ -65,6 +96,15 @@ pub fn TopNav(
   ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
 ) -> impl IntoView {
   let i18n = use_i18n();
+
+  let (theme_cookie, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+    "theme",
+    UseCookieOptions::default()
+      .max_age(604800)
+      // .domain(None.into())
+      .path("/")
+      .same_site(SameSite::Lax),
+  );
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   // let ssr_error = RwSignal::new::<Option<(LemmyAppError, Option<RwSignal<bool>>)>>(None);
@@ -115,7 +155,16 @@ pub fn TopNav(
         let result = LemmyClient.logout().await;
         match result {
           Ok(_o) => {
-            let _ = remove_cookie("jwt").await;
+            let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+              "jwt",
+              UseCookieOptions::default()
+                .max_age(604800)
+                // .domain(None.into())
+                .path("/")
+                .same_site(SameSite::Lax),
+            );
+            set_auth_cookie.set(None);
+            // let _ = remove_cookie("jwt").await;
             authenticated.set(Some(false));
           }
           Err(e) => {
@@ -161,46 +210,47 @@ pub fn TopNav(
     },
   );
 
-  let ui_focus = RwSignal::new(FocusSetter(true));
+  // let ui_focus = RwSignal::new(FocusSetter(true));
 
-  #[cfg(not(feature = "ssr"))]
-  let visibility = use_document_visibility();
+  // #[cfg(not(feature = "ssr"))]
+  // let visibility = use_document_visibility();
 
-  #[cfg(not(feature = "ssr"))]
-  let e = Effect::new(move |_| match visibility.get() {
-    VisibilityState::Visible => {
-      refresh.update(|b| *b = !*b);
-    }
-    VisibilityState::Hidden => {}
-    _ => {}
-  });
+  // #[cfg(not(feature = "ssr"))]
+  // let e = Effect::new(move |_| match visibility.get() {
+  //   VisibilityState::Visible => {
+  //     refresh.update(|b| *b = !*b);
+  //   }
+  //   VisibilityState::Hidden => {}
+  //   _ => {}
+  // });
 
-  #[cfg(not(feature = "ssr"))]
-  set_interval_with_handle(
-    move || match visibility.get() {
-      VisibilityState::Visible => {
-        refresh.update(|b| *b = !*b);
-      }
-      VisibilityState::Hidden => {}
-      _ => {}
-    },
-    std::time::Duration::from_millis(30000),
-  );
+  // #[cfg(not(feature = "ssr"))]
+  // set_interval_with_handle(
+  //   move || match visibility.get() {
+  //     VisibilityState::Visible => {
+  //       refresh.update(|b| *b = !*b);
+  //     }
+  //     VisibilityState::Hidden => {}
+  //     _ => {}
+  //   },
+  //   std::time::Duration::from_millis(30000),
+  // );
 
-  let theme = expect_context::<RwSignal<Option<String>>>();
+  // let theme = expect_context::<RwSignal<Option<String>>>();
   let online = expect_context::<RwSignal<OnlineSetter>>();
   let theme_action = create_server_action::<ChangeThemeFn>();
 
   let on_theme_submit = move |theme_name: &'static str| {
     move |ev: SubmitEvent| {
       ev.prevent_default();
-      let _res = create_local_resource(
-        move || theme_name.to_string(),
-        move |t| async move {
-          let _ = set_cookie("theme", &t, &core::time::Duration::from_secs(604800)).await;
-        },
-      );
-      theme.set(Some(theme_name.to_string()));
+      // let _res = create_local_resource(
+      //   move || theme_name.to_string(),
+      //   move |t| async move {
+      //     let _ = set_cookie("theme", &t, &core::time::Duration::from_secs(604800)).await;
+      //   },
+      // );
+      set_theme_cookie.set(Some(theme_name.to_string()));
+      // theme.set(Some(theme_name.to_string()));
     }
   };
 
@@ -372,7 +422,6 @@ pub fn TopNav(
           </Transition>
           <Show
             when={move || { if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = ssr_site.get() { true } else { false } }}
-
             fallback={move || {
               view! {
                 // let l = use_location();
@@ -411,7 +460,6 @@ pub fn TopNav(
                       String::default()
                     }
                   }}
-
                 </summary>
                 <ul class="z-10">
                   <li>
@@ -514,6 +562,14 @@ pub fn BottomNav(
   const FE_VERSION: &str = env!("CARGO_PKG_VERSION");
   const GIT_HASH: std::option::Option<&'static str> = option_env!("GIT_HASH");
 
+  let version = move || {
+    if let Some(Ok(m)) = ssr_site.get() {
+      m.version
+    } else {
+      "Lemmy".to_string()
+    }
+  };
+
   view! {
     <nav class="container hidden mx-auto lg:flex navbar">
       <div class="w-auto navbar-start" />
@@ -530,8 +586,25 @@ pub fn BottomNav(
           <li>
             <a href="//github.com/LemmyNet/lemmy/releases" class="text-md">
               "BE: "
-              {move || { if let Some(Ok(m)) = ssr_site.get() { m.version } else { "Lemmy".to_string() } }}
+              {move || version()}
+              // {move || { if let Some(Ok(m)) = ssr_site.get() { m.version } else { "Lemmy".to_string() } }}
+              // {if let Ok(v) = s { v.version } else { "Lemmy".to_string() }}
             </a>
+            // <Transition fallback={|| {}}>
+            //   {move || {
+            //     ssr_site
+            //       .get()
+            //       .map(|s| {
+            //         view!{
+            //           <a href="//github.com/LemmyNet/lemmy/releases" class="text-md">
+            //             "BE: "
+            //             // {move || { if let Some(Ok(m)) = ssr_site.get() { m.version } else { "Lemmy".to_string() } }}
+            //             {if let Ok(v) = s { v.version } else { "Lemmy".to_string() }}
+            //           </a>
+            //         }
+            //       });
+            //   }}
+            // </Transition>
           </li>
           <li>
             <A href="/modlog" class="pointer-events-none text-md text-base-content/50">

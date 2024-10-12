@@ -1,14 +1,15 @@
 use crate::{
-  cookie::set_cookie,
+  // cookie::set_cookie,
   errors::{LemmyAppError, LemmyAppErrorType},
   i18n::*,
   ui::components::common::text_input::{InputType, TextInput},
   UriSetter,
 };
+use codee::string::FromToStringCodec;
 use lemmy_api_common::person::{Login, LoginResponse};
 use leptos::*;
 use leptos_router::*;
-use leptos_use::storage::use_storage;
+use leptos_use::{storage::use_storage, use_cookie_with_options, SameSite, UseCookieOptions};
 use web_sys::SubmitEvent;
 
 fn validate_login(form: &Login) -> Option<LemmyAppErrorType> {
@@ -23,13 +24,10 @@ fn validate_login(form: &Login) -> Option<LemmyAppErrorType> {
 
 async fn try_login(form: Login) -> Result<LoginResponse, LemmyAppError> {
   let val = validate_login(&form);
-
   match val {
     None => {
       use crate::lemmy_client::*;
-
       let result = LemmyClient.login(form).await;
-
       match result {
         Ok(LoginResponse { ref jwt, .. }) => {
           if let Some(_jwt_string) = jwt {
@@ -54,32 +52,38 @@ async fn try_login(form: Login) -> Result<LoginResponse, LemmyAppError> {
 #[server(LoginFn, "/serverfn")]
 pub async fn login(username_or_email: String, password: String, uri: String) -> Result<(), ServerFnError> {
   use leptos_actix::redirect;
-
   let req = Login {
     username_or_email: username_or_email.into(),
     password: password.into(),
     totp_2fa_token: None,
   };
-
   let result = try_login(req).await;
-
   match result {
     Ok(LoginResponse { jwt, .. }) => {
-      let r = set_cookie("jwt", &jwt.unwrap_or_default().into_inner(), &core::time::Duration::from_secs(604800)).await;
-      match r {
-        Ok(_o) => {
-          if uri.len() > 0 {
-            redirect(&uri);
-          } else {
-            redirect("/");
-          }
-          Ok(())
-        }
-        Err(e) => {
-          redirect(&format!("/login?error={}", serde_json::to_string(&e)?)[..]);
-          Ok(())
-        }
+      let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+        "jwt",
+        UseCookieOptions::default()
+          .max_age(604800)
+          // .domain(None.into())
+          .path("/")
+          .same_site(SameSite::Lax),
+      );
+      set_auth_cookie.set(Some(jwt.unwrap_or_default().into_inner()));
+      // let r = set_cookie("jwt", &jwt.unwrap_or_default().into_inner(), &core::time::Duration::from_secs(604800)).await;
+      // match r {
+      //   Ok(_o) => {
+      if uri.len() > 0 {
+        redirect(&uri);
+      } else {
+        redirect("/");
       }
+      Ok(())
+      //   }
+      //   Err(e) => {
+      //     redirect(&format!("/login?error={}", serde_json::to_string(&e)?)[..]);
+      //     Ok(())
+      //   }
+      // }
     }
     Err(e) => {
       redirect(&format!("/login?error={}", serde_json::to_string(&e)?)[..]);
@@ -164,7 +168,16 @@ pub fn LoginForm() -> impl IntoView {
         let result = try_login(req.clone()).await;
         match result {
           Ok(LoginResponse { jwt: Some(jwt), .. }) => {
-            let _ = set_cookie("jwt", &jwt.clone().into_inner(), &core::time::Duration::from_secs(604800)).await;
+            let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+              "jwt",
+              UseCookieOptions::default()
+                .max_age(604800)
+                // .domain(None.into())
+                .path("/")
+                .same_site(SameSite::Lax),
+            );
+            set_auth_cookie.set(Some(jwt.clone().into_inner()));
+            // let _ = set_cookie("jwt", &jwt.clone().into_inner(), &core::time::Duration::from_secs(604800)).await;
             authenticated.set(Some(true));
             // leptos_router::use_navigate()("/", Default::default());
             // leptos_router::use_navigate()(&query.get().get("uri").cloned().unwrap_or("/".into()), Default::default());

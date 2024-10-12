@@ -1,13 +1,15 @@
 use crate::{
-  cookie::get_cookie,
+  // cookie::get_cookie,
   errors::LemmyAppError,
   ui::components::common::nav::{BottomNav, TopNav},
   TitleSetter,
 };
+use codee::string::FromToStringCodec;
 use lemmy_api_common::site::GetSiteResponse;
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::Outlet;
+use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 
 #[component]
 pub fn Layout(
@@ -53,44 +55,64 @@ pub fn Layout(
   //   _ => "Lemmy".to_string(),
   // };
 
-  let ui_theme = expect_context::<RwSignal<Option<String>>>();
-  let theme = Resource::new(
-    move || (),
-    move |()| async move {
-      let r = get_cookie("theme").await;
-      match r {
-        Ok(Some(o)) => o,
-        _ => "".to_string(),
-      }
-    },
+  let (theme_cookie, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+    "theme",
+    UseCookieOptions::default()
+      .max_age(604800)
+      // .domain(None.into())
+      .path("/")
+      .same_site(SameSite::Lax),
   );
 
+  // // let ui_theme = expect_context::<RwSignal<Option<String>>>();
+  // // let theme = Resource::new(
+  // //   move || (),
+  // //   move |()| async move {
+  // //     let r = get_cookie("theme").await;
+  // //     match r {
+  // //       Ok(Some(o)) => o,
+  // //       _ => "".to_string(),
+  // //     }
+  // //   },
+  // // );
+
   view! {
-    <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css" />
-    <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico" />
-    <Title text={move || title()} />
-    <Meta name="description" content={move || title()} />
-    <Transition fallback={|| {}}>
-      {move || {
-        theme
-          .get()
-          .map(|m| {
-            ui_theme.set(Some(m));
-            view! {
-              <div class="flex flex-col min-h-screen" data-theme={move || ui_theme.get()}>
-                <TopNav ssr_site />
-                <div class="flex flex-col flex-grow w-full">
-                  <div class="sm:container sm:mx-auto">
-                    <div class="flex flex-col flex-grow px-0 w-full lg:px-6">
-                      <Outlet />
-                    </div>
-                  </div>
-                </div>
-                <BottomNav ssr_site />
-              </div>
-            }
-          })
-      }}
-    </Transition>
+     <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css" />
+     <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico" />
+     <Title text={move || title()} />
+     <Meta name="description" content={move || title()} />
+     <Transition fallback={|| {}}>
+       {move || {
+         ssr_site
+           .get()
+           .map(|s| {
+             // ui_theme.set(Some(m));
+             view! {
+               <div class="flex flex-col min-h-screen" data-theme={move || theme_cookie.get()}>
+                 <TopNav ssr_site />
+                 <div class="flex flex-col flex-grow w-full">
+                   <div class="sm:container sm:mx-auto">
+                     <div class="flex flex-col flex-grow px-0 w-full lg:px-6">
+                       <Outlet />
+                     </div>
+                   </div>
+                 </div>
+                 <BottomNav ssr_site />
+               </div>
+             }
+           })
+       }}
+     </Transition>
+     // <div class="flex flex-col min-h-screen"/*  data-theme={move || theme_cookie.get()} */>
+       // <TopNav ssr_site />
+       // <div class="flex flex-col flex-grow w-full">
+       //   <div class="sm:container sm:mx-auto">
+       //     <div class="flex flex-col flex-grow px-0 w-full lg:px-6">
+       //       <Outlet />
+       //     </div>
+       //   </div>
+       // </div>
+       // <BottomNav ssr_site />
+     // </div>
   }
 }

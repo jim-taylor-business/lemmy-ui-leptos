@@ -1,5 +1,5 @@
 // useful in development to only have errors in compiler output
-#![allow(warnings)]
+// #![allow(warnings)]
 
 mod config;
 mod cookie;
@@ -65,8 +65,8 @@ pub fn App() -> impl IntoView {
   provide_context(error);
   let authenticated: RwSignal<Option<bool>> = RwSignal::new(None);
   provide_context(authenticated);
-  let theme: RwSignal<Option<String>> = RwSignal::new(None);
-  provide_context(theme);
+  // let theme: RwSignal<Option<String>> = RwSignal::new(None);
+  // provide_context(theme);
   let title: RwSignal<Option<TitleSetter>> = RwSignal::new(None);
   provide_context(title);
   let online = RwSignal::new(OnlineSetter(true));
