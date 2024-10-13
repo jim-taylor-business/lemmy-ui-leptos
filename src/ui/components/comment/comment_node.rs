@@ -296,8 +296,8 @@ pub fn CommentNode(
         on:dblclick={move |_e: MouseEvent| {
           vote_show.set(!vote_show.get());
         }}
-        on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
-        on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(!back_show.get()); }
+        on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(true); }
+        on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(false); }
     >
         <div class={move || format!("max-w-none prose{}", if back_show.get() { " brightness-200" } else { "" })} inner_html={safe_html} />
         <Show when={move || vote_show.get()} fallback={|| view! {}}>

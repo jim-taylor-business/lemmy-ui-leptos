@@ -4,14 +4,12 @@
 mod config;
 mod cookie;
 mod errors;
-pub mod host;
+mod host;
+mod indexed_db;
 mod layout;
 mod lemmy_client;
 mod lemmy_error;
 mod ui;
-
-#[cfg(not(feature = "ssr"))]
-mod indexed_db;
 
 use std::collections::BTreeMap;
 
@@ -31,6 +29,7 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
+use leptos_use::{SameSite, UseCookieOptions};
 use ui::components::notifications::notifications_activity::NotificationsActivity;
 
 leptos_i18n::load_locales!();
@@ -47,24 +46,17 @@ enum ResourceStatus {
   Ok,
   Err,
 }
-// #[derive(Clone, Debug)]
-// pub struct FocusSetter(bool);
 #[derive(Clone, Debug, PartialEq)]
 pub struct NotificationsRefresh(bool);
-
-// static authenticated: LazyLock<RwSignal<Option<bool>>> = std::sync::LazyLock::new(|| RwSignal::new(None));
 
 #[component]
 pub fn App() -> impl IntoView {
   provide_meta_context();
-  // provide_i18n_context();
 
   let error: RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>> = RwSignal::new(Vec::new());
   provide_context(error);
   let authenticated: RwSignal<Option<bool>> = RwSignal::new(None);
   provide_context(authenticated);
-  // let theme: RwSignal<Option<String>> = RwSignal::new(None);
-  // provide_context(theme);
   let title: RwSignal<Option<TitleSetter>> = RwSignal::new(None);
   provide_context(title);
   let online = RwSignal::new(OnlineSetter(true));
@@ -127,37 +119,37 @@ pub fn App() -> impl IntoView {
           });
       }}
     </Transition>
-    <I18nContextProvider>
-    <Router>
-      <Routes>
-        <Route path="/" view={move || view! { <Layout ssr_site /> }} ssr={SsrMode::Async}>
-          <Route path="/*any" view={NotFound} />
+    <I18nContextProvider cookie_options={UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax)}>
+      <Router>
+        <Routes>
+          <Route path="/" view={move || view! { <Layout ssr_site /> }} ssr={SsrMode::Async}>
+            <Route path="/*any" view={NotFound} />
 
-          <Route path="" view={move || view! { <HomeActivity site_signal={ssr_site} /> }} />
+            <Route path="" view={move || view! { <HomeActivity ssr_site /> }} />
 
-          <Route path="create_post" view={CommunitiesActivity} />
-          <Route path="post/:id" view={move || view! { <PostActivity site_signal={ssr_site} /> }} />
+            <Route path="create_post" view={CommunitiesActivity} />
+            <Route path="post/:id" view={move || view! { <PostActivity ssr_site /> }} />
 
-          <Route path="search" view={CommunitiesActivity} />
-          <Route path="communities" view={CommunitiesActivity} />
-          <Route path="create_community" view={CommunitiesActivity} />
-          <Route path="c/:name" view={move || view! { <HomeActivity site_signal={ssr_site} /> }} />
-          />
+            <Route path="search" view={CommunitiesActivity} />
+            <Route path="communities" view={CommunitiesActivity} />
+            <Route path="create_community" view={CommunitiesActivity} />
+            <Route path="c/:name" view={move || view! { <HomeActivity ssr_site /> }} />
+            />
 
-          <Route path="login" methods={&[Method::Get, Method::Post]} view={LoginActivity} />
-          <Route path="logout" view={CommunitiesActivity} />
-          <Route path="signup" view={CommunitiesActivity} />
+            <Route path="login" methods={&[Method::Get, Method::Post]} view={LoginActivity} />
+            <Route path="logout" view={CommunitiesActivity} />
+            <Route path="signup" view={CommunitiesActivity} />
 
-          <Route path="inbox" view={CommunitiesActivity} />
-          <Route path="settings" view={CommunitiesActivity} />
-          <Route path="notifications" view={NotificationsActivity} />
-          <Route path="u/:id" view={CommunitiesActivity} />
+            <Route path="inbox" view={CommunitiesActivity} />
+            <Route path="settings" view={CommunitiesActivity} />
+            <Route path="notifications" view={NotificationsActivity} />
+            <Route path="u/:id" view={CommunitiesActivity} />
 
-          <Route path="modlog" view={CommunitiesActivity} />
-          <Route path="instances" view={CommunitiesActivity} />
-        </Route>
-      </Routes>
-    </Router>
+            <Route path="modlog" view={CommunitiesActivity} />
+            <Route path="instances" view={CommunitiesActivity} />
+          </Route>
+        </Routes>
+      </Router>
     </I18nContextProvider>
   }
 }

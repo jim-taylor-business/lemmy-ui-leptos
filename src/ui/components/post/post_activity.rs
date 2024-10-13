@@ -18,9 +18,7 @@ use web_sys::wasm_bindgen::JsCast;
 use web_sys::{HtmlAnchorElement, HtmlImageElement};
 
 #[component]
-pub fn PostActivity(
-  site_signal: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>, //RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>
-) -> impl IntoView {
+pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let params = use_params_map();
   let post_id = move || params.get().get("id").cloned().unwrap_or_default().parse::<i32>().ok();
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
@@ -133,7 +131,7 @@ pub fn PostActivity(
                   };
                   view! {
                     <div>
-                      <PostListing post_view={res.post_view.into()} site_signal post_number=0 reply_show />
+                      <PostListing post_view={res.post_view.into()} ssr_site post_number=0 reply_show />
                     </div>
                     {if let Some(ref content) = text {
                       let mut options = pulldown_cmark::Options::empty();

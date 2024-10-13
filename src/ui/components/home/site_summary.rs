@@ -3,14 +3,12 @@ use lemmy_api_common::site::GetSiteResponse;
 use leptos::*;
 
 #[component]
-pub fn SiteSummary(
-  site_signal: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>, // RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>
-) -> impl IntoView {
+pub fn SiteSummary(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let _i18n = use_i18n();
 
   view! {
     {move || {
-      site_signal
+      ssr_site
         .get()
         .map(|o| match o {
           Ok(o) => {

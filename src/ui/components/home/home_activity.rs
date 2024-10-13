@@ -23,7 +23,7 @@ use leptos_router::*;
 use web_sys::MouseEvent;
 
 #[component]
-pub fn HomeActivity(site_signal: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
+pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
@@ -79,7 +79,7 @@ pub fn HomeActivity(site_signal: Resource<Option<bool>, Result<GetSiteResponse, 
   let refresh = RwSignal::new(false);
 
   let logged_in = Signal::derive(move || {
-    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
+    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = ssr_site.get() {
       Some(true)
     } else {
       Some(false)
@@ -364,7 +364,7 @@ pub fn HomeActivity(site_signal: Resource<Option<bool>, Result<GetSiteResponse, 
             format!(
               "btn join-item{}{}",
               if ListingType::Subscribed == ssr_list() { " btn-active" } else { "" },
-              if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() { "" } else { " btn-disabled" },
+              if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = ssr_site.get() { "" } else { " btn-disabled" },
             )
           }}
         >
@@ -539,7 +539,7 @@ pub fn HomeActivity(site_signal: Resource<Option<bool>, Result<GetSiteResponse, 
                       if loading.get() { " opacity-25" } else { "" },
                     )
                   }}>
-                    <PostListings posts={posts.1.posts.into()} site_signal page_number={posts.0.0.into()} />
+                    <PostListings posts={posts.1.posts.into()} ssr_site page_number={posts.0.0.into()} />
                   </div>
                   <div class="hidden sm:block join">
                     {
@@ -645,7 +645,7 @@ pub fn HomeActivity(site_signal: Resource<Option<bool>, Result<GetSiteResponse, 
                   }
                 }}
               >
-                <PostListings posts={r.1.clone().1.unwrap().posts.into()} site_signal page_number={r.0.0.into()} />
+                <PostListings posts={r.1.clone().1.unwrap().posts.into()} ssr_site page_number={r.0.0.into()} />
               </Show>
             }
           }
@@ -655,7 +655,7 @@ pub fn HomeActivity(site_signal: Resource<Option<bool>, Result<GetSiteResponse, 
       </div>
       <div class="hidden lg:block lg:w-1/3 2xl:w-1/4 3xl:w-1/5 4xl:w-1/6">
         <About />
-        <SiteSummary site_signal />
+        <SiteSummary ssr_site />
         <Trending />
       </div>
     </main>

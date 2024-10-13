@@ -1,5 +1,4 @@
 use crate::{
-  // cookie::get_cookie,
   errors::LemmyAppError,
   ui::components::common::nav::{BottomNav, TopNav},
   TitleSetter,
@@ -33,26 +32,8 @@ pub fn Layout(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
     _ => "Lemmy".to_string(),
   };
 
-  let (theme_cookie, _) = use_cookie_with_options::<String, FromToStringCodec>(
-    "theme",
-    UseCookieOptions::default()
-      .max_age(604800)
-      // .domain(None.into())
-      .path("/")
-      .same_site(SameSite::Lax),
-  );
-
-  // // let ui_theme = expect_context::<RwSignal<Option<String>>>();
-  // // let theme = Resource::new(
-  // //   move || (),
-  // //   move |()| async move {
-  // //     let r = get_cookie("theme").await;
-  // //     match r {
-  // //       Ok(Some(o)) => o,
-  // //       _ => "".to_string(),
-  // //     }
-  // //   },
-  // // );
+  let (theme_cookie, _) =
+    use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
 
   view! {
      <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css" />
@@ -64,7 +45,6 @@ pub fn Layout(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
          ssr_site
            .get()
            .map(|_| {
-             // ui_theme.set(Some(m));
              view! {
                <div class="flex flex-col min-h-screen" data-theme={move || theme_cookie.get()}>
                  <TopNav ssr_site />

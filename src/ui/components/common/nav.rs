@@ -26,11 +26,7 @@ pub async fn logout() -> Result<(), ServerFnError> {
     Ok(_o) => {
       let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
         "jwt",
-        UseCookieOptions::default()
-          .max_age(604800)
-          // .domain(None.into())
-          .path("/")
-          .same_site(SameSite::Lax),
+        UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax),
       );
       set_auth_cookie.set(None);
       // let r = remove_cookie("jwt").await;
@@ -56,11 +52,7 @@ pub async fn logout() -> Result<(), ServerFnError> {
 pub async fn change_lang(lang: String) -> Result<(), ServerFnError> {
   let (_, set_locale_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
     "i18n_pref_locale",
-    UseCookieOptions::default()
-      .max_age(604800)
-      // .domain(None.into())
-      .path("/")
-      .same_site(SameSite::Lax),
+    UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax),
   );
   set_locale_cookie.set(Some(lang.to_lowercase()));
   // let _ = set_cookie("i18n_pref_locale", &lang.to_lowercase(), &core::time::Duration::from_secs(604800)).await;
@@ -69,38 +61,18 @@ pub async fn change_lang(lang: String) -> Result<(), ServerFnError> {
 
 #[server(ChangeThemeFn, "/serverfn")]
 pub async fn change_theme(theme: String) -> Result<(), ServerFnError> {
-  // use leptos_actix::redirect;
-  let (_, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
-    "theme",
-    UseCookieOptions::default()
-      .max_age(604800)
-      // .domain(None.into())
-      .path("/")
-      .same_site(SameSite::Lax),
-  );
+  let (_, set_theme_cookie) =
+    use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
   set_theme_cookie.set(Some(theme));
-  // let r = set_cookie("theme", &theme, &core::time::Duration::from_secs(604800)).await;
-  // match r {
-  //   Ok(_o) => Ok(()),
-  //   Err(e) => {
-  //     redirect(&format!("/login?error={}", serde_json::to_string(&e)?)[..]);
   Ok(())
-  //   }
-  // }
 }
 
 #[component]
 pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let i18n = use_i18n();
 
-  let (_, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
-    "theme",
-    UseCookieOptions::default()
-      .max_age(604800)
-      // .domain(None.into())
-      .path("/")
-      .same_site(SameSite::Lax),
-  );
+  let (_, set_theme_cookie) =
+    use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   // let ssr_error = RwSignal::new::<Option<(LemmyAppError, Option<RwSignal<bool>>)>>(None);
@@ -115,7 +87,6 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
     serde_json::from_str::<LemmyAppError>(&query.get().get("error").cloned().unwrap_or("".into()))
       .ok()
       .map(|e| (e, None::<Option<RwSignal<bool>>>))
-    // .unwrap_or((0usize, None))
   };
 
   // let ssr_error = move || query.with(|params| params.get("error").cloned());
@@ -139,7 +110,6 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
   let notifications_refresh = expect_context::<RwSignal<NotificationsRefresh>>();
   let uri = expect_context::<RwSignal<UriSetter>>();
 
-  // let login_action = create_server_action::<NavigateLoginFn>();
   let logout_action = create_server_action::<LogoutFn>();
 
   let on_logout_submit = move |ev: SubmitEvent| {
@@ -153,11 +123,7 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
           Ok(_o) => {
             let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
               "jwt",
-              UseCookieOptions::default()
-                .max_age(604800)
-                // .domain(None.into())
-                .path("/")
-                .same_site(SameSite::Lax),
+              UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax),
             );
             set_auth_cookie.set(None);
             // let _ = remove_cookie("jwt").await;
@@ -185,7 +151,6 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
   let ssr_unread = Resource::new(
     move || (refresh.get(), logged_in.get(), notifications_refresh.get()),
     move |(_refresh, logged_in, _notifications_refresh)| async move {
-      // logging::log!("vivance");
       let result = if logged_in == Some(true) {
         LemmyClient.unread_count().await
       } else {
@@ -199,7 +164,7 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
       match result {
         Ok(o) => Ok(o),
         Err(e) => {
-          // error.set(Some((e.clone(), None)));
+          error.update(|es| es.push(Some((e.clone(), None))));
           Err(e)
         }
       }
@@ -232,21 +197,13 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
   //   std::time::Duration::from_millis(30000),
   // );
 
-  // let theme = expect_context::<RwSignal<Option<String>>>();
   let online = expect_context::<RwSignal<OnlineSetter>>();
   let theme_action = create_server_action::<ChangeThemeFn>();
 
   let on_theme_submit = move |theme_name: &'static str| {
     move |ev: SubmitEvent| {
       ev.prevent_default();
-      // let _res = create_local_resource(
-      //   move || theme_name.to_string(),
-      //   move |t| async move {
-      //     let _ = set_cookie("theme", &t, &core::time::Duration::from_secs(604800)).await;
-      //   },
-      // );
       set_theme_cookie.set(Some(theme_name.to_string()));
-      // theme.set(Some(theme_name.to_string()));
     }
   };
 
@@ -580,24 +537,7 @@ pub fn BottomNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyA
             <a href="//github.com/LemmyNet/lemmy/releases" class="text-md">
               "BE: "
               {move || version()}
-              // {move || { if let Some(Ok(m)) = ssr_site.get() { m.version } else { "Lemmy".to_string() } }}
-              // {if let Ok(v) = s { v.version } else { "Lemmy".to_string() }}
             </a>
-            // <Transition fallback={|| {}}>
-            //   {move || {
-            //     ssr_site
-            //       .get()
-            //       .map(|s| {
-            //         view!{
-            //           <a href="//github.com/LemmyNet/lemmy/releases" class="text-md">
-            //             "BE: "
-            //             // {move || { if let Some(Ok(m)) = ssr_site.get() { m.version } else { "Lemmy".to_string() } }}
-            //             {if let Ok(v) = s { v.version } else { "Lemmy".to_string() }}
-            //           </a>
-            //         }
-            //       });
-            //   }}
-            // </Transition>
           </li>
           <li>
             <A href="/modlog" class="pointer-events-none text-md text-base-content/50">

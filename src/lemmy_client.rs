@@ -147,8 +147,7 @@ cfg_if! {
         let (get_auth_cookie, _) = use_cookie_with_options::<String, FromToStringCodec>(
           "jwt",
           UseCookieOptions::default()
-            .max_age(604800)
-            // .domain(None.into())
+            .max_age(604800000)
             .path("/")
             .same_site(SameSite::Lax),
         );

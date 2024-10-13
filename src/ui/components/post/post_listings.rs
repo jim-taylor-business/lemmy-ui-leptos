@@ -5,8 +5,7 @@ use leptos::*;
 #[component]
 pub fn PostListings(
   posts: MaybeSignal<Vec<PostView>>,
-  site_signal: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
-  //RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
+  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
   page_number: RwSignal<usize>,
 ) -> impl IntoView {
   let post_number = RwSignal::new(page_number.get());
@@ -14,7 +13,7 @@ pub fn PostListings(
     <For each={move || posts.get()} key={|pv| pv.post.id} let:pv>
       {
         post_number.set(post_number.get() + 1);
-        view! { <PostListing post_view={pv.into()} site_signal post_number={post_number.get()} reply_show={false.into()} /> }
+        view! { <PostListing post_view={pv.into()} ssr_site post_number={post_number.get()} reply_show={false.into()} /> }
       }
     </For>
   }

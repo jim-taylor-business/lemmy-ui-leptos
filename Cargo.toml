@@ -35,7 +35,6 @@ strum_macros = "0"
 web-sys = { version = "0", features = ["AbortController"] }
 
 pulldown-cmark = { branch = "deploy_demo", git = "https://github.com/jim-taylor-business/pulldown-cmark.git" }
-# pulldown-cmark = "0"
 
 html-escape = "0"
 pretty-duration = "0"

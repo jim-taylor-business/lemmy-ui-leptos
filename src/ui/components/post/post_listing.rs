@@ -122,14 +122,13 @@ pub async fn report_post_fn(post_id: i32, reason: String) -> Result<Option<PostR
 #[component]
 pub fn PostListing(
   post_view: MaybeSignal<PostView>,
-  site_signal: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
-  //RwSignal<Option<Result<GetSiteResponse, LemmyAppError>>>,
+  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
   post_number: usize,
   reply_show: RwSignal<bool>,
 ) -> impl IntoView {
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let logged_in = Signal::derive(move || {
-    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = site_signal.get() {
+    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = ssr_site.get() {
       Some(true)
     } else {
       Some(false)
