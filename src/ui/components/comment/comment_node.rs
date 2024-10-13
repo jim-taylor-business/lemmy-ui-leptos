@@ -220,10 +220,9 @@ pub fn CommentNode(
   view! {
     <div class={move || {
       format!(
-        "pl-4{}{}", //{}",
+        "pl-4{}{}",
         if level == 1 { " odd:bg-base-200 pr-4 pt-2 pb-1" } else { "" },
         if !hidden_comments.get().contains(&parent_comment_id) { "" } else { " hidden" },
-        // if back_show.get() { " bg-base-300" } else { "" },
       )
     }}>
       <div
@@ -296,9 +295,15 @@ pub fn CommentNode(
         on:dblclick={move |_e: MouseEvent| {
           vote_show.set(!vote_show.get());
         }}
-        on:mouseover=move |e: MouseEvent| { e.stop_propagation(); back_show.set(true); }
-        on:mouseout=move |e: MouseEvent| { e.stop_propagation(); back_show.set(false); }
-    >
+        on:mouseover={move |e: MouseEvent| {
+          e.stop_propagation();
+          back_show.set(true);
+        }}
+        on:mouseout={move |e: MouseEvent| {
+          e.stop_propagation();
+          back_show.set(false);
+        }}
+      >
         <div class={move || format!("max-w-none prose{}", if back_show.get() { " brightness-200" } else { "" })} inner_html={safe_html} />
         <Show when={move || vote_show.get()} fallback={|| view! {}}>
           <div on:click={cancel} class="flex gap-x-2 items-center">

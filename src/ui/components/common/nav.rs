@@ -14,9 +14,10 @@ use lemmy_api_common::{
   lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, person::GetUnreadCountResponse, site::GetSiteResponse,
 };
 use leptos::*;
+use leptos_dom::helpers::IntervalHandle;
 use leptos_router::*;
-use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
-use web_sys::SubmitEvent;
+use leptos_use::{use_cookie_with_options, use_document_visibility, SameSite, UseCookieOptions};
+use web_sys::{SubmitEvent, VisibilityState};
 
 #[server(LogoutFn, "/serverfn")]
 pub async fn logout() -> Result<(), ServerFnError> {
@@ -26,7 +27,7 @@ pub async fn logout() -> Result<(), ServerFnError> {
     Ok(_o) => {
       let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
         "jwt",
-        UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax),
+        UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
       );
       set_auth_cookie.set(None);
       // let r = remove_cookie("jwt").await;
@@ -52,7 +53,7 @@ pub async fn logout() -> Result<(), ServerFnError> {
 pub async fn change_lang(lang: String) -> Result<(), ServerFnError> {
   let (_, set_locale_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
     "i18n_pref_locale",
-    UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax),
+    UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
   );
   set_locale_cookie.set(Some(lang.to_lowercase()));
   // let _ = set_cookie("i18n_pref_locale", &lang.to_lowercase(), &core::time::Duration::from_secs(604800)).await;
@@ -61,8 +62,10 @@ pub async fn change_lang(lang: String) -> Result<(), ServerFnError> {
 
 #[server(ChangeThemeFn, "/serverfn")]
 pub async fn change_theme(theme: String) -> Result<(), ServerFnError> {
-  let (_, set_theme_cookie) =
-    use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
+  let (_, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+    "theme",
+    UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
+  );
   set_theme_cookie.set(Some(theme));
   Ok(())
 }
@@ -71,8 +74,10 @@ pub async fn change_theme(theme: String) -> Result<(), ServerFnError> {
 pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let i18n = use_i18n();
 
-  let (_, set_theme_cookie) =
-    use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
+  let (_, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+    "theme",
+    UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
+  );
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   // let ssr_error = RwSignal::new::<Option<(LemmyAppError, Option<RwSignal<bool>>)>>(None);
@@ -112,6 +117,88 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
 
   let logout_action = create_server_action::<LogoutFn>();
 
+  let refresh = RwSignal::new(true);
+
+  let unread_visibility: RwSignal<Option<Signal<VisibilityState>>> = RwSignal::new(None);
+  let unread_effect: RwSignal<Option<Effect<()>>> = RwSignal::new(None);
+  let unread_interval: RwSignal<Option<IntervalHandle>> = RwSignal::new(None);
+
+  // watch(deps, callback, immediate)
+
+  let _unread_effect = Effect::new(move |_| match authenticated.get() {
+    Some(true) => {
+      // if let Some(v) = unread_visibility.get() {
+      unread_visibility.set(Some(use_document_visibility()));
+
+      // #[cfg(not(feature = "ssr"))]
+      // let e = ;
+      unread_effect.set(Some(Effect::new(move |_| match unread_visibility.get().unwrap().get() {
+        VisibilityState::Visible => {
+          refresh.update(|b| *b = !*b);
+        }
+        VisibilityState::Hidden => {}
+        _ => {}
+      })));
+
+      // #[cfg(not(feature = "ssr"))]
+      // let h = ;
+      unread_interval.set(
+        set_interval_with_handle(
+          move || match unread_visibility.get().unwrap().get() {
+            VisibilityState::Visible => {
+              refresh.update(|b| *b = !*b);
+            }
+            VisibilityState::Hidden => {}
+            _ => {}
+          },
+          std::time::Duration::from_millis(30000),
+        )
+        .ok(),
+      );
+    }
+    _ => {
+      if let Some(i) = unread_interval.get() {
+        logging::log!("1");
+        i.clear();
+        unread_interval.set(None);
+      }
+      if let Some(e) = unread_effect.get() {
+        logging::log!("2");
+        e.dispose();
+        unread_effect.set(None);
+      }
+      if let Some(_v) = unread_visibility.get() {
+        logging::log!("3");
+        unread_visibility.set(None);
+      }
+    }
+  });
+
+  // // #[cfg(not(feature = "ssr"))]
+  // let visibility = use_document_visibility();
+
+  // // #[cfg(not(feature = "ssr"))]
+  // let _e = Effect::new(move |_| match visibility.get() {
+  //   VisibilityState::Visible => {
+  //     refresh.update(|b| *b = !*b);
+  //   }
+  //   VisibilityState::Hidden => {}
+  //   _ => {}
+  // });
+
+  // // #[cfg(not(feature = "ssr"))]
+  // let h = set_interval_with_handle(
+  //   move || match visibility.get() {
+  //     VisibilityState::Visible => {
+  //       refresh.update(|b| *b = !*b);
+  //     }
+  //     VisibilityState::Hidden => {}
+  //     _ => {}
+  //   },
+  //   std::time::Duration::from_millis(30000),
+  // )
+  // .ok();
+
   let on_logout_submit = move |ev: SubmitEvent| {
     ev.prevent_default();
 
@@ -121,12 +208,15 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
         let result = LemmyClient.logout().await;
         match result {
           Ok(_o) => {
+            // #[cfg(not(feature = "ssr"))]
+            // if let Some(h) = h {
+            //   h.clear();
+            // }
             let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
               "jwt",
-              UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax),
+              UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
             );
             set_auth_cookie.set(None);
-            // let _ = remove_cookie("jwt").await;
             authenticated.set(Some(false));
           }
           Err(e) => {
@@ -145,8 +235,6 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
       Some(false)
     }
   });
-
-  let refresh = RwSignal::new(true);
 
   let ssr_unread = Resource::new(
     move || (refresh.get(), logged_in.get(), notifications_refresh.get()),
@@ -170,32 +258,6 @@ pub fn TopNav(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
       }
     },
   );
-
-  // let ui_focus = RwSignal::new(FocusSetter(true));
-
-  // #[cfg(not(feature = "ssr"))]
-  // let visibility = use_document_visibility();
-
-  // #[cfg(not(feature = "ssr"))]
-  // let e = Effect::new(move |_| match visibility.get() {
-  //   VisibilityState::Visible => {
-  //     refresh.update(|b| *b = !*b);
-  //   }
-  //   VisibilityState::Hidden => {}
-  //   _ => {}
-  // });
-
-  // #[cfg(not(feature = "ssr"))]
-  // set_interval_with_handle(
-  //   move || match visibility.get() {
-  //     VisibilityState::Visible => {
-  //       refresh.update(|b| *b = !*b);
-  //     }
-  //     VisibilityState::Hidden => {}
-  //     _ => {}
-  //   },
-  //   std::time::Duration::from_millis(30000),
-  // );
 
   let online = expect_context::<RwSignal<OnlineSetter>>();
   let theme_action = create_server_action::<ChangeThemeFn>();

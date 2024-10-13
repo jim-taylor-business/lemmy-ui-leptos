@@ -24,12 +24,13 @@ use crate::{
   },
 };
 
+use codee::string::FromToStringCodec;
 use lemmy_api_common::{lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse, site::GetSiteResponse};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
-use leptos_use::{SameSite, UseCookieOptions};
+use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 use ui::components::notifications::notifications_activity::NotificationsActivity;
 
 leptos_i18n::load_locales!();
@@ -109,6 +110,14 @@ pub fn App() -> impl IntoView {
     },
   );
 
+  let (get_theme_cookie, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
+    "theme",
+    UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
+  );
+  if let Some(t) = get_theme_cookie.get() {
+    set_theme_cookie.set(Some(t));
+  }
+
   view! {
     <Transition fallback={|| {}}>
       {move || {
@@ -119,7 +128,7 @@ pub fn App() -> impl IntoView {
           });
       }}
     </Transition>
-    <I18nContextProvider cookie_options={UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax)}>
+    <I18nContextProvider cookie_options={UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax)}>
       <Router>
         <Routes>
           <Route path="/" view={move || view! { <Layout ssr_site /> }} ssr={SsrMode::Async}>
@@ -134,7 +143,6 @@ pub fn App() -> impl IntoView {
             <Route path="communities" view={CommunitiesActivity} />
             <Route path="create_community" view={CommunitiesActivity} />
             <Route path="c/:name" view={move || view! { <HomeActivity ssr_site /> }} />
-            />
 
             <Route path="login" methods={&[Method::Get, Method::Post]} view={LoginActivity} />
             <Route path="logout" view={CommunitiesActivity} />

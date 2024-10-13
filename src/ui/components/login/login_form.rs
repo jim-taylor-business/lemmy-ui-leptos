@@ -62,7 +62,7 @@ pub async fn login(username_or_email: String, password: String, uri: String) -> 
     Ok(LoginResponse { jwt, .. }) => {
       let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
         "jwt",
-        UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax),
+        UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
       );
       set_auth_cookie.set(Some(jwt.unwrap_or_default().into_inner()));
       // let r = set_cookie("jwt", &jwt.unwrap_or_default().into_inner(), &core::time::Duration::from_secs(604800)).await;
@@ -137,7 +137,7 @@ pub fn LoginForm() -> impl IntoView {
           Ok(LoginResponse { jwt: Some(jwt), .. }) => {
             let (_, set_auth_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
               "jwt",
-              UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax),
+              UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
             );
             set_auth_cookie.set(Some(jwt.clone().into_inner()));
             // let _ = set_cookie("jwt", &jwt.clone().into_inner(), &core::time::Duration::from_secs(604800)).await;
@@ -184,7 +184,7 @@ pub fn LoginForm() -> impl IntoView {
   };
 
   view! {
-    <ActionForm class="space-y-3" action={login} on:submit=on_submit>
+    <ActionForm class="space-y-3" action={login} on:submit={on_submit}>
       <input type="hidden" name="uri" value={move || query.get().get("uri").cloned().unwrap_or("".into())} />
       <TextInput id="username" name="username_or_email" on_input={move |s| update!(| name | * name = s)} label="Username" />
       <TextInput

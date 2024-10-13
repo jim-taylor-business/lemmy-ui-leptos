@@ -32,34 +32,36 @@ pub fn Layout(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
     _ => "Lemmy".to_string(),
   };
 
-  let (theme_cookie, _) =
-    use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
+  let (theme_cookie, _) = use_cookie_with_options::<String, FromToStringCodec>(
+    "theme",
+    UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
+  );
 
   view! {
-     <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css" />
-     <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico" />
-     <Title text={move || title()} />
-     <Meta name="description" content={move || title()} />
-     <Transition fallback={|| {}}>
-       {move || {
-         ssr_site
-           .get()
-           .map(|_| {
-             view! {
-               <div class="flex flex-col min-h-screen" data-theme={move || theme_cookie.get()}>
-                 <TopNav ssr_site />
-                 <div class="flex flex-col flex-grow w-full">
-                   <div class="sm:container sm:mx-auto">
-                     <div class="flex flex-col flex-grow px-0 w-full lg:px-6">
-                       <Outlet />
-                     </div>
-                   </div>
-                 </div>
-                 <BottomNav ssr_site />
-               </div>
-             }
-           })
-       }}
-     </Transition>
+    <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css" />
+    <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico" />
+    <Title text={move || title()} />
+    <Meta name="description" content={move || title()} />
+    <Transition fallback={|| {}}>
+      {move || {
+        ssr_site
+          .get()
+          .map(|_| {
+            view! {
+              <div class="flex flex-col min-h-screen" data-theme={move || theme_cookie.get()}>
+                <TopNav ssr_site />
+                <div class="flex flex-col flex-grow w-full">
+                  <div class="sm:container sm:mx-auto">
+                    <div class="flex flex-col flex-grow px-0 w-full lg:px-6">
+                      <Outlet />
+                    </div>
+                  </div>
+                </div>
+                <BottomNav ssr_site />
+              </div>
+            }
+          })
+      }}
+    </Transition>
   }
 }
