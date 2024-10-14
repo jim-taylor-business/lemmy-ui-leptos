@@ -22,7 +22,7 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
   let params = use_params_map();
   let post_id = move || params.get().get("id").cloned().unwrap_or_default().parse::<i32>().ok();
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
-  let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
+  let title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
   let reply_show = RwSignal::new(false);
   let refresh_comments = RwSignal::new(false);
@@ -123,7 +123,7 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
                 .get()
                 .unwrap_or(None)
                 .map(|res| {
-                  ui_title.set(Some(TitleSetter(res.post_view.post.name.clone())));
+                  title.set(Some(TitleSetter(res.post_view.post.name.clone())));
                   let text = if let Some(b) = res.post_view.post.body.clone() {
                     if b.len() > 0 { Some(b) } else { res.post_view.post.embed_description.clone() }
                   } else {

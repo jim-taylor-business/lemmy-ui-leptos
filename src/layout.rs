@@ -12,10 +12,10 @@ use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 
 #[component]
 pub fn Layout(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
-  let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
+  let title = expect_context::<RwSignal<Option<TitleSetter>>>();
   let title = move || match ssr_site.get() {
     Some(Ok(site)) => {
-      if let Some(TitleSetter(t)) = ui_title.get() {
+      if let Some(TitleSetter(t)) = title.get() {
         if let Some(d) = site.site_view.site.description {
           format!("{} - Tech Demo UI for {} - {}", t, site.site_view.site.name, d)
         } else {
@@ -32,10 +32,8 @@ pub fn Layout(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppE
     _ => "Lemmy".to_string(),
   };
 
-  let (theme_cookie, _) = use_cookie_with_options::<String, FromToStringCodec>(
-    "theme",
-    UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
-  );
+  let (theme_cookie, _) =
+    use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
 
   view! {
     <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css" />

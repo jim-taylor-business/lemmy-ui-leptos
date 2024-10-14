@@ -17,9 +17,9 @@ use crate::{
 pub fn NotificationsActivity() -> impl IntoView {
   let errors = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let notifications_refresh = expect_context::<RwSignal<NotificationsRefresh>>();
-  let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
+  let title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
-  ui_title.set(Some(TitleSetter("Notifications".into())));
+  title.set(Some(TitleSetter("Notifications".into())));
 
   let replies_refresh = RwSignal::new(true);
 

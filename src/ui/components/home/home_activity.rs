@@ -27,7 +27,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
-  let ui_title = expect_context::<RwSignal<Option<TitleSetter>>>();
+  let title = expect_context::<RwSignal<Option<TitleSetter>>>();
   let online = expect_context::<RwSignal<OnlineSetter>>();
 
   let param = use_params_map();
@@ -86,7 +86,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
     }
   });
 
-  ui_title.set(None);
+  title.set(None);
 
   let posts_resource = Resource::new(
     move || {
@@ -120,7 +120,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
       if online.get().0 {
         let result = LemmyClient.list_posts(form.clone()).await;
         loading.set(false);
-        ui_title.set(None);
+        title.set(None);
 
         match result {
           Ok(o) => {

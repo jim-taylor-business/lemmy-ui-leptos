@@ -147,11 +147,10 @@ cfg_if! {
         let (get_auth_cookie, _) = use_cookie_with_options::<String, FromToStringCodec>(
           "jwt",
           UseCookieOptions::default()
-            .max_age(2147483647)
+            .max_age(604800000)
             .path("/")
             .same_site(SameSite::Lax),
         );
-        // let jwt = get_cookie("jwt").await?;
         let jwt = get_auth_cookie.get();
         let route = build_route(path);
 
@@ -226,13 +225,11 @@ cfg_if! {
         let (get_auth_cookie, _) = use_cookie_with_options::<String, FromToStringCodec>(
           "jwt",
           UseCookieOptions::default()
-            .max_age(604800)
-            // .domain(None.into())
+            .max_age(604800000)
             .path("/")
             .same_site(SameSite::Lax),
         );
         let jwt = get_auth_cookie.get();
-        // let jwt = get_cookie("jwt").await?;
 
         let abort_controller = AbortController::new().ok();
         let abort_signal = abort_controller.as_ref().map(AbortController::signal);

@@ -1,5 +1,5 @@
 // useful in development to only have errors in compiler output
-// #![allow(warnings)]
+#![allow(warnings)]
 
 mod config;
 mod cookie;
@@ -30,7 +30,7 @@ use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
 
-use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
+use leptos_use::{use_cookie_with_options, use_document_visibility, SameSite, UseCookieOptions};
 use ui::components::notifications::notifications_activity::NotificationsActivity;
 
 leptos_i18n::load_locales!();
@@ -66,6 +66,10 @@ pub fn App() -> impl IntoView {
   provide_context(notifications_refresh);
   let uri: RwSignal<UriSetter> = RwSignal::new(UriSetter("".into()));
   provide_context(uri);
+  #[cfg(not(feature = "ssr"))]
+  let visibility = use_document_visibility();
+  #[cfg(not(feature = "ssr"))]
+  provide_context(visibility);
 
   let on_online = move |b: bool| {
     move |_| {
@@ -110,12 +114,13 @@ pub fn App() -> impl IntoView {
     },
   );
 
-  let (get_theme_cookie, set_theme_cookie) = use_cookie_with_options::<String, FromToStringCodec>(
-    "theme",
-    UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax),
-  );
+  #[cfg(feature = "ssr")]
+  let (get_theme_cookie, set_theme_cookie) =
+    use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
+  #[cfg(feature = "ssr")]
   if let Some(t) = get_theme_cookie.get() {
     set_theme_cookie.set(Some(t));
+    logging::log!("SET");
   }
 
   view! {
@@ -128,7 +133,7 @@ pub fn App() -> impl IntoView {
           });
       }}
     </Transition>
-    <I18nContextProvider cookie_options={UseCookieOptions::default().max_age(2147483647).path("/").same_site(SameSite::Lax)}>
+    <I18nContextProvider cookie_options={UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax)}>
       <Router>
         <Routes>
           <Route path="/" view={move || view! { <Layout ssr_site /> }} ssr={SsrMode::Async}>

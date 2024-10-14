@@ -228,7 +228,8 @@ pub fn CommentNode(
       <div
         class={move || {
           format!(
-            "pb-2 cursor-pointer{}",
+            "pb-2 cursor-pointer{}{}",
+            if comment_view.get().creator.id.eq(&comment_view.get().post.creator_id) { " border-l-4 pl-2 border-accent" } else { "" },
             if let Some(v) = comment_view.get().my_vote {
               if v == 1 { " border-l-4 pl-2 border-secondary" } else if v == -1 { " border-l-4 pl-2 border-primary" } else { "" }
             } else {
