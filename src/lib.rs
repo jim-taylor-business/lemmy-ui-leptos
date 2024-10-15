@@ -11,26 +11,25 @@ mod lemmy_client;
 mod lemmy_error;
 mod ui;
 
-use std::collections::BTreeMap;
-
 use crate::{
   errors::LemmyAppError,
   i18n::*,
   layout::Layout,
   lemmy_client::*,
   ui::components::{
-    communities::communities_activity::CommunitiesActivity, home::home_activity::HomeActivity, login::login_activity::LoginActivity,
+    communities::communities_activity::CommunitiesActivity,
+    home::home_activity::HomeActivity,
+    login::login_activity::LoginActivity,
     post::post_activity::PostActivity,
   },
 };
-
 use codee::string::FromToStringCodec;
 use lemmy_api_common::{lemmy_db_schema::SortType, lemmy_db_views::structs::PaginationCursor, post::GetPostsResponse, site::GetSiteResponse};
 use leptos::*;
 use leptos_meta::*;
 use leptos_router::*;
-
 use leptos_use::{use_cookie_with_options, use_document_visibility, SameSite, UseCookieOptions};
+use std::collections::BTreeMap;
 use ui::components::notifications::notifications_activity::NotificationsActivity;
 
 leptos_i18n::load_locales!();

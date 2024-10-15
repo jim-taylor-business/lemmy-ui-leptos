@@ -12,15 +12,12 @@ use web_sys::SubmitEvent;
 #[server(VotePostFn, "/serverfn")]
 pub async fn vote_post_fn(post_id: i32, score: i16) -> Result<Option<PostResponse>, ServerFnError> {
   use lemmy_api_common::lemmy_db_schema::newtypes::PostId;
-
   let form = CreatePostLike {
     post_id: PostId(post_id),
     score,
   };
   let result = LemmyClient.like_post(form).await;
-
   use leptos_actix::redirect;
-
   match result {
     Ok(o) => Ok(Some(o)),
     Err(e) => {
@@ -33,15 +30,12 @@ pub async fn vote_post_fn(post_id: i32, score: i16) -> Result<Option<PostRespons
 #[server(SavePostFn, "/serverfn")]
 pub async fn save_post_fn(post_id: i32, save: bool) -> Result<Option<PostResponse>, ServerFnError> {
   use lemmy_api_common::lemmy_db_schema::newtypes::PostId;
-
   let form = SavePost {
     post_id: PostId(post_id),
     save,
   };
   let result = LemmyClient.save_post(form).await;
-
   use leptos_actix::redirect;
-
   match result {
     Ok(o) => Ok(Some(o)),
     Err(e) => {
@@ -54,15 +48,12 @@ pub async fn save_post_fn(post_id: i32, save: bool) -> Result<Option<PostRespons
 #[server(BlockUserFn, "/serverfn")]
 pub async fn block_user_fn(person_id: i32, block: bool) -> Result<Option<BlockPersonResponse>, ServerFnError> {
   use lemmy_api_common::lemmy_db_schema::newtypes::PersonId;
-
   let form = BlockPerson {
     person_id: PersonId(person_id),
     block,
   };
   let result = LemmyClient.block_user(form).await;
-
   use leptos_actix::redirect;
-
   match result {
     Ok(o) => Ok(Some(o)),
     Err(e) => {
@@ -81,11 +72,9 @@ fn validate_report(form: &CreatePostReport) -> Option<LemmyAppErrorType> {
 
 async fn try_report(form: CreatePostReport) -> Result<PostReportResponse, LemmyAppError> {
   let val = validate_report(&form);
-
   match val {
     None => {
       let result = LemmyClient.report_post(form).await;
-
       match result {
         Ok(o) => Ok(o),
         Err(e) => Err(e),
@@ -107,9 +96,7 @@ pub async fn report_post_fn(post_id: i32, reason: String) -> Result<Option<PostR
     reason,
   };
   let result = try_report(form).await;
-
   use leptos_actix::redirect;
-
   match result {
     Ok(o) => Ok(Some(o)),
     Err(e) => {
@@ -136,12 +123,10 @@ pub fn PostListing(
   });
 
   let post_view = RwSignal::new(post_view.get());
-
   let vote_action = create_server_action::<VotePostFn>();
 
   let on_vote_submit = move |ev: SubmitEvent, score: i16| {
     ev.prevent_default();
-
     create_local_resource(
       move || (),
       move |()| async move {
@@ -149,16 +134,13 @@ pub fn PostListing(
           post_id: post_view.get().post.id,
           score,
         };
-
         let result = LemmyClient.like_post(form).await;
-
         match result {
           Ok(o) => {
             post_view.set(o.post_view);
           }
           Err(e) => {
             error.update(|es| es.push(Some((e, None))));
-            // error.set(Some((e, None)));
           }
         }
       },
@@ -179,7 +161,6 @@ pub fn PostListing(
 
   let on_save_submit = move |ev: SubmitEvent| {
     ev.prevent_default();
-
     create_local_resource(
       move || (),
       move |()| async move {
@@ -187,9 +168,7 @@ pub fn PostListing(
           post_id: post_view.get().post.id,
           save: !post_view.get().saved,
         };
-
         let result = LemmyClient.save_post(form).await;
-
         match result {
           Ok(o) => {
             post_view.set(o.post_view);
@@ -206,7 +185,6 @@ pub fn PostListing(
 
   let on_block_submit = move |ev: SubmitEvent| {
     ev.prevent_default();
-
     create_local_resource(
       move || (),
       move |()| async move {
@@ -214,9 +192,7 @@ pub fn PostListing(
           person_id: post_view.get().creator.id,
           block: true,
         };
-
         let result = LemmyClient.block_user(form).await;
-
         match result {
           Ok(_o) => {}
           Err(e) => {
@@ -235,7 +211,6 @@ pub fn PostListing(
 
   if let Some(e) = ssr_error() {
     let le = serde_json::from_str::<LemmyAppError>(&e[..]);
-
     match le {
       Ok(e) => match e {
         LemmyAppError {
@@ -261,7 +236,6 @@ pub fn PostListing(
 
   let on_report_submit = move |ev: SubmitEvent| {
     ev.prevent_default();
-
     create_local_resource(
       move || (),
       move |()| async move {
@@ -269,9 +243,7 @@ pub fn PostListing(
           post_id: post_view.get().post.id,
           reason: reason.get(),
         };
-
         let result = try_report(form).await;
-
         match result {
           Ok(_o) => {}
           Err(e) => {
@@ -401,7 +373,6 @@ pub fn PostListing(
               }
             }
           }}
-
         </a>
       </div>
       <div class={move || {
@@ -514,13 +485,8 @@ pub fn PostListing(
               }
             }}
           >
-            // <A href="/create_post">
             <Icon icon={Crosspost} />
-          // </A>
           </span>
-          // {
-          // if post_number == 0 {
-          // view! {
           <div class="dropdown max-sm:dropdown-end">
             <label tabindex="0">
               <Icon icon={VerticalDots} />
@@ -554,13 +520,6 @@ pub fn PostListing(
               </li>
             </ul>
           </div>
-        // }
-        // } else {
-        // view! {
-        // <div class="hidden"></div>
-        // }
-        // }
-        // }
         </Show>
         <span class="text-right grow text-base-content/25">{if post_number != 0 { format!("{}", post_number) } else { "".into() }}</span>
       </div>

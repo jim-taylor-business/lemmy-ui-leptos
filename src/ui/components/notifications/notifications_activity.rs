@@ -1,3 +1,11 @@
+use crate::{
+  errors::{message_from_error, LemmyAppError},
+  ui::components::{comment::comment_node::CommentNode, common::about::About},
+  LemmyApi,
+  LemmyClient,
+  NotificationsRefresh,
+  TitleSetter,
+};
 use ev::MouseEvent;
 use lemmy_api_common::{
   lemmy_db_schema::{newtypes::CommentReplyId, CommentSortType},
@@ -6,12 +14,6 @@ use lemmy_api_common::{
   private_message::GetPrivateMessages,
 };
 use leptos::*;
-
-use crate::{
-  errors::{message_from_error, LemmyAppError},
-  ui::components::{comment::comment_node::CommentNode, common::about::About},
-  LemmyApi, LemmyClient, NotificationsRefresh, TitleSetter,
-};
 
 #[component]
 pub fn NotificationsActivity() -> impl IntoView {

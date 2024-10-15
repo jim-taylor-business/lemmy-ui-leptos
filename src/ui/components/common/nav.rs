@@ -11,7 +11,10 @@ use crate::{
 use codee::string::FromToStringCodec;
 use ev::MouseEvent;
 use lemmy_api_common::{
-  lemmy_db_schema::source::site::Site, lemmy_db_views::structs::SiteView, person::GetUnreadCountResponse, site::GetSiteResponse,
+  lemmy_db_schema::source::site::Site,
+  lemmy_db_views::structs::SiteView,
+  person::GetUnreadCountResponse,
+  site::GetSiteResponse,
 };
 use leptos::*;
 use leptos_dom::helpers::IntervalHandle;

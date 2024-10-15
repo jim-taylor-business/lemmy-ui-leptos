@@ -1,5 +1,4 @@
-use crate::i18n::*;
-use crate::lemmy_error::LemmyErrorType;
+use crate::{i18n::*, lemmy_error::LemmyErrorType};
 use core::num::ParseIntError;
 use leptos::*;
 use serde::{Deserialize, Serialize};
@@ -33,9 +32,7 @@ pub fn message_from_error(error: &LemmyAppError) -> String {
   let i18n = use_i18n();
 
   let s = match error.error_type {
-    LemmyAppErrorType::ApiError(LemmyErrorType::IncorrectLogin) => {
-      t!(i18n, invalid_login)().to_string()
-    }
+    LemmyAppErrorType::ApiError(LemmyErrorType::IncorrectLogin) => t!(i18n, invalid_login)().to_string(),
     LemmyAppErrorType::EmptyUsername => t!(i18n, empty_username)().to_string(),
     LemmyAppErrorType::EmptyPassword => t!(i18n, empty_password)().to_string(),
     LemmyAppErrorType::MissingReason => t!(i18n, empty_reason)().to_string(),

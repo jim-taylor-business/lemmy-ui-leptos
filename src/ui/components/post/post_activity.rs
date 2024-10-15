@@ -1,10 +1,9 @@
 use crate::{
-  errors::LemmyAppError,
+  errors::{message_from_error, LemmyAppError, LemmyAppErrorType},
   lemmy_client::*,
   ui::components::{comment::comment_nodes::CommentNodes, post::post_listing::PostListing},
   TitleSetter,
 };
-
 use ev::MouseEvent;
 use lemmy_api_common::{
   comment::{CreateComment, GetComments},
@@ -14,8 +13,7 @@ use lemmy_api_common::{
 };
 use leptos::*;
 use leptos_router::use_params_map;
-use web_sys::wasm_bindgen::JsCast;
-use web_sys::{HtmlAnchorElement, HtmlImageElement};
+use web_sys::{wasm_bindgen::JsCast, HtmlAnchorElement, HtmlImageElement};
 
 #[component]
 pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
@@ -27,31 +25,41 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
   let reply_show = RwSignal::new(false);
   let refresh_comments = RwSignal::new(false);
   let content = RwSignal::new(String::default());
+  let loading = RwSignal::new(true);
+  let refresh = RwSignal::new(false);
 
-  let post = Resource::new(post_id, move |id_string| async move {
-    if let Some(id) = id_string {
-      let form = GetPost {
-        id: Some(PostId(id)),
-        comment_id: None,
-      };
-
-      let result = LemmyClient.get_post(form).await;
-
-      match result {
-        Ok(o) => Some(o),
-        Err(e) => {
-          error.update(|es| es.push(Some((e, None))));
-          None
+  let post_resource = Resource::new(
+    move || (refresh.get(), post_id()),
+    move |(_refresh, id_string)| async move {
+      if let Some(id) = id_string {
+        let form = GetPost {
+          id: Some(PostId(id)),
+          comment_id: None,
+        };
+        let result = LemmyClient.get_post(form).await;
+        loading.set(false);
+        match result {
+          Ok(o) => Ok(o),
+          Err(e) => {
+            error.update(|es| es.push(Some((e.clone(), None))));
+            Err((e, Some(refresh)))
+          }
         }
+      } else {
+        Err((
+          LemmyAppError {
+            error_type: LemmyAppErrorType::ParamsError,
+            content: "".into(),
+          },
+          None,
+        ))
       }
-    } else {
-      None
-    }
-  });
+    },
+  );
 
   let comments = Resource::new(
-    move || (post_id(), refresh_comments.get()),
-    move |(post_id, _refresh)| async move {
+    move || (refresh.get(), post_id(), refresh_comments.get()),
+    move |(_refresh, post_id, _refresh_comments)| async move {
       if let Some(id) = post_id {
         let form = GetComments {
           post_id: Some(PostId(id)),
@@ -67,9 +75,7 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
           disliked_only: None,
           liked_only: None,
         };
-
         let result = LemmyClient.get_comments(form).await;
-
         match result {
           Ok(o) => Some(o),
           Err(e) => {
@@ -85,7 +91,6 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
 
   let on_reply_click = move |ev: MouseEvent| {
     ev.prevent_default();
-
     create_local_resource(
       move || (),
       move |()| async move {
@@ -96,9 +101,7 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
             parent_id: None,
             language_id: None,
           };
-
           let result = LemmyClient.reply_comment(form).await;
-
           match result {
             Ok(_o) => {
               refresh_comments.update(|b| *b = !*b);
@@ -119,17 +122,54 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
         <div>
           <Transition fallback={|| {}}>
             {move || {
-              post
-                .get()
-                .unwrap_or(None)
-                .map(|res| {
+              match post_resource.get() {
+                Some(Err(err)) => {
+                  Some(view! {
+                    <div class="py-4 px-8">
+                      <div class="flex justify-between alert alert-error">
+                        <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
+                        <div>
+                          <Show when={move || { if let Some(_) = err.1 { true } else { false } }} fallback={|| {}}>
+                            <button
+                              on:click={move |_| {
+                                if let Some(r) = err.1 {
+                                  r.set(!r.get());
+                                } else {}
+                              }}
+                              class="btn btn-sm"
+                            >
+                              "Retry"
+                            </button>
+                          </Show>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="hidden" />
+                  })
+                }
+                Some(Ok(res)) => {
                   title.set(Some(TitleSetter(res.post_view.post.name.clone())));
                   let text = if let Some(b) = res.post_view.post.body.clone() {
                     if b.len() > 0 { Some(b) } else { res.post_view.post.embed_description.clone() }
                   } else {
                     None
                   };
-                  view! {
+                  Some(view! {
+                    // {loading
+                    //   .get()
+                    //   .then(move || {
+                    //     view! {
+                    //       <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
+                    //         <div class="py-4 px-8">
+                    //           <div class="alert">
+                    //             <span>"Loading"</span>
+                    //           </div>
+                    //         </div>
+                    //       </div>
+                          // <div class="hidden" />
+
+                    //     }
+                    //   })}
                     <div>
                       <PostListing post_view={res.post_view.into()} ssr_site post_number=0 reply_show />
                     </div>
@@ -154,8 +194,6 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
                       pulldown_cmark::html::push_html(&mut safe_html, custom);
                       Some(
                         view! {
-                          // let parser = pulldown_cmark::Parser::new(content);
-
                           <div class="pr-4 pl-4">
                             <div
                               class="py-2"
@@ -192,8 +230,21 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
                         </button>
                       </div>
                     </Show>
-                  }
-                })
+                  })
+                }
+                None => {
+                  Some(view! {
+                    <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
+                      <div class="py-4 px-8">
+                        <div class="alert">
+                          <span>"Loading"</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div class="hidden" />
+                  })
+                }
+              }
             }}
           </Transition>
           <Transition fallback={|| {}}>

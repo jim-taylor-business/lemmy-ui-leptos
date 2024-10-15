@@ -1,5 +1,3 @@
-use std::{collections::BTreeMap, usize, vec};
-
 use crate::{
   errors::{message_from_error, LemmyAppError, LemmyAppErrorType},
   i18n::*,
@@ -9,7 +7,9 @@ use crate::{
     home::{site_summary::SiteSummary, trending::Trending},
     post::post_listings::PostListings,
   },
-  OnlineSetter, ResourceStatus, TitleSetter,
+  OnlineSetter,
+  ResourceStatus,
+  TitleSetter,
 };
 use lemmy_api_common::{
   lemmy_db_schema::{ListingType, SortType},
@@ -17,9 +17,9 @@ use lemmy_api_common::{
   post::{GetPosts, GetPostsResponse},
   site::GetSiteResponse,
 };
-use leptos::html::*;
-use leptos::*;
+use leptos::{html::*, *};
 use leptos_router::*;
+use std::{collections::BTreeMap, usize, vec};
 use web_sys::MouseEvent;
 
 #[component]
@@ -36,16 +36,12 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
   let query = use_query_map();
 
   let ssr_list = move || serde_json::from_str::<ListingType>(&query.get().get("list").cloned().unwrap_or("".into())).unwrap_or(ListingType::All);
-
   let ssr_sort = move || serde_json::from_str::<SortType>(&query.get().get("sort").cloned().unwrap_or("".into())).unwrap_or(SortType::Active);
-
   let ssr_from = move || {
     serde_json::from_str::<(usize, Option<PaginationCursor>)>(&query.get().get("from").cloned().unwrap_or("".into())).unwrap_or((0usize, None))
   };
-
   let ssr_prev =
     move || serde_json::from_str::<Vec<(usize, Option<PaginationCursor>)>>(&query.get().get("prev").cloned().unwrap_or("".into())).unwrap_or(vec![]);
-
   let ssr_limit = move || query.get().get("limit").cloned().unwrap_or("".into()).parse::<usize>().unwrap_or(10usize);
 
   let on_sort_click = move |s: SortType| {
@@ -121,7 +117,6 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
         let result = LemmyClient.list_posts(form.clone()).await;
         loading.set(false);
         title.set(None);
-
         match result {
           Ok(o) => {
             #[cfg(not(feature = "ssr"))]
@@ -520,19 +515,19 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
               Some(Ok(posts)) => {
                 let next_page = Some((posts.0.0 + ssr_limit(), posts.1.next_page.clone()));
                 view! {
-                  {loading
-                    .get()
-                    .then(move || {
-                      view! {
-                        <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
-                          <div class="py-4 px-8">
-                            <div class="alert">
-                              <span>"Loading"</span>
-                            </div>
-                          </div>
-                        </div>
-                      }
-                    })}
+                  // {loading
+                  //   .get()
+                  //   .then(move || {
+                  //     view! {
+                  //       <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
+                  //         <div class="py-4 px-8">
+                  //           <div class="alert">
+                  //             <span>"Loading"</span>
+                  //           </div>
+                  //         </div>
+                  //       </div>
+                  //     }
+                  //   })}
                   <div class={move || {
                     format!(
                       "hidden sm:block columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}",

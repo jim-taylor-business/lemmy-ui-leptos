@@ -11,25 +11,18 @@ use lemmy_api_common::{
 use leptos::*;
 use leptos_dom::helpers::TimeoutHandle;
 use leptos_router::{Form, A};
-use web_sys::wasm_bindgen::JsCast;
-use web_sys::{HtmlAnchorElement, HtmlImageElement};
+use web_sys::{wasm_bindgen::JsCast, HtmlAnchorElement, HtmlImageElement};
 
 #[component]
 pub fn CommentNode(
-  //<F>(
   comment_view: MaybeSignal<CommentView>,
   comments: MaybeSignal<Vec<CommentView>>,
   level: usize,
-  // show: MaybeSignal<bool>,
   parent_comment_id: i32,
   now_in_millis: u64,
   hidden_comments: RwSignal<Vec<i32>>,
-  // on_toggle: F,
   #[prop(into)] on_toggle: Callback<i32>,
-) -> impl IntoView
-// where
-//   F: Fn(i32) + 'static,
-{
+) -> impl IntoView {
   let mut comments_descendants = comments.get().clone();
   let id = comment_view.get().comment.id.to_string();
 
@@ -59,30 +52,21 @@ pub fn CommentNode(
   options.insert(pulldown_cmark::Options::ENABLE_TABLES);
   let parser = pulldown_cmark::Parser::new_ext(content, options);
 
-  // let parser = pulldown_cmark::Parser::new(content);
   let custom = parser.map(|event| match event {
     pulldown_cmark::Event::Html(text) => {
       let er = format!("<p>{}</p>", html_escape::encode_safe(&text).to_string());
-      // logging::log!("pc h {}", text);
       pulldown_cmark::Event::Html(er.into())
     }
     pulldown_cmark::Event::InlineHtml(text) => {
       let er = html_escape::encode_safe(&text).to_string();
-      // logging::log!("pc i {}", text);
       pulldown_cmark::Event::InlineHtml(er.into())
     }
-    _ => {
-      // logging::log!("pc o {:?}", event);
-      event
-    }
+    _ => event,
   });
   let mut safe_html = String::new();
   pulldown_cmark::html::push_html(&mut safe_html, custom);
 
-  // let child_show = RwSignal::new(true);
-
-  let back_show = RwSignal::new(false);
-
+  let highlight_show = RwSignal::new(false);
   let still_down = RwSignal::new(false);
   let vote_show = RwSignal::new(false);
   let reply_show = RwSignal::new(false);
@@ -90,22 +74,6 @@ pub fn CommentNode(
 
   let comment_view = RwSignal::new(comment_view.get());
   let content = RwSignal::new(String::default());
-
-  // let show = move || {
-  //   if hidden_comments.get().contains(&parent_comment_id) {
-  //     false
-  //   } else {
-  //     true
-  //   }
-  // };
-
-  // let child_show = move || {
-  //   if hidden_comments.get().contains(&comment_view.get().comment.id.0) {
-  //     false
-  //   } else {
-  //     true
-  //   }
-  // };
 
   let duration_in_text = pretty_duration::pretty_duration(
     &std::time::Duration::from_millis(now_in_millis - comment_view.get().post.published.timestamp_millis() as u64),
@@ -264,7 +232,7 @@ pub fn CommentNode(
             );
         }}
         on:touchstart={move |_e: TouchEvent| {
-          back_show.set(!back_show.get());
+          highlight_show.set(!highlight_show.get());
           still_handle
             .set(
               set_timeout_with_handle(
@@ -278,7 +246,7 @@ pub fn CommentNode(
             );
         }}
         on:touchend={move |_e: TouchEvent| {
-          back_show.set(!back_show.get());
+          highlight_show.set(!highlight_show.get());
           if let Some(h) = still_handle.get() {
             h.clear();
           }
@@ -298,16 +266,16 @@ pub fn CommentNode(
         }}
         on:mouseover={move |e: MouseEvent| {
           e.stop_propagation();
-          back_show.set(true);
+          highlight_show.set(true);
         }}
         on:mouseout={move |e: MouseEvent| {
           e.stop_propagation();
-          back_show.set(false);
+          highlight_show.set(false);
         }}
       >
-        <div class={move || format!("max-w-none prose{}", if back_show.get() { " brightness-200" } else { "" })} inner_html={safe_html} />
+        <div class={move || format!("max-w-none prose{}", if highlight_show.get() { " brightness-200" } else { "" })} inner_html={safe_html} />
         <Show when={move || vote_show.get()} fallback={|| view! {}}>
-          <div on:click={cancel} class="flex gap-x-2 items-center">
+          <div on:click={cancel} class="flex gap-x-2 items-center flex-wrap">
             <Form on:submit={on_up_vote_submit} action="POST" class="flex items-center">
               <input type="hidden" name="post_id" value={format!("{}", comment_view.get().post.id)} />
               <input type="hidden" name="score" value={move || if Some(1) == comment_view.get().my_vote { 0 } else { 1 }} />
@@ -316,7 +284,7 @@ pub fn CommentNode(
               </button>
             </Form>
             <span class="text-sm">{move || comment_view.get().counts.score}</span>
-            <Form on:submit={on_down_vote_submit} action="POST" on:submit={|_| {}} class="flex items-center">
+            <Form on:submit={on_down_vote_submit} action="POST" class="flex items-center">
               <input type="hidden" name="post_id" value={format!("{}", comment_view.get().post.id)} />
               <input type="hidden" name="score" value={move || if Some(-1) == comment_view.get().my_vote { 0 } else { -1 }} />
               <button type="submit" class={move || { if Some(-1) == comment_view.get().my_vote { " text-primary" } else { "" } }} title="Down vote">
@@ -368,25 +336,11 @@ pub fn CommentNode(
               {content.get_untracked()}
             </textarea>
           </label>
-          // <div class="space-x-3 flex row">
-          // <div class="flex row gap-4">
           <button on:click={on_reply_click} type="button" class="btn btn-neutral">
             "Comment"
           </button>
-        // </div>
-        // <label class="label cursor-pointer space-x-3">
-        // <input type="checkbox" checked="checked" class="checkbox" />
-        // <span class="label-text">Markdown</span>
-        // </label>
-        // // </div>
-        // </div>
         </div>
       </Show>
-      // {move || {
-      // if hidden_comments.get().contains(&comment_view.get().comment.id.0) {
-      // child_show.set(false);
-      // }
-      // }}
       <For each={move || com_sig.get()} key={|cv| cv.comment.id} let:cv>
         <CommentNode
           parent_comment_id={comment_view.get().comment.id.0}

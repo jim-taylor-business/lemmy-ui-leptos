@@ -1,7 +1,5 @@
-
-use leptos::*;
-
 use crate::ui::components::common::about::About;
+use leptos::*;
 
 #[component]
 pub fn CommunitiesActivity() -> impl IntoView {
