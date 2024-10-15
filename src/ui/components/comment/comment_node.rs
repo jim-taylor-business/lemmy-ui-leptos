@@ -308,7 +308,7 @@ pub fn CommentNode(
             <span class="pointer-events-none text-base-content/50" title="Edit">
               <Icon icon={Pencil} />
             </span>
-            <span class="overflow-hidden mb-1 break-words">
+            <span class="overflow-hidden break-words">
               <span>{abbr_duration.clone()}</span>
               " ago, by "
               <A href={move || format!("/u/{}", comment_view.get().creator.name)} class="text-sm break-words hover:text-secondary">
