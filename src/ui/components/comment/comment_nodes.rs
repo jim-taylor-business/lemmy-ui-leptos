@@ -1,11 +1,15 @@
 #[cfg(not(feature = "ssr"))]
 use crate::indexed_db::*;
-use crate::ui::components::comment::comment_node::CommentNode;
-use lemmy_api_common::lemmy_db_views::structs::CommentView;
+use crate::{errors::LemmyAppError, ui::components::comment::comment_node::CommentNode};
+use lemmy_api_common::{lemmy_db_views::structs::CommentView, site::GetSiteResponse};
 use leptos::*;
 
 #[component]
-pub fn CommentNodes(comments: MaybeSignal<Vec<CommentView>>, _post_id: MaybeSignal<Option<i32>>) -> impl IntoView {
+pub fn CommentNodes(
+  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
+  comments: MaybeSignal<Vec<CommentView>>,
+  _post_id: MaybeSignal<Option<i32>>,
+) -> impl IntoView {
   let mut comments_clone = comments.get().clone();
   comments_clone.retain(|ct| ct.comment.path.chars().filter(|c| *c == '.').count() == 1);
   let com_sig = RwSignal::new(comments_clone);
@@ -59,6 +63,7 @@ pub fn CommentNodes(comments: MaybeSignal<Vec<CommentView>>, _post_id: MaybeSign
   view! {
     <For each={move || com_sig.get()} key={|cv| cv.comment.id} let:cv>
       <CommentNode
+        ssr_site
         parent_comment_id=0
         hidden_comments
         on_toggle={on_hide_show}

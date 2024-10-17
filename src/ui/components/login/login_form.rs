@@ -167,6 +167,7 @@ pub fn LoginForm() -> impl IntoView {
             // leptos_router::use_navigate()("/", Default::default());
             // leptos_router::use_navigate()(&query.get().get("uri").cloned().unwrap_or("/".into()), Default::default());
             leptos_router::use_navigate()(&uri.get().0, Default::default());
+            // window().history().
           }
           Ok(LoginResponse { jwt: None, .. }) => {
             error.update(|es| {

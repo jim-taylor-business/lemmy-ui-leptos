@@ -7,6 +7,7 @@ use ev::{MouseEvent, SubmitEvent, TouchEvent};
 use lemmy_api_common::{
   comment::{CreateComment, CreateCommentLike, SaveComment},
   lemmy_db_views::structs::CommentView,
+  site::GetSiteResponse,
 };
 use leptos::*;
 use leptos_dom::helpers::TimeoutHandle;
@@ -15,6 +16,7 @@ use web_sys::{wasm_bindgen::JsCast, HtmlAnchorElement, HtmlImageElement};
 
 #[component]
 pub fn CommentNode(
+  ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>,
   comment_view: MaybeSignal<CommentView>,
   comments: MaybeSignal<Vec<CommentView>>,
   level: usize,
@@ -23,6 +25,14 @@ pub fn CommentNode(
   hidden_comments: RwSignal<Vec<i32>>,
   #[prop(into)] on_toggle: Callback<i32>,
 ) -> impl IntoView {
+  let logged_in = Signal::derive(move || {
+    if let Some(Ok(GetSiteResponse { my_user: Some(_), .. })) = ssr_site.get() {
+      Some(true)
+    } else {
+      Some(false)
+    }
+  });
+
   let mut comments_descendants = comments.get().clone();
   let id = comment_view.get().comment.id.to_string();
 
@@ -275,11 +285,22 @@ pub fn CommentNode(
       >
         <div class={move || format!("max-w-none prose{}", if highlight_show.get() { " brightness-200" } else { "" })} inner_html={safe_html} />
         <Show when={move || vote_show.get()} fallback={|| view! {}}>
-          <div on:click={cancel} class="flex gap-x-2 items-center flex-wrap">
+          <div on:click={cancel} class="flex flex-wrap gap-x-2 items-center">
             <Form on:submit={on_up_vote_submit} action="POST" class="flex items-center">
               <input type="hidden" name="post_id" value={format!("{}", comment_view.get().post.id)} />
               <input type="hidden" name="score" value={move || if Some(1) == comment_view.get().my_vote { 0 } else { 1 }} />
-              <button type="submit" class={move || { if Some(1) == comment_view.get().my_vote { " text-secondary" } else { "" } }} title="Up vote">
+              <button
+                type="submit"
+                class={move || {
+                  format!(
+                    "{}{}",
+                    { if Some(1) == comment_view.get().my_vote { "text-secondary" } else { "" } },
+                    { if Some(true) != logged_in.get() { " text-base-content/50" } else { " hover:text-secondary/50" } },
+                  )
+                }}
+                title="Up vote"
+                disabled={move || Some(true) != logged_in.get()}
+              >
                 <Icon icon={Upvote} />
               </button>
             </Form>
@@ -287,7 +308,18 @@ pub fn CommentNode(
             <Form on:submit={on_down_vote_submit} action="POST" class="flex items-center">
               <input type="hidden" name="post_id" value={format!("{}", comment_view.get().post.id)} />
               <input type="hidden" name="score" value={move || if Some(-1) == comment_view.get().my_vote { 0 } else { -1 }} />
-              <button type="submit" class={move || { if Some(-1) == comment_view.get().my_vote { " text-primary" } else { "" } }} title="Down vote">
+              <button
+                type="submit"
+                class={move || {
+                  format!(
+                    "{}{}",
+                    { if Some(-1) == comment_view.get().my_vote { "text-primary" } else { "" } },
+                    { if Some(true) != logged_in.get() { " text-base-content/50" } else { " hover:text-primary/50" } },
+                  )
+                }}
+                title="Down vote"
+                disabled={move || Some(true) != logged_in.get()}
+              >
                 <Icon icon={Downvote} />
               </button>
             </Form>
@@ -297,7 +329,14 @@ pub fn CommentNode(
               <button
                 type="submit"
                 title="Save post"
-                class={move || if comment_view.get().saved { "text-primary hover:text-primary/50" } else { "hover:text-primary/50" }}
+                class={move || {
+                  format!(
+                    "{}{}",
+                    { if comment_view.get().saved { "text-accent" } else { "" } },
+                    { if Some(true) != logged_in.get() { " text-base-content/50" } else { " hover:text-accent/50" } },
+                  )
+                }}
+                disabled={move || Some(true) != logged_in.get()}
               >
                 <Icon icon={Save} />
               </button>
@@ -343,6 +382,7 @@ pub fn CommentNode(
       </Show>
       <For each={move || com_sig.get()} key={|cv| cv.comment.id} let:cv>
         <CommentNode
+          ssr_site
           parent_comment_id={comment_view.get().comment.id.0}
           hidden_comments={hidden_comments}
           on_toggle

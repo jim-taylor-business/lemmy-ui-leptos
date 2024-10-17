@@ -412,7 +412,18 @@ pub fn PostListing(
         <ActionForm action={vote_action} on:submit={on_up_vote_submit} class="flex items-center sm:hidden">
           <input type="hidden" name="post_id" value={format!("{}", post_view.get().post.id)} />
           <input type="hidden" name="score" value={move || if Some(1) == post_view.get().my_vote { 0 } else { 1 }} />
-          <button type="submit" class={move || { if Some(1) == post_view.get().my_vote { " text-secondary" } else { "" } }} title="Up vote">
+          <button
+            type="submit"
+            class={move || {
+              format!(
+                "{}{}",
+                { if Some(1) == post_view.get().my_vote { "text-secondary" } else { "" } },
+                { if Some(true) != logged_in.get() { " text-base-content/50" } else { " hover:text-secondary/50" } },
+              )
+            }}
+            disabled={move || Some(true) != logged_in.get()}
+            title="Up vote"
+          >
             <Icon icon={Upvote} />
           </button>
         </ActionForm>
@@ -422,8 +433,14 @@ pub fn PostListing(
           <input type="hidden" name="score" value={move || if Some(-1) == post_view.get().my_vote { 0 } else { -1 }} />
           <button
             type="submit"
-            class={move || { if Some(-1) == post_view.get().my_vote { " text-primary" } else { "" } }}
-
+            class={move || {
+              format!(
+                "{}{}",
+                { if Some(-1) == post_view.get().my_vote { "text-primary" } else { "" } },
+                { if Some(true) != logged_in.get() { " text-base-content/50" } else { " hover:text-primary/50" } },
+              )
+            }}
+            disabled={move || Some(true) != logged_in.get()}
             title="Down vote"
           >
             <Icon icon={Downvote} />
@@ -460,7 +477,14 @@ pub fn PostListing(
           <button
             type="submit"
             title="Save post"
-            class={move || if post_view.get().saved { "text-primary hover:text-primary/50" } else { "hover:text-primary/50" }}
+            class={move || {
+              format!(
+                "{}{}",
+                { if post_view.get().saved { "text-accent" } else { "" } },
+                { if Some(true) != logged_in.get() { " text-base-content/50" } else { " hover:text-accent/50" } },
+              )
+            }}
+            disabled={move || Some(true) != logged_in.get()}
           >
             <Icon icon={Save} />
           </button>

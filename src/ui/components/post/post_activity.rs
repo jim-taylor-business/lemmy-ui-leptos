@@ -124,28 +124,30 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
             {move || {
               match post_resource.get() {
                 Some(Err(err)) => {
-                  Some(view! {
-                    <div class="py-4 px-8">
-                      <div class="flex justify-between alert alert-error">
-                        <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
-                        <div>
-                          <Show when={move || { if let Some(_) = err.1 { true } else { false } }} fallback={|| {}}>
-                            <button
-                              on:click={move |_| {
-                                if let Some(r) = err.1 {
-                                  r.set(!r.get());
-                                } else {}
-                              }}
-                              class="btn btn-sm"
-                            >
-                              "Retry"
-                            </button>
-                          </Show>
+                  Some(
+                    view! {
+                      <div class="py-4 px-8">
+                        <div class="flex justify-between alert alert-error">
+                          <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
+                          <div>
+                            <Show when={move || { if let Some(_) = err.1 { true } else { false } }} fallback={|| {}}>
+                              <button
+                                on:click={move |_| {
+                                  if let Some(r) = err.1 {
+                                    r.set(!r.get());
+                                  } else {}
+                                }}
+                                class="btn btn-sm"
+                              >
+                                "Retry"
+                              </button>
+                            </Show>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div class="hidden" />
-                  })
+                      <div class="hidden" />
+                    },
+                  )
                 }
                 Some(Ok(res)) => {
                   title.set(Some(TitleSetter(res.post_view.post.name.clone())));
@@ -154,95 +156,99 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
                   } else {
                     None
                   };
-                  Some(view! {
-                    // {loading
-                    //   .get()
-                    //   .then(move || {
-                    //     view! {
-                    //       <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
-                    //         <div class="py-4 px-8">
-                    //           <div class="alert">
-                    //             <span>"Loading"</span>
-                    //           </div>
-                    //         </div>
-                    //       </div>
-                          // <div class="hidden" />
+                  Some(
+                    view! {
+                      // {loading
+                      // .get()
+                      // .then(move || {
+                      // view! {
+                      // <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
+                      // <div class="py-4 px-8">
+                      // <div class="alert">
+                      // <span>"Loading"</span>
+                      // </div>
+                      // </div>
+                      // </div>
+                      // <div class="hidden" />
 
-                    //     }
-                    //   })}
-                    <div>
-                      <PostListing post_view={res.post_view.into()} ssr_site post_number=0 reply_show />
-                    </div>
-                    {if let Some(ref content) = text {
-                      let mut options = pulldown_cmark::Options::empty();
-                      options.insert(pulldown_cmark::Options::ENABLE_STRIKETHROUGH);
-                      options.insert(pulldown_cmark::Options::ENABLE_TABLES);
-                      let parser = pulldown_cmark::Parser::new_ext(content, options);
-                      let custom = parser
-                        .map(|event| match event {
-                          pulldown_cmark::Event::Html(text) => {
-                            let er = format!("<p>{}</p>", html_escape::encode_safe(&text).to_string());
-                            pulldown_cmark::Event::Html(er.into())
-                          }
-                          pulldown_cmark::Event::InlineHtml(text) => {
-                            let er = html_escape::encode_safe(&text).to_string();
-                            pulldown_cmark::Event::InlineHtml(er.into())
-                          }
-                          _ => event,
-                        });
-                      let mut safe_html = String::new();
-                      pulldown_cmark::html::push_html(&mut safe_html, custom);
-                      Some(
-                        view! {
-                          <div class="pr-4 pl-4">
-                            <div
-                              class="py-2"
-                              on:click={move |e: MouseEvent| {
-                                if let Some(t) = e.target() {
-                                  if let Some(i) = t.dyn_ref::<HtmlImageElement>() {
-                                    let _ = window().location().set_href(&i.src());
-                                  } else if let Some(_l) = t.dyn_ref::<HtmlAnchorElement>() {}
-                                }
-                              }}
-                            >
-                              <div class="max-w-none prose" inner_html={safe_html} />
-                            </div>
-                          </div>
-                        },
-                      )
-                    } else {
-                      None
-                    }}
-                    <Show when={move || reply_show.get()} fallback={|| {}}>
-                      <div class="mb-3 space-y-3">
-                        <label class="form-control">
-                          <textarea
-                            class="h-24 text-base textarea textarea-bordered"
-                            placeholder="Comment text"
-                            prop:value={move || content.get()}
-                            on:input={move |ev| content.set(event_target_value(&ev))}
-                          >
-                            {content.get_untracked()}
-                          </textarea>
-                        </label>
-                        <button on:click={on_reply_click} type="button" class="btn btn-neutral">
-                          "Comment"
-                        </button>
+                      // }
+                      // })}
+                      <div>
+                        <PostListing post_view={res.post_view.into()} ssr_site post_number=0 reply_show />
                       </div>
-                    </Show>
-                  })
+                      {if let Some(ref content) = text {
+                        let mut options = pulldown_cmark::Options::empty();
+                        options.insert(pulldown_cmark::Options::ENABLE_STRIKETHROUGH);
+                        options.insert(pulldown_cmark::Options::ENABLE_TABLES);
+                        let parser = pulldown_cmark::Parser::new_ext(content, options);
+                        let custom = parser
+                          .map(|event| match event {
+                            pulldown_cmark::Event::Html(text) => {
+                              let er = format!("<p>{}</p>", html_escape::encode_safe(&text).to_string());
+                              pulldown_cmark::Event::Html(er.into())
+                            }
+                            pulldown_cmark::Event::InlineHtml(text) => {
+                              let er = html_escape::encode_safe(&text).to_string();
+                              pulldown_cmark::Event::InlineHtml(er.into())
+                            }
+                            _ => event,
+                          });
+                        let mut safe_html = String::new();
+                        pulldown_cmark::html::push_html(&mut safe_html, custom);
+                        Some(
+                          view! {
+                            <div class="pr-4 pl-4">
+                              <div
+                                class="py-2"
+                                on:click={move |e: MouseEvent| {
+                                  if let Some(t) = e.target() {
+                                    if let Some(i) = t.dyn_ref::<HtmlImageElement>() {
+                                      let _ = window().location().set_href(&i.src());
+                                    } else if let Some(_l) = t.dyn_ref::<HtmlAnchorElement>() {}
+                                  }
+                                }}
+                              >
+                                <div class="max-w-none prose" inner_html={safe_html} />
+                              </div>
+                            </div>
+                          },
+                        )
+                      } else {
+                        None
+                      }}
+                      <Show when={move || reply_show.get()} fallback={|| {}}>
+                        <div class="mb-3 space-y-3">
+                          <label class="form-control">
+                            <textarea
+                              class="h-24 text-base textarea textarea-bordered"
+                              placeholder="Comment text"
+                              prop:value={move || content.get()}
+                              on:input={move |ev| content.set(event_target_value(&ev))}
+                            >
+                              {content.get_untracked()}
+                            </textarea>
+                          </label>
+                          <button on:click={on_reply_click} type="button" class="btn btn-neutral">
+                            "Comment"
+                          </button>
+                        </div>
+                      </Show>
+                    },
+                  )
                 }
                 None => {
-                  Some(view! {
-                    <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
-                      <div class="py-4 px-8">
-                        <div class="alert">
-                          <span>"Loading"</span>
+                  Some(
+                    view! {
+                      <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
+                        <div class="py-4 px-8">
+                          <div class="alert">
+                            <span>"Loading"</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    <div class="hidden" />
-                  })
+                      <div class="hidden" />
+                    },
+                  )
                 }
               }
             }}
@@ -255,7 +261,7 @@ pub fn PostActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
                 .map(|res| {
                   view! {
                     <div class="w-full">
-                      <CommentNodes comments={res.comments.into()} _post_id={post_id().into()} />
+                      <CommentNodes ssr_site comments={res.comments.into()} _post_id={post_id().into()} />
                     </div>
                   }
                 })

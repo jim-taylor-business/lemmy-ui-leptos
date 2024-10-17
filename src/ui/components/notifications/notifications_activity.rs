@@ -1,6 +1,6 @@
 use crate::{
-  errors::{message_from_error, LemmyAppError},
-  ui::components::{comment::comment_node::CommentNode, common::about::About},
+  errors::{message_from_error, LemmyAppError, LemmyAppErrorType},
+  ui::components::{comment::comment_node::CommentNode, common::about::About, post::post_listing::PostListing},
   LemmyApi,
   LemmyClient,
   NotificationsRefresh,
@@ -9,14 +9,15 @@ use crate::{
 use ev::MouseEvent;
 use lemmy_api_common::{
   lemmy_db_schema::{newtypes::CommentReplyId, CommentSortType},
-  lemmy_db_views::structs::CommentView,
+  lemmy_db_views::structs::{CommentView, PostView},
   person::{GetPersonMentions, GetReplies, MarkCommentReplyAsRead},
   private_message::GetPrivateMessages,
+  site::GetSiteResponse,
 };
 use leptos::*;
 
 #[component]
-pub fn NotificationsActivity() -> impl IntoView {
+pub fn NotificationsActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let errors = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let notifications_refresh = expect_context::<RwSignal<NotificationsRefresh>>();
   let title = expect_context::<RwSignal<Option<TitleSetter>>>();
@@ -151,8 +152,14 @@ pub fn NotificationsActivity() -> impl IntoView {
                         my_vote: r.my_vote,
                       };
                       view! {
+                        // let p = PostView {
+
+                        // };
+
                         <div class="mb-6">
+                          // <PostListing post_number=0 reply_show=RwSignal::new(false) ssr_site=Resource::new(move || {None}, move |_b| async move { Err(LemmyAppError { error_type: LemmyAppErrorType::Unknown, content: "".to_string() }) }) post_view=p.into() />
                           <CommentNode
+                            ssr_site
                             parent_comment_id=0
                             hidden_comments={RwSignal::new(vec![])}
                             on_toggle={on_hide_show}

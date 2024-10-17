@@ -516,18 +516,18 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
                 let next_page = Some((posts.0.0 + ssr_limit(), posts.1.next_page.clone()));
                 view! {
                   // {loading
-                  //   .get()
-                  //   .then(move || {
-                  //     view! {
-                  //       <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
-                  //         <div class="py-4 px-8">
-                  //           <div class="alert">
-                  //             <span>"Loading"</span>
-                  //           </div>
-                  //         </div>
-                  //       </div>
-                  //     }
-                  //   })}
+                  // .get()
+                  // .then(move || {
+                  // view! {
+                  // <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
+                  // <div class="py-4 px-8">
+                  // <div class="alert">
+                  // <span>"Loading"</span>
+                  // </div>
+                  // </div>
+                  // </div>
+                  // }
+                  // })}
                   <div class={move || {
                     format!(
                       "hidden sm:block columns-1 2xl:columns-2 3xl:columns-3 4xl:columns-4 gap-0{}",

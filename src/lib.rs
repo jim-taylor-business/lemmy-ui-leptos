@@ -154,7 +154,7 @@ pub fn App() -> impl IntoView {
 
             <Route path="inbox" view={CommunitiesActivity} />
             <Route path="settings" view={CommunitiesActivity} />
-            <Route path="notifications" view={NotificationsActivity} />
+            <Route path="notifications" view={move || view! { <NotificationsActivity ssr_site /> }} />
             <Route path="u/:id" view={CommunitiesActivity} />
 
             <Route path="modlog" view={CommunitiesActivity} />

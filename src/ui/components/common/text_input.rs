@@ -22,14 +22,12 @@ pub fn TextInput(
   #[prop(optional)] validation_class: MaybeSignal<String>,
 ) -> impl IntoView {
   let show_password = RwSignal::new(false);
-  // let for_id = id.get().clone();
   let eye_icon = Signal::derive(move || with!(|show_password| if *show_password { EyeSlash } else { Eye }));
 
   view! {
     <label class="flex relative gap-2 items-center">
       <input
         type={move || { if input_type == InputType::Text || show_password.get() { "text" } else { "password" } }}
-        // class="grow" placeholder="Username"
         id={id}
         class={move || { format!("input input-bordered p-4 grow {}", validation_class.get()) }}
         placeholder={move || label.get()}
@@ -44,7 +42,6 @@ pub fn TextInput(
         <button
           type="button"
           class="absolute bottom-2 btn btn-ghost btn-sm btn-circle end-1 text-accent"
-          // class="btn btn-ghost btn-sm btn-circle absolute end-1 bottom-2 text-accent"
           on:click={move |_| update!(|show_password| *show_password = !*show_password)}
         >
           <Icon icon={eye_icon} />
