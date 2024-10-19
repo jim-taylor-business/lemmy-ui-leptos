@@ -7,13 +7,13 @@ settings:
 devDependencies:
   '@tailwindcss/typography':
     specifier: ^0.5.15
-    version: 0.5.15(tailwindcss@3.4.13)
+    version: 0.5.15(tailwindcss@3.4.14)
   daisyui:
-    specifier: ^4.12.10
-    version: 4.12.10(postcss@8.4.47)
+    specifier: ^4.12.13
+    version: 4.12.13(postcss@8.4.47)
   tailwindcss:
-    specifier: ^3.4.13
-    version: 3.4.13
+    specifier: ^3.4.14
+    version: 3.4.14
 
 packages:
 
@@ -92,7 +92,7 @@ packages:
     dev: true
     optional: true
 
-  /@tailwindcss/typography@0.5.15(tailwindcss@3.4.13):
+  /@tailwindcss/typography@0.5.15(tailwindcss@3.4.14):
     resolution: {integrity: sha512-AqhlCXl+8grUz8uqExv5OTtgpjuVIwFTSXTrh8y9/pw6q2ek7fJ+Y8ZEVw7EB2DCcuCOtEjf9w3+J3rzts01uA==}
     peerDependencies:
       tailwindcss: '>=3.0.0 || insiders || >=4.0.0-alpha.20'
@@ -101,7 +101,7 @@ packages:
       lodash.isplainobject: 4.0.6
       lodash.merge: 4.6.2
       postcss-selector-parser: 6.0.10
-      tailwindcss: 3.4.13
+      tailwindcss: 3.4.14
     dev: true
 
   /ansi-regex@5.0.1:
@@ -227,13 +227,13 @@ packages:
     engines: {node: ^12.20.0 || ^14.13.1 || >=16.0.0}
     dev: true
 
-  /daisyui@4.12.10(postcss@8.4.47):
-    resolution: {integrity: sha512-jp1RAuzbHhGdXmn957Z2XsTZStXGHzFfF0FgIOZj3Wv9sH7OZgLfXTRZNfKVYxltGUOBsG1kbWAdF5SrqjebvA==}
+  /daisyui@4.12.13(postcss@8.4.47):
+    resolution: {integrity: sha512-BnXyQoOByUF/7wSdIKubyhXxbtL8gxwY3u2cNMkxGP39TSVJqMmlItqtpY903fQnLI/NokC+bc+ZV+PEPsppPw==}
     engines: {node: '>=16.9.0'}
     dependencies:
       css-selector-tokenizer: 0.8.0
       culori: 3.3.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
       postcss-js: 4.0.1(postcss@8.4.47)
     transitivePeerDependencies:
       - postcss
@@ -329,7 +329,7 @@ packages:
       jackspeak: 3.4.3
       minimatch: 9.0.5
       minipass: 7.1.2
-      package-json-from-dist: 1.0.0
+      package-json-from-dist: 1.0.1
       path-scurry: 1.11.1
     dev: true
 
@@ -477,8 +477,8 @@ packages:
     engines: {node: '>= 6'}
     dev: true
 
-  /package-json-from-dist@1.0.0:
-    resolution: {integrity: sha512-dATvCeZN/8wQsGywez1mzHtTlP22H8OEfPrVMLNr4/eGa+ijtLn/6M5f0dY8UKNrC2O9UCU6SSoG3qRKnt7STw==}
+  /package-json-from-dist@1.0.1:
+    resolution: {integrity: sha512-UEZIS3/by4OC8vL3P2dTXRETpebLI2NiI5vIrjaD/5UtrkFX/tNbwjTSRAGC/+7CAo2pIcBaRgWmcBBHcsaCIw==}
     dev: true
 
   /path-key@3.1.1:
@@ -498,8 +498,8 @@ packages:
       minipass: 7.1.2
     dev: true
 
-  /picocolors@1.1.0:
-    resolution: {integrity: sha512-TQ92mBOW0l3LeMeyLV6mzy/kWr8lkd/hp3mTg7wYK7zJhuBStmGMBG0BdeDZS/dZx1IukaX6Bk11zcln25o1Aw==}
+  /picocolors@1.1.1:
+    resolution: {integrity: sha512-xceH2snhtb5M9liqDsmEw56le376mTZkEX/jEb/RxNFyegNul7eNslCXP9FDj/Lcu0X8KEyMceP2ntpaHrDEVA==}
     dev: true
 
   /picomatch@2.3.1:
@@ -553,7 +553,7 @@ packages:
     dependencies:
       lilconfig: 3.1.2
       postcss: 8.4.47
-      yaml: 2.5.1
+      yaml: 2.6.0
     dev: true
 
   /postcss-nested@6.2.0(postcss@8.4.47):
@@ -591,7 +591,7 @@ packages:
     engines: {node: ^10 || ^12 || >=14}
     dependencies:
       nanoid: 3.3.7
-      picocolors: 1.1.0
+      picocolors: 1.1.1
       source-map-js: 1.2.1
     dev: true
 
@@ -705,8 +705,8 @@ packages:
     engines: {node: '>= 0.4'}
     dev: true
 
-  /tailwindcss@3.4.13:
-    resolution: {integrity: sha512-KqjHOJKogOUt5Bs752ykCeiwvi0fKVkr5oqsFNt/8px/tA8scFPIlkygsf6jXrfCqGHz7VflA6+yytWuM+XhFw==}
+  /tailwindcss@3.4.14:
+    resolution: {integrity: sha512-IcSvOcTRcUtQQ7ILQL5quRDg7Xs93PdJEk1ZLbhhvJc7uj/OAhYOnruEiwnGgBvUtaUAJ8/mhSw1o8L2jCiENA==}
     engines: {node: '>=14.0.0'}
     hasBin: true
     dependencies:
@@ -723,7 +723,7 @@ packages:
       micromatch: 4.0.8
       normalize-path: 3.0.0
       object-hash: 3.0.0
-      picocolors: 1.1.0
+      picocolors: 1.1.1
       postcss: 8.4.47
       postcss-import: 15.1.0(postcss@8.4.47)
       postcss-js: 4.0.1(postcss@8.4.47)
@@ -790,8 +790,8 @@ packages:
       strip-ansi: 7.1.0
     dev: true
 
-  /yaml@2.5.1:
-    resolution: {integrity: sha512-bLQOjaX/ADgQ20isPJRvF0iRUHIxVhYvr53Of7wGcWlO2jvtUlH5m87DsmulFVxRpNLOnI4tB6p/oh8D7kpn9Q==}
+  /yaml@2.6.0:
+    resolution: {integrity: sha512-a6ae//JvKDEra2kdi1qzCyrJW/WZCgFi8ydDV+eXExl95t+5R+ijnqHJbz9tmMh8FUjx3iv2fCQ4dclAQlO2UQ==}
     engines: {node: '>= 14'}
     hasBin: true
     dev: true

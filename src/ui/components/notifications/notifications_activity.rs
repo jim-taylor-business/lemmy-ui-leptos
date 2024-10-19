@@ -1,14 +1,16 @@
 use crate::{
   errors::{message_from_error, LemmyAppError, LemmyAppErrorType},
   ui::components::{comment::comment_node::CommentNode, common::about::About, post::post_listing::PostListing},
-  LemmyApi,
-  LemmyClient,
-  NotificationsRefresh,
-  TitleSetter,
+  LemmyApi, LemmyClient, NotificationsRefresh, TitleSetter,
 };
 use ev::MouseEvent;
 use lemmy_api_common::{
-  lemmy_db_schema::{newtypes::CommentReplyId, CommentSortType},
+  lemmy_db_schema::{
+    aggregates::structs::PostAggregates,
+    newtypes::{CommentReplyId, InstanceId},
+    source::{instance::Instance, person::Person},
+    CommentSortType, SubscribedType,
+  },
   lemmy_db_views::structs::{CommentView, PostView},
   person::{GetPersonMentions, GetReplies, MarkCommentReplyAsRead},
   private_message::GetPrivateMessages,
@@ -108,9 +110,7 @@ pub fn NotificationsActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResp
             comment_reply_id: id,
             read: true,
           };
-
           let result = LemmyClient.mark_comment(form).await;
-
           match result {
             Ok(_o) => {
               replies_refresh.update(|b| *b = !*b);
@@ -139,9 +139,9 @@ pub fn NotificationsActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResp
                     {
                       let c = CommentView {
                         comment: r.comment,
-                        creator: r.creator,
-                        post: r.post,
-                        community: r.community,
+                        creator: r.creator.clone(),
+                        post: r.post.clone(),
+                        community: r.community.clone(),
                         counts: r.counts,
                         creator_banned_from_community: false,
                         creator_is_moderator: r.creator_is_moderator,
@@ -151,13 +151,55 @@ pub fn NotificationsActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResp
                         creator_blocked: r.creator_blocked,
                         my_vote: r.my_vote,
                       };
+                      let p = PostView {
+                        post: r.post.clone(),
+                        creator: r.creator.clone(),
+                        community: r.community.clone(),
+                        creator_banned_from_community: false,
+                        creator_is_moderator: false,
+                        creator_is_admin: false,
+                        counts: PostAggregates {
+                          post_id: r.post.id,
+                          comments: 0,
+                          score: 0,
+                          upvotes: 0,
+                          downvotes: 0,
+                          published: chrono::offset::Utc::now(),
+                          newest_comment_time_necro: chrono::offset::Utc::now(),
+                          newest_comment_time: chrono::offset::Utc::now(),
+                          featured_community: false,
+                          featured_local: false,
+                          hot_rank: 0f64,
+                          hot_rank_active: 0f64,
+                          community_id: r.community.id,
+                          creator_id: r.creator.id,
+                          controversy_rank: 0f64,
+                          instance_id: InstanceId(0),
+                          scaled_rank: 0f64,
+                        },
+                        subscribed: SubscribedType::NotSubscribed,
+                        saved: false,
+                        read: false,
+                        creator_blocked: false,
+                        my_vote: None,
+                        unread_comments: 0,
+                      };
                       view! {
-                        // let p = PostView {
-
-                        // };
-
                         <div class="mb-6">
-                          // <PostListing post_number=0 reply_show=RwSignal::new(false) ssr_site=Resource::new(move || {None}, move |_b| async move { Err(LemmyAppError { error_type: LemmyAppErrorType::Unknown, content: "".to_string() }) }) post_view=p.into() />
+                          <PostListing
+                            post_number=0
+                            reply_show={RwSignal::new(false)}
+                            ssr_site={Resource::new(
+                              move || { None },
+                              move |_b| async move {
+                                Err(LemmyAppError {
+                                  error_type: LemmyAppErrorType::Unknown,
+                                  content: "".to_string(),
+                                })
+                              },
+                            )}
+                            post_view={p.into()}
+                          />
                           <CommentNode
                             ssr_site
                             parent_comment_id=0

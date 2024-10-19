@@ -6,8 +6,8 @@ use crate::{
 use ev::{MouseEvent, SubmitEvent, TouchEvent};
 use lemmy_api_common::{
   comment::{CreateComment, CreateCommentLike, SaveComment},
-  lemmy_db_views::structs::CommentView,
-  site::GetSiteResponse,
+  lemmy_db_views::structs::{CommentView, LocalUserView},
+  site::{GetSiteResponse, MyUserInfo},
 };
 use leptos::*;
 use leptos_dom::helpers::TimeoutHandle;
@@ -32,6 +32,21 @@ pub fn CommentNode(
       Some(false)
     }
   });
+
+  // let current_person = Signal::derive(move || {
+  //   if let Some(Ok(GetSiteResponse {
+  //     my_user: Some(MyUserInfo {
+  //       local_user_view: LocalUserView { person, .. },
+  //       ..
+  //     }),
+  //     ..
+  //   })) = ssr_site.get()
+  //   {
+  //     Some(person)
+  //   } else {
+  //     None
+  //   }
+  // });
 
   let mut comments_descendants = comments.get().clone();
   let id = comment_view.get().comment.id.to_string();
@@ -109,7 +124,6 @@ pub fn CommentNode(
 
   let on_vote_submit = move |ev: SubmitEvent, score: i16| {
     ev.prevent_default();
-
     create_local_resource(
       move || (),
       move |()| async move {
@@ -117,9 +131,7 @@ pub fn CommentNode(
           comment_id: comment_view.get().comment.id,
           score,
         };
-
         let result = LemmyClient.like_comment(form).await;
-
         match result {
           Ok(o) => {
             comment_view.set(o.comment_view);
@@ -144,7 +156,6 @@ pub fn CommentNode(
 
   let on_save_submit = move |ev: SubmitEvent| {
     ev.prevent_default();
-
     create_local_resource(
       move || (),
       move |()| async move {
@@ -152,9 +163,7 @@ pub fn CommentNode(
           comment_id: comment_view.get().comment.id,
           save: !comment_view.get().saved,
         };
-
         let result = LemmyClient.save_comment(form).await;
-
         match result {
           Ok(o) => {
             comment_view.set(o.comment_view);
@@ -169,7 +178,6 @@ pub fn CommentNode(
 
   let on_reply_click = move |ev: MouseEvent| {
     ev.prevent_default();
-
     create_local_resource(
       move || (),
       move |()| async move {
@@ -179,9 +187,7 @@ pub fn CommentNode(
           parent_id: Some(comment_view.get().comment.id),
           language_id: None,
         };
-
         let result = LemmyClient.reply_comment(form).await;
-
         match result {
           Ok(o) => {
             com_sig.update(|cs| cs.push(o.comment_view));
@@ -242,7 +248,6 @@ pub fn CommentNode(
             );
         }}
         on:touchstart={move |_e: TouchEvent| {
-          highlight_show.set(!highlight_show.get());
           still_handle
             .set(
               set_timeout_with_handle(
@@ -256,7 +261,6 @@ pub fn CommentNode(
             );
         }}
         on:touchend={move |_e: TouchEvent| {
-          highlight_show.set(!highlight_show.get());
           if let Some(h) = still_handle.get() {
             h.clear();
           }
@@ -274,15 +278,15 @@ pub fn CommentNode(
         on:dblclick={move |_e: MouseEvent| {
           vote_show.set(!vote_show.get());
         }}
-        on:mouseover={move |e: MouseEvent| {
-          e.stop_propagation();
-          highlight_show.set(true);
-        }}
-        on:mouseout={move |e: MouseEvent| {
-          e.stop_propagation();
-          highlight_show.set(false);
-        }}
       >
+        // on:mouseover={move |e: MouseEvent| {
+        // e.stop_propagation();
+        // highlight_show.set(true);
+        // }}
+        // on:mouseout={move |e: MouseEvent| {
+        // e.stop_propagation();
+        // highlight_show.set(false);
+        // }}
         <div class={move || format!("max-w-none prose{}", if highlight_show.get() { " brightness-200" } else { "" })} inner_html={safe_html} />
         <Show when={move || vote_show.get()} fallback={|| view! {}}>
           <div on:click={cancel} class="flex flex-wrap gap-x-2 items-center">
