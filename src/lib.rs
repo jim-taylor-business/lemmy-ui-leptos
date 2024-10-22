@@ -17,9 +17,7 @@ use crate::{
   layout::Layout,
   lemmy_client::*,
   ui::components::{
-    communities::communities_activity::CommunitiesActivity,
-    home::home_activity::HomeActivity,
-    login::login_activity::LoginActivity,
+    communities::communities_activity::CommunitiesActivity, home::home_activity::HomeActivity, login::login_activity::LoginActivity,
     post::post_activity::PostActivity,
   },
 };
@@ -34,8 +32,8 @@ use ui::components::notifications::notifications_activity::NotificationsActivity
 
 leptos_i18n::load_locales!();
 
-#[derive(Clone)]
-pub struct TitleSetter(String);
+// #[derive(Clone)]
+// pub struct TitleSetter(String);
 #[derive(Clone)]
 pub struct UriSetter(String);
 #[derive(Clone)]
@@ -57,8 +55,8 @@ pub fn App() -> impl IntoView {
   provide_context(error);
   let authenticated: RwSignal<Option<bool>> = RwSignal::new(None);
   provide_context(authenticated);
-  let title: RwSignal<Option<TitleSetter>> = RwSignal::new(None);
-  provide_context(title);
+  // let title_signal: RwSignal<Option<TitleSetter>> = RwSignal::new(None);
+  // provide_context(title_signal);
   let online = RwSignal::new(OnlineSetter(true));
   provide_context(online);
   let notifications_refresh = RwSignal::new(NotificationsRefresh(true));
@@ -102,7 +100,6 @@ pub fn App() -> impl IntoView {
       } else {
         LemmyClient.get_site().await
       };
-
       match result {
         Ok(o) => Ok(o),
         Err(e) => {
@@ -119,8 +116,48 @@ pub fn App() -> impl IntoView {
   #[cfg(feature = "ssr")]
   if let Some(t) = get_theme_cookie.get() {
     set_theme_cookie.set(Some(t));
-    logging::log!("SET");
+    // logging::log!("SET");
   }
+
+  // let title = expect_context::<RwSignal<Option<TitleSetter>>>();
+  // let formatter = move || match ssr_site.get() {
+  //   Some(Ok(site)) => {
+  //     if let Some(TitleSetter(t)) = title.get() {
+  //       if let Some(d) = site.site_view.site.description {
+  //         format!("{} - Tech Demo UI for {} - {}", t, site.site_view.site.name, d)
+  //       } else {
+  //         format!("{} - Tech Demo UI for {}", t, site.site_view.site.name)
+  //       }
+  //     } else {
+  //       if let Some(d) = site.site_view.site.description {
+  //         format!("Tech Demo UI for {} - {}", site.site_view.site.name, d)
+  //       } else {
+  //         format!("Tech Demo UI for {}", site.site_view.site.name)
+  //       }
+  //     }
+  //   }
+  //   _ => "Lemmy".to_string(),
+  // };
+
+  let formatter = move |text: String| // format!("{}", text);
+  match ssr_site.get() {
+    Some(Ok(site)) => {
+      if text.len() > 0 {
+        if let Some(d) = site.site_view.site.description {
+          format!("{} - Tech Demo UI for {} - {}", text, site.site_view.site.name, d)
+        } else {
+          format!("{} - Tech Demo UI for {}", text, site.site_view.site.name)
+        }
+      } else {
+        if let Some(d) = site.site_view.site.description {
+          format!("Tech Demo UI for {} - {}", site.site_view.site.name, d)
+        } else {
+          format!("Tech Demo UI for {}", site.site_view.site.name)
+        }
+      }
+    }
+    _ => "Lemmy".to_string(),
+  };
 
   view! {
     <Transition fallback={|| {}}>
@@ -132,6 +169,12 @@ pub fn App() -> impl IntoView {
           });
       }}
     </Transition>
+    <Stylesheet id="leptos" href="/pkg/lemmy-ui-leptos.css" />
+    <Link rel="shortcut icon" type_="image/ico" href="/favicon.ico" />
+    // <Title text={move || formatter()} />
+    // <Meta name="description" content={move || formatter()} />
+    <Title formatter />
+    <Meta name="description" content={formatter("".into())} />
     <I18nContextProvider cookie_options={UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax)}>
       <Router>
         <Routes>

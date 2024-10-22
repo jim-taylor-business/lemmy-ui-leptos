@@ -8,8 +8,7 @@ use crate::{
     post::post_listings::PostListings,
   },
   OnlineSetter,
-  ResourceStatus,
-  TitleSetter,
+  ResourceStatus, // TitleSetter,
 };
 use lemmy_api_common::{
   lemmy_db_schema::{ListingType, SortType},
@@ -18,6 +17,7 @@ use lemmy_api_common::{
   site::GetSiteResponse,
 };
 use leptos::{html::*, *};
+use leptos_meta::*;
 use leptos_router::*;
 use std::{collections::BTreeMap, usize, vec};
 use web_sys::MouseEvent;
@@ -27,7 +27,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
   let i18n = use_i18n();
 
   let error = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
-  let title = expect_context::<RwSignal<Option<TitleSetter>>>();
+  // let title = expect_context::<RwSignal<Option<TitleSetter>>>();
   let online = expect_context::<RwSignal<OnlineSetter>>();
 
   let param = use_params_map();
@@ -47,9 +47,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
   let on_sort_click = move |s: SortType| {
     move |_e: MouseEvent| {
       let r = serde_json::to_string::<SortType>(&s);
-
       let mut query_params = query.get();
-
       match r {
         Ok(o) => {
           query_params.insert("sort".into(), o);
@@ -58,11 +56,9 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
           error.update(|es| es.push(Some((e.into(), None))));
         }
       }
-
       if SortType::Active == s {
         query_params.remove("sort".into());
       }
-
       let navigate = leptos_router::use_navigate();
       navigate(
         &format!("{}{}", use_location().pathname.get(), query_params.to_query_string()),
@@ -82,7 +78,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
     }
   });
 
-  title.set(None);
+  // title.set(None);
 
   let posts_resource = Resource::new(
     move || {
@@ -116,7 +112,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
       if online.get().0 {
         let result = LemmyClient.list_posts(form.clone()).await;
         loading.set(false);
-        title.set(None);
+        // title.set(None);
         match result {
           Ok(o) => {
             #[cfg(not(feature = "ssr"))]
@@ -451,6 +447,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
             match posts_resource.get() {
               Some(Err(err)) => {
                 view! {
+                  <Title text="Error loading post list" />
                   <div class="py-4 px-8">
                     <div class="flex justify-between alert alert-error">
                       <span>{message_from_error(&err.0)} " - " {err.0.content}</span>
@@ -515,6 +512,8 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
               Some(Ok(posts)) => {
                 let next_page = Some((posts.0.0 + ssr_limit(), posts.1.next_page.clone()));
                 view! {
+                  <Title text={format!("Page {}", 1 + (ssr_from().0 / ssr_limit()))} />
+
                   // {loading
                   // .get()
                   // .then(move || {
@@ -592,6 +591,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
               }
               None => {
                 view! {
+                  <Title text="Loading post list" />
                   <div class="overflow-hidden animate-[popdown_1s_step-end_1]">
                     <div class="py-4 px-8">
                       <div class="alert">
@@ -610,6 +610,7 @@ pub fn HomeActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, Lem
           {
             let r_copy = r.clone();
             view! {
+              <Title text="" />
               <Show
                 when={move || r.0.1 == ResourceStatus::Ok}
                 fallback={move || {

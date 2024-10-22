@@ -1,7 +1,9 @@
 use crate::{
   errors::{message_from_error, LemmyAppError, LemmyAppErrorType},
   ui::components::{comment::comment_node::CommentNode, common::about::About, post::post_listing::PostListing},
-  LemmyApi, LemmyClient, NotificationsRefresh, TitleSetter,
+  LemmyApi,
+  LemmyClient,
+  NotificationsRefresh, // TitleSetter,
 };
 use ev::MouseEvent;
 use lemmy_api_common::{
@@ -17,14 +19,15 @@ use lemmy_api_common::{
   site::GetSiteResponse,
 };
 use leptos::*;
+use leptos_meta::*;
 
 #[component]
 pub fn NotificationsActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResponse, LemmyAppError>>) -> impl IntoView {
   let errors = expect_context::<RwSignal<Vec<Option<(LemmyAppError, Option<RwSignal<bool>>)>>>>();
   let notifications_refresh = expect_context::<RwSignal<NotificationsRefresh>>();
-  let title = expect_context::<RwSignal<Option<TitleSetter>>>();
+  // let title = expect_context::<RwSignal<Option<TitleSetter>>>();
 
-  title.set(Some(TitleSetter("Notifications".into())));
+  // title.set(Some(TitleSetter("Notifications".into())));
 
   let replies_refresh = RwSignal::new(true);
 
@@ -127,6 +130,7 @@ pub fn NotificationsActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResp
 
   view! {
     <main class="mx-auto">
+      <Title text="Notifications" />
       <Transition fallback={|| {}}>
         {move || {
           replies
@@ -210,9 +214,11 @@ pub fn NotificationsActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResp
                             level=1
                             now_in_millis
                           />
-                          <button class="btn btn-sm" on:click={on_clear_reply_click(r.comment_reply.id)}>
-                            "Clear"
-                          </button>
+                          <div class="ml-4">
+                            <button class="btn btn-sm" on:click={on_clear_reply_click(r.comment_reply.id)}>
+                              "Clear"
+                            </button>
+                          </div>
                         </div>
                       }
                     }
@@ -318,7 +324,9 @@ pub fn NotificationsActivity(ssr_site: Resource<Option<bool>, Result<GetSiteResp
           "Clear All Errors"
         </button>
       </div>
-      <About />
+      <div class="mx-6 sm:mx-0">
+        <About />
+      </div>
     </main>
   }
 }

@@ -1,5 +1,4 @@
 use crate::{
-  // cookie::set_cookie,
   errors::{LemmyAppError, LemmyAppErrorType},
   i18n::*,
   ui::components::common::text_input::{InputType, TextInput},
@@ -8,6 +7,7 @@ use crate::{
 use codee::string::FromToStringCodec;
 use lemmy_api_common::person::{Login, LoginResponse};
 use leptos::*;
+use leptos_meta::*;
 use leptos_router::*;
 use leptos_use::{use_cookie_with_options, SameSite, UseCookieOptions};
 use web_sys::SubmitEvent;
