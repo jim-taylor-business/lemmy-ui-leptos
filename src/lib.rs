@@ -63,6 +63,7 @@ pub fn App() -> impl IntoView {
   provide_context(notifications_refresh);
   let uri: RwSignal<UriSetter> = RwSignal::new(UriSetter("".into()));
   provide_context(uri);
+
   #[cfg(not(feature = "ssr"))]
   let visibility = use_document_visibility();
   #[cfg(not(feature = "ssr"))]
@@ -110,14 +111,14 @@ pub fn App() -> impl IntoView {
     },
   );
 
-  #[cfg(feature = "ssr")]
-  let (get_theme_cookie, set_theme_cookie) =
-    use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
-  #[cfg(feature = "ssr")]
-  if let Some(t) = get_theme_cookie.get() {
-    set_theme_cookie.set(Some(t));
-    // logging::log!("SET");
-  }
+  // // #[cfg(feature = "ssr")]
+  // let (get_theme_cookie, set_theme_cookie) =
+  //   use_cookie_with_options::<String, FromToStringCodec>("theme", UseCookieOptions::default().max_age(604800000).path("/").same_site(SameSite::Lax));
+  // // #[cfg(feature = "ssr")]
+  // if let Some(t) = get_theme_cookie.get() {
+  //   set_theme_cookie.set(Some(t));
+  //   // logging::log!("SET");
+  // }
 
   // let title = expect_context::<RwSignal<Option<TitleSetter>>>();
   // let formatter = move || match ssr_site.get() {
